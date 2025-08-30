@@ -48,7 +48,7 @@ This is a full-stack TypeScript application with:
 - ✅ Real-time search with debouncing and quote support for exact matches
 - ✅ Sortable table headers for title and creation date
 - ✅ Index card preview with dynamic font scaling (24px title, 16px body)
-- ✅ Compact tag input with proper styling
+- ✅ Compact tag input with proper styling and improved vertical spacing
 
 ## Getting Started
 

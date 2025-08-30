@@ -62,6 +62,10 @@
 
 .full-width {
   width: 100%;
+  
+  &:has(input[formControlName="tags"]) {
+    margin-bottom: 16px; // Add extra space after tags field
+  }
 }
 
 .form-row {
