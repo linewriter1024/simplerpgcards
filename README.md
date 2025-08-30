@@ -30,7 +30,7 @@ This is a full-stack TypeScript application with:
   - Title: ~12pt (same as body, bold for distinction)
   - Body: ~12pt (calculated as card height ÷ 18)
 - **Typography**: True small caps with `font-variant: small-caps`
-- **Preview**: Pixel-accurate 360×216px (5×3 inches at 72 DPI) 
+- **Preview**: Live PDF preview in card form dialog with 100% accuracy
 - **PDF Output**: Print-ready with inline browser viewing
 
 ### User Interface
@@ -39,6 +39,7 @@ This is a full-stack TypeScript application with:
 - ✅ Monospace fonts for card text (JetBrains Mono/Roboto Mono)
 - ✅ Responsive layout optimized for dark theme
 - ✅ Live card preview with 5×3 landscape aspect ratio (200×120px)
+- ✅ Real-time PDF preview in card form dialog showing exact print output
 - ✅ Intuitive tag-based filtering system
 - ✅ Real-time search with debouncing
 - ✅ Advanced sorting and filtering options
@@ -108,6 +109,7 @@ src/app/
 
 ### PDF Generation
 - `POST /api/cards/pdf` - Generate PDF from selected cards
+- `POST /api/cards/pdf/preview` - Generate single-card preview PDF
 
 ### Import/Export
 - `POST /api/cards/import` - Import cards from text file

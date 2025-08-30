@@ -42,23 +42,12 @@
     </form>
 
     <div class="preview-section">
-      <h3>Live Preview</h3>
-      <div class="card-previews">
-        <div class="card-preview front">
-          <h4>Front</h4>
-          <div class="preview-card front">
-            <div class="card-text" *ngIf="cardForm.get('title')?.value"><strong>{{ cardForm.get('title')?.value }}</strong></div>
-            <div class="card-text">{{ cardForm.get('frontText')?.value }}</div>
-          </div>
-        </div>
-        <div class="card-preview back">
-          <h4>Back</h4>
-          <div class="preview-card">
-            <div class="card-text">
-              <span *ngIf="cardForm.get('title')?.value"><strong>{{ cardForm.get('title')?.value }}</strong> | </span>{{ cardForm.get('backText')?.value }}
-            </div>
-          </div>
-        </div>
+      <h3>Live PDF Preview</h3>
+      <div class="pdf-preview-container" *ngIf="previewPdfUrl">
+        <embed [src]="previewPdfUrl" type="application/pdf" width="100%" height="400px" />
+      </div>
+      <div class="no-preview" *ngIf="!previewPdfUrl">
+        <p>Enter card details to see live PDF preview</p>
       </div>
     </div>
   </div>

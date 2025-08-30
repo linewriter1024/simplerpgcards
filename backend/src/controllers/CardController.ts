@@ -135,6 +135,26 @@ export class CardController {
     }
   }
 
+  async generatePreviewPdf(req: Request, res: Response): Promise<void> {
+    try {
+      const previewCard = req.body.previewCard;
+      
+      if (!previewCard) {
+        res.status(400).json({ error: 'Preview card data required' });
+        return;
+      }
+
+      const pdfBuffer = await this.pdfService.generatePreviewPdf(previewCard);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename=card-preview.pdf');
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Error generating preview PDF:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
   async getTags(req: Request, res: Response): Promise<void> {
     try {
       const tags = await this.cardService.getAllTags();

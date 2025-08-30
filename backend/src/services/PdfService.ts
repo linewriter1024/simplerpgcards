@@ -171,6 +171,53 @@ export class PdfService {
       } as Card);
     }
 
+    return this.generatePdfFromCards(cards, duplex, providedTitleSize, providedBodySize, marginMm);
+  }
+
+  async generatePreviewPdf(cardData: any): Promise<Buffer> {
+    // Create a single card for preview
+    const previewCards = [
+      {
+        id: 'preview',
+        title: cardData.title || '',
+        frontText: cardData.frontText || '',
+        backText: cardData.backText || '',
+      } as Card
+    ];
+
+    // Pad to 4 cards for proper layout
+    while (previewCards.length < 4) {
+      previewCards.push({
+        id: '_blank',
+        title: '',
+        frontText: '',
+        backText: '',
+      } as Card);
+    }
+
+    return this.generatePdfFromCards(previewCards, 'long', undefined, undefined, 4.0);
+  }
+
+  private async generatePdfFromCards(
+    cards: Card[],
+    duplex: 'long' | 'short',
+    providedTitleSize?: number,
+    providedBodySize?: number,
+    marginMm: number = 4.0
+  ): Promise<Buffer> {
+    
+    // Get cards from database
+    
+    // Pad to multiple of 4 (4 cards per page now)
+    while (cards.length % 4 !== 0) {
+      cards.push({
+        id: '_blank',
+        title: '',
+        frontText: '',
+        backText: '',
+      } as Card);
+    }
+
     const doc = new PDFDocument({ 
       size: 'LETTER', // Use standard letter size
       layout: 'landscape',

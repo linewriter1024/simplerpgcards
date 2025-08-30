@@ -47,6 +47,20 @@ export class CardService {
     });
   }
 
+  generatePreviewPdf(cardData: CreateCardDto): Observable<Blob> {
+    // Create a temporary card for preview
+    const previewOptions = {
+      cardIds: ['preview'], // Special ID for preview
+      duplex: 'long' as const,
+      marginMm: 4.0,
+      previewCard: cardData // Pass the card data for preview
+    };
+    
+    return this.http.post(`${this.baseUrl}/cards/pdf/preview`, previewOptions, {
+      responseType: 'blob'
+    });
+  }
+
   importCards(file: File): Observable<{ message: string; cards: Card[] }> {
     const formData = new FormData();
     formData.append('file', file);

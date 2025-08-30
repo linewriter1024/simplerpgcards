@@ -24,6 +24,13 @@ const pdfValidation = [
   body('marginMm').optional().isFloat({ min: 0, max: 20 }),
 ];
 
+const previewValidation = [
+  body('previewCard').notEmpty().withMessage('Preview card data is required'),
+  body('previewCard.title').optional().isString(),
+  body('previewCard.frontText').optional().isString(),
+  body('previewCard.backText').optional().isString(),
+];
+
 const uuidValidation = [
   param('id').isUUID().withMessage('Invalid card ID'),
 ];
@@ -36,6 +43,7 @@ router.post('/cards', cardValidation, cardController.createCard.bind(cardControl
 router.put('/cards/:id', [...uuidValidation, ...cardValidation], cardController.updateCard.bind(cardController));
 router.delete('/cards/:id', uuidValidation, cardController.deleteCard.bind(cardController));
 router.post('/cards/pdf', pdfValidation, cardController.generatePdf.bind(cardController));
+router.post('/cards/pdf/preview', previewValidation, cardController.generatePreviewPdf.bind(cardController));
 router.post('/cards/import', upload.single('file'), cardController.importCards.bind(cardController));
 
 export default router;
