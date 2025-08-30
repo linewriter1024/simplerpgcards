@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "description": "RPG Card Maker Backend API",
   "main": "dist/app.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linewriter1024/simplerpgcards.git"
+  },
+  "homepage": "https://github.com/linewriter1024/simplerpgcards",
+  "bugs": {
+    "url": "https://github.com/linewriter1024/simplerpgcards/issues"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",

@@ -1,6 +1,14 @@
 {
   "name": "rpg-cards-frontend",
   "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linewriter1024/simplerpgcards.git"
+  },
+  "homepage": "https://github.com/linewriter1024/simplerpgcards",
+  "bugs": {
+    "url": "https://github.com/linewriter1024/simplerpgcards/issues"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

@@ -2,6 +2,8 @@
 
 A modern web application for creating, managing, and generating RPG cards with a professional print-ready PDF output.
 
+**Repository:** [https://github.com/linewriter1024/simplerpgcards](https://github.com/linewriter1024/simplerpgcards)
+
 ## Architecture
 
 This is a full-stack TypeScript application with:
