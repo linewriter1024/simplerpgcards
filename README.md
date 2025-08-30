@@ -164,6 +164,13 @@ The backend supports the following environment variables:
 - `SRC_DATABASE_PATH` - SQLite database file path (default: ./rpg_cards.db)
 - `NODE_ENV` - Environment mode (production/development)
 
+### Frontend Environment Configuration
+The frontend uses Angular environment files to configure API endpoints:
+- **Development**: `src/environments/environment.ts` - Points to `http://localhost:3000/api`
+- **Production**: `src/environments/environment.prod.ts` - Points to `http://localhost:3000/api` (ignored by git for security)
+
+The production environment file is automatically used when building with `ng build --configuration production`. The production environment file is excluded from version control to allow for deployment-specific configurations.
+
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
