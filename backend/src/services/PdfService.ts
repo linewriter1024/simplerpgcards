@@ -1,4 +1,3 @@
-import { createCanvas, CanvasRenderingContext2D, registerFont } from 'canvas';
 import PDFDocument from 'pdfkit';
 import { Card } from '../entities/Card';
 import { PdfGenerationOptions } from '../types/card.types';
@@ -53,7 +52,7 @@ export class PdfService {
   }
 
   private drawCard(
-    doc: PDFDocument,
+    doc: InstanceType<typeof PDFDocument>,
     position: CardPosition,
     title: string,
     body: string,
