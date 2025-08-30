@@ -6,7 +6,8 @@ import { AppDataSource } from './config/database';
 import cardRoutes from './routes/cards';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.SRC_PORT) || 3000;
+const HOST = process.env.SRC_HOST || 'localhost';
 
 // Middleware
 app.use(helmet());
@@ -39,8 +40,8 @@ async function startServer() {
     await AppDataSource.initialize();
     console.log('Database connected successfully');
     
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`Server running on http://${HOST}:${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

@@ -25,14 +25,9 @@ export class PdfService {
     return Math.round(mm / 25.4 * dpi);
   }
 
-  private toSmallCaps(text: string): string {
-    // Proper small caps: lowercase letters become smaller uppercase, uppercase stays same size
-    return text.split('').map(char => {
-      if (char >= 'a' && char <= 'z') {
-        return char.toUpperCase(); // Will be rendered smaller via font size adjustment
-      }
-      return char;
-    }).join('');
+  private formatText(text: string): string {
+    // Just return the text as-is for regular monospace
+    return text;
   }
 
   private getIndexCardTitleSize(cardWidthInches: number, cardHeightInches: number): number {
@@ -99,7 +94,7 @@ export class PdfService {
     if (isFront) {
       // Front cards: separate title and body as before
       if (title) {
-        const titleText = this.toSmallCaps(title);
+        const titleText = this.formatText(title);
         doc.fontSize(titleSize)
            .font(fontName + '-Bold')
            .text(titleText, innerX, innerY, {
@@ -121,7 +116,7 @@ export class PdfService {
         const textHeight = estimatedLines * lineHeight;
         textY = bodyY + Math.max(0, (availableHeight - textHeight) / 2);
 
-        const bodyText = this.toSmallCaps(body);
+        const bodyText = this.formatText(body);
         doc.fontSize(bodySize)
            .font(fontName)
            .text(bodyText, innerX, textY, {
@@ -133,19 +128,63 @@ export class PdfService {
       }
     } else {
       // Back cards: title inline with first line of body, separated by " | "
-      let combinedText = '';
       if (title && body) {
-        combinedText = `${this.toSmallCaps(title)} | ${this.toSmallCaps(body)}`;
-      } else if (title) {
-        combinedText = this.toSmallCaps(title);
-      } else if (body) {
-        combinedText = this.toSmallCaps(body);
-      }
-
-      if (combinedText) {
+        const titleText = this.formatText(title);
+        const bodyText = this.formatText(body);
+        
+        // Use smaller font size for title (0.75x)
+        const titleFontSize = Math.round(bodySize * 0.75);
+        
+        // Split body into lines to get first line
+        const bodyLines = bodyText.split('\n');
+        const firstBodyLine = bodyLines[0] || '';
+        const remainingBodyLines = bodyLines.slice(1).join('\n');
+        
+        // Create first line with title and first body line
+        const firstLine = `${titleText} | ${firstBodyLine}`;
+        
+        // Draw the first line with title formatting for title part
+        doc.fontSize(titleFontSize)
+           .font(fontName + '-Bold')
+           .text(titleText + ' | ', innerX, innerY, {
+             continued: true,
+             lineBreak: false
+           });
+           
+        // Continue with first body line in normal font
         doc.fontSize(bodySize)
            .font(fontName)
-           .text(combinedText, innerX, innerY, {
+           .text(firstBodyLine, {
+             continued: false,
+             lineBreak: true
+           });
+        
+        // Draw remaining body lines if any
+        if (remainingBodyLines.trim()) {
+          doc.fontSize(bodySize)
+             .font(fontName)
+             .text(remainingBodyLines, innerX, doc.y + Math.max(1, bodySize * 0.1), {
+               width: innerWidth,
+               align: 'left',
+               lineGap: Math.max(1, bodySize * 0.1)
+             });
+        }
+      } else if (title) {
+        const titleText = this.formatText(title);
+        const titleFontSize = Math.round(bodySize * 0.75);
+        doc.fontSize(titleFontSize)
+           .font(fontName + '-Bold')
+           .text(titleText, innerX, innerY, {
+             width: innerWidth,
+             height: innerHeight,
+             align: 'left',
+             lineGap: Math.max(1, bodySize * 0.1)
+           });
+      } else if (body) {
+        const bodyText = this.formatText(body);
+        doc.fontSize(bodySize)
+           .font(fontName)
+           .text(bodyText, innerX, innerY, {
              width: innerWidth,
              height: innerHeight,
              align: 'left',
@@ -175,27 +214,108 @@ export class PdfService {
   }
 
   async generatePreviewPdf(cardData: any): Promise<Buffer> {
-    // Create a single card for preview
-    const previewCards = [
-      {
-        id: 'preview',
-        title: cardData.title || '',
-        frontText: cardData.frontText || '',
-        backText: cardData.backText || '',
-      } as Card
-    ];
+    // Create a single card for preview - show front and back in column
+    const previewCard = {
+      id: 'preview',
+      title: cardData.title || '',
+      frontText: cardData.frontText || '',
+      backText: cardData.backText || '',
+    } as Card;
 
-    // Pad to 4 cards for proper layout
-    while (previewCards.length < 4) {
-      previewCards.push({
-        id: '_blank',
-        title: '',
-        frontText: '',
-        backText: '',
-      } as Card);
-    }
+    return this.generatePreviewPdfFromCard(previewCard);
+  }
 
-    return this.generatePdfFromCards(previewCards, 'long', undefined, undefined, 4.0);
+  private async generatePreviewPdfFromCard(card: Card): Promise<Buffer> {
+    // Card dimensions at half size (2.5×1.5 inches)
+    const cardWidthInches = 2.5;
+    const cardHeightInches = 1.5;
+    const cardWidth = this.inToPx(cardWidthInches);
+    const cardHeight = this.inToPx(cardHeightInches);
+    
+    // Calculate dimensions for custom page size
+    const margin = 20;
+    const labelHeight = 20; // Space for "FRONT" and "BACK" labels
+    const gapBetweenCards = 30;
+    const totalCardsHeight = 2 * cardHeight + gapBetweenCards + 2 * labelHeight;
+    
+    // Custom page size to fit content exactly
+    const pageWidth = cardWidth + 2 * margin;
+    const pageHeight = totalCardsHeight + 2 * margin;
+
+    const doc = new PDFDocument({ 
+      size: [pageWidth, pageHeight], // Custom size to fit content
+      layout: 'portrait',
+      margins: { top: 0, bottom: 0, left: 0, right: 0 }
+    });
+
+    const buffers: Buffer[] = [];
+    doc.on('data', buffers.push.bind(buffers));
+
+    // Calculate dynamic font sizes for half-size cards
+    const titleSize = this.getIndexCardTitleSize(cardWidthInches, cardHeightInches);
+    const bodySize = this.getIndexCardBodySize(cardWidthInches, cardHeightInches);
+    const marginPx = this.mmToPx(4.0);
+    
+    // Center cards horizontally, stack vertically from top
+    const centerX = margin;
+    const startY = margin + labelHeight;
+    
+    // Front card position
+    const frontPosition: CardPosition = {
+      x: centerX,
+      y: startY,
+      width: cardWidth,
+      height: cardHeight
+    };
+    
+    // Back card position
+    const backPosition: CardPosition = {
+      x: centerX,
+      y: startY + cardHeight + gapBetweenCards + labelHeight,
+      width: cardWidth,
+      height: cardHeight
+    };
+
+    // Draw front card with label
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .text('FRONT', centerX, margin, { width: cardWidth, align: 'center' });
+       
+    this.drawCard(
+      doc,
+      frontPosition,
+      card.title || '',
+      card.frontText || '',
+      titleSize,
+      bodySize,
+      marginPx,
+      true // Is front card
+    );
+
+    // Draw back card with label
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .text('BACK', centerX, startY + cardHeight + gapBetweenCards, { width: cardWidth, align: 'center' });
+       
+    this.drawCard(
+      doc,
+      backPosition,
+      card.title || '',
+      card.backText || '',
+      titleSize,
+      bodySize,
+      marginPx,
+      false // Is back card
+    );
+
+    doc.end();
+
+    return new Promise((resolve, reject) => {
+      doc.on('end', () => {
+        resolve(Buffer.concat(buffers));
+      });
+      doc.on('error', reject);
+    });
   }
 
   private async generatePdfFromCards(

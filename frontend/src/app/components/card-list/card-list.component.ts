@@ -45,7 +45,6 @@ export class CardListComponent implements OnInit {
   cards: Card[] = [];
   filteredCards: Card[] = [];
   allTags: string[] = [];
-  selectedTags: string[] = [];
   searchControl = new FormControl('');
   selection = new SelectionModel<Card>(true, []);
   sortBy: 'title' | 'createdAt' = 'createdAt';
@@ -84,25 +83,30 @@ export class CardListComponent implements OnInit {
   applyFilters(): void {
     let filtered = [...this.cards];
     
-    // Apply search filter
+    // Apply search filter - enhanced to support title and tag searching
     const searchTerm = this.searchControl.value?.toLowerCase().trim();
     if (searchTerm) {
-      filtered = filtered.filter(card =>
-        card.title.toLowerCase().includes(searchTerm) ||
-        card.frontText?.toLowerCase().includes(searchTerm) ||
-        card.backText?.toLowerCase().includes(searchTerm)
-      );
-    }
-    
-    // Apply tag filter
-    if (this.selectedTags.length > 0) {
+      // Parse search terms - support quotes for exact matching
+      const searchTerms = this.parseSearchTerms(searchTerm);
+      
       filtered = filtered.filter(card => {
-        if (!card.tags || card.tags.length === 0) return false;
-        return this.selectedTags.every(tag => 
-          card.tags!.some(cardTag => cardTag.toLowerCase().includes(tag.toLowerCase()))
-        );
+        return searchTerms.some(term => {
+          // Search in title
+          if (card.title.toLowerCase().includes(term.toLowerCase())) {
+            return true;
+          }
+          
+          // Search in tags
+          if (card.tags && card.tags.length > 0) {
+            return card.tags.some(tag => tag.toLowerCase().includes(term.toLowerCase()));
+          }
+          
+          return false;
+        });
       });
     }
+    
+    // Note: Tag filtering is now handled through search functionality
     
     // Sort
     filtered.sort((a, b) => {
@@ -121,18 +125,64 @@ export class CardListComponent implements OnInit {
     this.filteredCards = filtered;
   }
 
-  toggleTagFilter(tag: string): void {
-    const index = this.selectedTags.indexOf(tag);
-    if (index >= 0) {
-      this.selectedTags.splice(index, 1);
-    } else {
-      this.selectedTags.push(tag);
+  private parseSearchTerms(searchText: string): string[] {
+    const terms: string[] = [];
+    let currentTerm = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < searchText.length; i++) {
+      const char = searchText[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ' ' && !inQuotes) {
+        if (currentTerm.trim()) {
+          terms.push(currentTerm.trim());
+          currentTerm = '';
+        }
+      } else {
+        currentTerm += char;
+      }
     }
+    
+    if (currentTerm.trim()) {
+      terms.push(currentTerm.trim());
+    }
+    
+    return terms;
+  }
+
+  isTagHighlighted(tag: string): boolean {
+    const searchTerm = this.searchControl.value?.toLowerCase().trim();
+    if (!searchTerm) return false;
+    
+    const searchTerms = this.parseSearchTerms(searchTerm);
+    return searchTerms.some(term => tag.toLowerCase().includes(term.toLowerCase()));
+  }
+
+  toggleTagFilter(tag: string): void {
+    const currentSearch = this.searchControl.value || '';
+    const searchTerms = this.parseSearchTerms(currentSearch);
+    
+    // Check if tag is already in search
+    const tagIndex = searchTerms.findIndex(term => term.toLowerCase() === tag.toLowerCase());
+    
+    if (tagIndex >= 0) {
+      // Remove tag from search
+      searchTerms.splice(tagIndex, 1);
+    } else {
+      // Add tag to search
+      searchTerms.push(tag);
+    }
+    
+    // Update search control
+    const newSearchText = searchTerms.join(' ');
+    this.searchControl.setValue(newSearchText);
+    
     this.applyFilters();
   }
 
   clearFilters(): void {
-    this.selectedTags = [];
     this.searchControl.setValue('');
     this.applyFilters();
   }
@@ -161,10 +211,16 @@ export class CardListComponent implements OnInit {
     this.selection.select(...this.filteredCards);
   }
 
+  toggleRowSelection(row: Card): void {
+    this.selection.toggle(row);
+  }
+
   editCard(card: Card): void {
     const dialogRef = this.dialog.open(CardFormComponent, {
-      width: '1200px', // Increased from 1000px to accommodate larger preview cards
-      maxHeight: '95vh', // Increased from 90vh
+      width: '100vw',
+      maxWidth: '100vw',
+      maxHeight: '95vh',
+      panelClass: 'fullscreen-width-dialog',
       data: { card }
     });
 
@@ -178,8 +234,10 @@ export class CardListComponent implements OnInit {
 
   createCard(): void {
     const dialogRef = this.dialog.open(CardFormComponent, {
-      width: '1200px', // Increased from 1000px to accommodate larger preview cards
-      maxHeight: '95vh', // Increased from 90vh
+      width: '100vw',
+      maxWidth: '100vw',
+      maxHeight: '95vh',
+      panelClass: 'fullscreen-width-dialog',
       data: {}
     });
 
@@ -223,16 +281,5 @@ export class CardListComponent implements OnInit {
       link.click();
       window.URL.revokeObjectURL(url);
     });
-  }
-
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.cardService.importCards(file).subscribe(result => {
-        alert(result.message);
-        this.loadCards();
-        this.loadTags();
-      });
-    }
   }
 }

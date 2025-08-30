@@ -60,10 +60,4 @@ export class CardService {
       responseType: 'blob'
     });
   }
-
-  importCards(file: File): Observable<{ message: string; cards: Card[] }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<{ message: string; cards: Card[] }>(`${this.baseUrl}/cards/import`, formData);
-  }
 }

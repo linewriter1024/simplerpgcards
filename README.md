@@ -25,13 +25,13 @@ This is a full-stack TypeScript application with:
 
 - **Size**: Standard 5×3 inch index cards (landscape orientation)
 - **Layout**: 4 cards per page in 2×2 grid layout
-- **Font**: Courier (monospace) with proper small caps styling
+- **Font**: Courier (monospace) with consistent regular text styling
 - **Font Sizes**: 
   - Title: ~12pt (same as body, bold for distinction)
   - Body: ~12pt (calculated as card height ÷ 18)
-- **Typography**: True small caps with `font-variant: small-caps`
-- **Preview**: Live PDF preview in card form dialog with 100% accuracy
-- **PDF Output**: Print-ready with inline browser viewing
+- **Typography**: Monospace fonts (Courier) with regular text for consistent appearance
+- **Preview**: Full-width card form dialog with live PDF preview showing front and back cards in a dynamically-sized, compact layout (2.5×1.5 inches)
+- **PDF Output**: Print-ready with inline browser viewing and proper multi-line text layout with inline title/body layout on card backs
 
 ### User Interface
 - ✅ Dark theme throughout the application
@@ -39,10 +39,12 @@ This is a full-stack TypeScript application with:
 - ✅ Monospace fonts for card text (JetBrains Mono/Roboto Mono)
 - ✅ Responsive layout optimized for dark theme
 - ✅ Live card preview with 5×3 landscape aspect ratio (200×120px)
-- ✅ Real-time PDF preview in card form dialog showing exact print output
-- ✅ Intuitive tag-based filtering system
-- ✅ Real-time search with debouncing
-- ✅ Advanced sorting and filtering options
+- ✅ Full-width card form dialog with real-time PDF preview showing front and back cards
+- ✅ Proper multi-line text layout on card backs with inline title and body text
+- ✅ Clickable table rows for easy card selection
+- ✅ Intuitive tag-based filtering system with search highlighting
+- ✅ Real-time search with debouncing and quote support for exact matches
+- ✅ Sortable table headers for title and creation date
 - ✅ Index card preview with dynamic font scaling (24px title, 16px body)
 - ✅ Compact tag input with proper styling
 
@@ -52,7 +54,9 @@ This is a full-stack TypeScript application with:
 - Node.js 18+
 - npm or yarn
 
-### Backend Setup
+### Development Mode
+
+#### Backend Setup
 ```bash
 cd backend
 npm install
@@ -62,7 +66,7 @@ npm run dev
 
 The backend will start on `http://localhost:3000`
 
-### Frontend Setup
+#### Frontend Setup
 ```bash
 cd frontend
 npm install
@@ -111,21 +115,13 @@ src/app/
 - `POST /api/cards/pdf` - Generate PDF from selected cards
 - `POST /api/cards/pdf/preview` - Generate single-card preview PDF
 
-### Import/Export
-- `POST /api/cards/import` - Import cards from text file
-
 ## Card Format
 
-The application supports the original text format:
-```
-Card Title
-Front text content
-+
-Back text content
-=
-Next Card Title
-...
-```
+Cards are created and managed through the web interface with the following structure:
+- **Title**: Card name/header
+- **Front Text**: Main card content 
+- **Back Text**: Additional details or mechanics
+- **Tags**: Categorization labels (e.g., "paladin", "spell-1", "cleric-3")
 
 ## Development
 
@@ -154,10 +150,17 @@ cd backend
 npm run build
 npm start
 
-# Frontend
+# Frontend  
 cd frontend
 ng build --configuration production
 ```
+
+### Environment Variables
+The backend supports the following environment variables:
+- `SRC_HOST` - Server host/IP (default: localhost)
+- `SRC_PORT` - Server port (default: 3000)  
+- `SRC_DATABASE_PATH` - SQLite database file path (default: ./rpg_cards.db)
+- `NODE_ENV` - Environment mode (production/development)
 
 ## License
 
