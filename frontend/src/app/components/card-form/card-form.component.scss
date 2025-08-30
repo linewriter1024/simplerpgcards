@@ -1,0 +1,76 @@
+.form-container {
+  display: flex;
+  gap: 24px;
+  min-height: 600px;
+}
+
+.form-section {
+  flex: 1;
+  min-width: 400px;
+}
+
+.preview-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-weight: 500;
+}
+
+.card-previews {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-preview {
+  h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+  }
+}
+
+.preview-card {
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 120px;
+  background: #fafafa;
+  font-family: 'Roboto Mono', monospace;
+  
+  pre {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+}
+
+mat-dialog-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+mat-dialog-actions {
+  margin: 0;
+  padding: 16px 24px;
+}

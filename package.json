@@ -1,0 +1,19 @@
+{
+  "name": "rpg-cards-fullstack",
+  "version": "1.0.0",
+  "description": "Full-stack RPG card management application",
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && ng serve",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && ng build",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && ng serve --prod"
+  },
+  "keywords": ["rpg", "cards", "pdf", "angular", "nodejs", "typescript"],
+  "author": "RPG Cards Team",
+  "license": "MIT"
+}
