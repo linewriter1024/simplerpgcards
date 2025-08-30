@@ -166,4 +166,10 @@ The backend supports the following environment variables:
 
 ## License
 
-MIT License
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+See the [LICENSE.txt](LICENSE.txt) file for the full license text.
+
+### Why AGPL?
+
+The AGPL license ensures that if you run a modified version of this software on a server and let others interact with it, you must provide them with the source code of your modifications. This helps maintain the open-source nature of the project even for web services.
