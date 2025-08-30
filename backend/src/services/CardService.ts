@@ -13,12 +13,18 @@ export class CardService {
   async getAllCards(filter?: CardFilter): Promise<Card[]> {
     const queryBuilder = this.cardRepository.createQueryBuilder('card');
 
-    if (filter?.category) {
-      queryBuilder.andWhere('card.category = :category', { category: filter.category });
-    }
-
-    if (filter?.level) {
-      queryBuilder.andWhere('card.level = :level', { level: filter.level });
+    if (filter?.tags && filter.tags.length > 0) {
+      // Check if any of the requested tags are present in the card's tags
+      const tagConditions = filter.tags.map((_: string, index: number) => 
+        `card.tags LIKE :tag${index}`
+      ).join(' OR ');
+      
+      const tagParameters = filter.tags.reduce((params: any, tag: string, index: number) => {
+        params[`tag${index}`] = `%"${tag}"%`;
+        return params;
+      }, {});
+      
+      queryBuilder.andWhere(`(${tagConditions})`, tagParameters);
     }
 
     if (filter?.search) {
@@ -28,20 +34,52 @@ export class CardService {
       );
     }
 
-    return queryBuilder.orderBy('card.title', 'ASC').getMany();
+    return queryBuilder.orderBy('card.createdAt', 'DESC').getMany();
   }
 
   async getCardById(id: string): Promise<Card | null> {
-    return this.cardRepository.findOne({ where: { id } });
+    const card = await this.cardRepository.findOne({ where: { id } });
+    if (card && card.tags) {
+      // Parse tags from JSON string to array
+      try {
+        (card as any).parsedTags = JSON.parse(card.tags);
+      } catch {
+        (card as any).parsedTags = [];
+      }
+    }
+    return card;
   }
 
   async createCard(cardData: CreateCardDto): Promise<Card> {
-    const card = this.cardRepository.create(cardData);
-    return this.cardRepository.save(card);
+    const card = this.cardRepository.create({
+      title: cardData.title,
+      frontText: cardData.frontText,
+      backText: cardData.backText,
+      tags: cardData.tags ? JSON.stringify(cardData.tags) : undefined
+    });
+    const savedCard = await this.cardRepository.save(card);
+    
+    // Add parsed tags for response
+    if (savedCard.tags) {
+      try {
+        (savedCard as any).parsedTags = JSON.parse(savedCard.tags);
+      } catch {
+        (savedCard as any).parsedTags = [];
+      }
+    }
+    
+    return savedCard;
   }
 
   async updateCard(id: string, cardData: UpdateCardDto): Promise<Card | null> {
-    await this.cardRepository.update(id, cardData);
+    const updateData: any = {
+      title: cardData.title,
+      frontText: cardData.frontText,
+      backText: cardData.backText,
+      tags: cardData.tags ? JSON.stringify(cardData.tags) : undefined
+    };
+    
+    await this.cardRepository.update(id, updateData);
     return this.getCardById(id);
   }
 
@@ -51,26 +89,36 @@ export class CardService {
   }
 
   async getCardsByIds(ids: string[]): Promise<Card[]> {
-    return this.cardRepository.findByIds(ids);
+    const cards = await this.cardRepository.findByIds(ids);
+    
+    // Parse tags for all cards
+    return cards.map(card => {
+      if (card.tags) {
+        try {
+          (card as any).parsedTags = JSON.parse(card.tags);
+        } catch {
+          (card as any).parsedTags = [];
+        }
+      }
+      return card;
+    });
   }
 
-  async getCategories(): Promise<string[]> {
-    const result = await this.cardRepository
-      .createQueryBuilder('card')
-      .select('DISTINCT card.category', 'category')
-      .where('card.category IS NOT NULL')
-      .getRawMany();
+  async getAllTags(): Promise<string[]> {
+    const cards = await this.cardRepository.find();
+    const allTags = new Set<string>();
     
-    return result.map(r => r.category).filter(Boolean);
-  }
-
-  async getLevels(): Promise<string[]> {
-    const result = await this.cardRepository
-      .createQueryBuilder('card')
-      .select('DISTINCT card.level', 'level')
-      .where('card.level IS NOT NULL')
-      .getRawMany();
+    cards.forEach(card => {
+      if (card.tags) {
+        try {
+          const tags = JSON.parse(card.tags);
+          tags.forEach((tag: string) => allTags.add(tag));
+        } catch {
+          // Ignore malformed tag data
+        }
+      }
+    });
     
-    return result.map(r => r.level).filter(Boolean);
+    return Array.from(allTags).sort();
   }
 }

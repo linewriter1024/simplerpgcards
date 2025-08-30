@@ -2,6 +2,21 @@
 
 This document contains detailed technical information about the RPG Cards full-stack application architecture, implementation decisions, and development guidelines.
 
+## Recent Updates - Index Card Optimization
+
+### PDF Generation Enhancements (August 30, 2025)
+- **Card Dimensions**: Updated to standard 3×5 inch index cards (216×360 pixels at 72 DPI)
+- **Layout**: Changed from 2×2 to 3×2 grid layout (6 cards per page)
+- **Font Sizing**: Optimized to 26pt titles and 18pt body text for index card readability
+- **DPI Setting**: 72 DPI for accurate print scaling
+- **Margins**: Reduced page margins for better card density
+
+### Frontend Preview Updates
+- **Aspect Ratio**: Preview cards now use accurate 3×5 proportions (144×240px)
+- **Font Scaling**: Preview fonts scaled appropriately (16pt title, 12pt body)
+- **Layout**: Centered preview cards with proper visual hierarchy
+- **Typography**: Maintained monospace fonts with better line spacing for index cards
+
 ## Table of Contents
 - [Project Overview](#project-overview)
 - [Technology Stack](#technology-stack)
@@ -19,11 +34,12 @@ This document contains detailed technical information about the RPG Cards full-s
 The RPG Cards application is a full-stack TypeScript solution for creating, managing, and printing RPG cards. It features a modern Angular frontend with Material Design, a Node.js/Express backend with TypeORM, and sophisticated PDF generation capabilities.
 
 ### Key Features
-- **Card Management**: Full CRUD operations with rich metadata
-- **PDF Generation**: Professional print-ready output with duplex support
-- **Import/Export**: Text file import with batch operations
-- **Search & Filter**: Advanced filtering by category, level, and content
-- **Responsive UI**: Material Design with mobile support
+- **Card Management**: Full CRUD operations with tag-based organization
+- **PDF Generation**: Professional print-ready output with monospace fonts and centered fronts
+- **Tag System**: Flexible tagging with multi-tag filtering (e.g., "paladin druid spell-1")
+- **Search & Filter**: Real-time search with advanced tag-based filtering
+- **Dark UI**: Complete dark theme with monospace fonts for better readability
+- **Sortable Interface**: Sort by creation date or title with real-time updates
 
 ## Technology Stack
 
@@ -103,32 +119,20 @@ frontend/src/app/
 ```typescript
 @Entity('cards')
 export class Card {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   title: string;
 
-  @Column('text')
+  @Column({ type: 'text', nullable: true })
   frontText: string;
 
-  @Column('text')
+  @Column({ type: 'text', nullable: true })
   backText: string;
 
-  @Column({ length: 100, nullable: true })
-  category: string;
-
-  @Column({ type: 'integer', nullable: true })
-  level: number;
-
-  @Column({ length: 100, nullable: true })
-  range: string;
-
-  @Column({ length: 100, nullable: true })
-  duration: string;
-
-  @Column('text', { nullable: true })
-  notes: string;
+  @Column({ type: 'text', nullable: true })
+  tags: string; // JSON string array of tags
 
   @CreateDateColumn()
   createdAt: Date;
@@ -144,6 +148,7 @@ export class Card {
 - **ORM**: TypeORM with decorators
 - **Migrations**: TypeORM migrations for schema changes
 - **Connection Pool**: Single connection (SQLite limitation)
+- **Tag Storage**: Tags stored as JSON string arrays for flexibility
 
 ## API Documentation
 
@@ -153,43 +158,16 @@ export class Card {
 ### Card Endpoints
 
 #### GET /cards
-**Description**: Retrieve all cards with optional filtering
+**Description**: Retrieve all cards with optional tag filtering
 **Query Parameters**:
-- `category` (string, optional): Filter by category
-- `level` (number, optional): Filter by level
+- `tags` (string, optional): Comma-separated list of tags to filter by
 - `search` (string, optional): Search in title and text content
 
-**Response**: Array of Card objects
+**Response**: Array of Card objects with parsed tags
 
-#### GET /cards/:id
-**Description**: Retrieve a specific card
-**Parameters**: `id` (number) - Card ID
-**Response**: Single Card object or 404
-
-#### POST /cards
-**Description**: Create a new card
-**Body**: Card data (excluding id, timestamps)
-**Validation**: All fields validated with express-validator
-**Response**: Created Card object
-
-#### PUT /cards/:id
-**Description**: Update an existing card
-**Parameters**: `id` (number) - Card ID
-**Body**: Updated card data
-**Response**: Updated Card object
-
-#### DELETE /cards/:id
-**Description**: Delete a card
-**Parameters**: `id` (number) - Card ID
-**Response**: Success message
-
-#### GET /cards/categories
-**Description**: Get all unique categories
-**Response**: Array of category strings
-
-#### GET /cards/levels
-**Description**: Get all unique levels
-**Response**: Array of level numbers
+#### GET /cards/tags
+**Description**: Get all unique tags across all cards
+**Response**: Array of tag strings sorted alphabetically
 
 ### PDF Generation Endpoints
 
@@ -210,25 +188,35 @@ export class Card {
 ## PDF Generation
 
 ### PDFKit Implementation
-The PDF generation uses PDFKit with custom layout logic:
+The PDF generation uses PDFKit with custom layout logic optimized for index cards:
 
 #### Layout Specifications
-- **Page Size**: A4 (595 x 842 points)
-- **Cards per Page**: 4 (2x2 grid)
-- **Card Size**: 268 x 380 points
-- **Margins**: 20 points
-- **Font**: Helvetica family
-- **Cut Lines**: Dashed lines for card separation
+- **Page Size**: A4 Landscape (11" × 8.5" at 72 DPI)
+- **Cards per Page**: 6 (3×2 grid layout)
+- **Card Size**: 3" × 5" (standard index card dimensions)
+- **Physical Size**: 216 × 360 pixels at 72 DPI
+- **Margins**: 0.5" page margins, configurable card margins
+- **Font**: Courier (monospace) family for consistent spacing
+- **Cut Lines**: Precise grid lines for accurate card cutting
+
+#### Typography Specifications
+- **Title Font**: Courier-Bold, 26pt (optimal for index card headers)
+- **Body Font**: Courier, 18pt (readable handwriting equivalent)
+- **Line Spacing**: 1.2x for index card line compatibility
+- **Character Width**: ~0.6 ratio for accurate text wrapping
 
 #### Duplex Printing Support
-- **Front Side**: Card fronts with titles and front text
-- **Back Side**: Card backs with back text (reversed order)
-- **Binding**: Long edge binding for proper alignment
+- **Front Side**: Card fronts with centered titles and content
+- **Back Side**: Card backs with left-aligned titles and content  
+- **Binding**: Long edge binding for proper card alignment
+- **Back Mapping**: Precise position mapping for 6-card duplex layout
+- **Font Consistency**: Same typography on both sides for professional appearance
 
 #### Text Formatting
-- **Title**: Bold, larger font
-- **Body**: Regular font with word wrapping
-- **Small Caps**: Custom implementation for consistent formatting
+- **Front Cards**: Centered text for better visual appeal
+- **Back Cards**: Left-aligned text for readability
+- **Monospace**: Consistent character spacing
+- **Larger Fonts**: Improved readability for physical cards
 
 ### PDF Service Features
 - Batch processing of multiple cards
@@ -241,27 +229,28 @@ The PDF generation uses PDFKit with custom layout logic:
 ### Component Architecture
 
 #### CardListComponent
-- **Responsibility**: Display and manage card collection
-- **Features**: Search, filter, selection, bulk operations
-- **State Management**: Local component state with reactive forms
+- **Responsibility**: Display and manage card collection with advanced filtering
+- **Features**: Real-time search, multi-tag filtering, sortable columns, bulk operations
+- **State Management**: Reactive forms with debounced search and tag-based filtering
 
 #### CardFormComponent
-- **Responsibility**: Create and edit cards
-- **Features**: Form validation, real-time preview
-- **Form Handling**: Angular reactive forms with validators
+- **Responsibility**: Create and edit cards with tag input
+- **Features**: Tag chip input, real-time preview with monospace fonts, form validation
+- **Tag Handling**: Space/comma-separated tag input with duplicate prevention
 
 ### Service Layer
 
 #### CardService
 - **Responsibility**: HTTP communication with backend
-- **Methods**: CRUD operations, file import, PDF generation
+- **Methods**: CRUD operations, tag management, file import, PDF generation
 - **Error Handling**: RxJS error operators with user-friendly messages
-- **Caching**: Simple response caching for categories and levels
+- **Tag Support**: Multi-tag filtering and tag suggestion functionality
 
 ### Material Design Integration
-- **Components**: MatTable, MatCard, MatDialog, MatSnackBar
-- **Theming**: Custom theme with consistent color palette
-- **Responsive**: Mobile-first design with breakpoint handling
+- **Components**: MatTable, MatCard, MatDialog, MatSnackBar, MatChips
+- **Dark Theming**: Complete dark theme implementation with custom overrides
+- **Typography**: Monospace fonts (JetBrains Mono/Roboto Mono) for code-like appearance
+- **Responsive**: Mobile-first design with dark theme breakpoint handling
 
 ## Development Guidelines
 

@@ -20,56 +20,33 @@
           </mat-error>
         </mat-form-field>
 
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Category</mat-label>
-            <mat-select formControlName="category">
-              <mat-option value="">None</mat-option>
-              <mat-option *ngFor="let category of categories" [value]="category">
-                {{category}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Level</mat-label>
-            <mat-select formControlName="level">
-              <mat-option value="">None</mat-option>
-              <mat-option *ngFor="let level of levels" [value]="level">
-                {{level}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Range</mat-label>
-            <input matInput formControlName="range" placeholder="e.g., 60 ft, Touch">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Duration</mat-label>
-            <input matInput formControlName="duration" placeholder="e.g., 1 hour, Instantaneous">
-          </mat-form-field>
-        </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Tags</mat-label>
+          <mat-chip-grid #chipGrid aria-label="Card tags">
+            <mat-chip-row *ngFor="let tag of selectedTags" (removed)="removeTag(tag)">
+              {{ tag }}
+              <button matChipRemove [attr.aria-label]="'remove ' + tag">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip-row>
+          </mat-chip-grid>
+          <input placeholder="Add tags (e.g., 'paladin druid spell-1' or 'cleric cleric-3 ability')"
+                 [matChipInputFor]="chipGrid"
+                 [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                 (matChipInputTokenEnd)="addTag($event)">
+          <mat-hint>Enter tags separated by spaces or commas. Press Enter to add.</mat-hint>
+        </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Front Text</mat-label>
-          <textarea matInput formControlName="frontText" rows="4" 
+          <textarea matInput formControlName="frontText" rows="6" 
                     placeholder="Text to appear on the front of the card"></textarea>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Back Text</mat-label>
-          <textarea matInput formControlName="backText" rows="4"
+          <textarea matInput formControlName="backText" rows="6"
                     placeholder="Text to appear on the back of the card"></textarea>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Notes</mat-label>
-          <textarea matInput formControlName="notes" rows="2"
-                    placeholder="Additional notes or quick reference"></textarea>
         </mat-form-field>
       </div>
     </form>
@@ -79,14 +56,16 @@
       <div class="card-previews">
         <div class="card-preview front">
           <h4>Front</h4>
-          <div class="preview-card">
-            <pre>{{ getPreviewFront() }}</pre>
+          <div class="preview-card front">
+            <div class="card-title" *ngIf="cardForm.get('title')?.value">{{ cardForm.get('title')?.value }}</div>
+            <div class="card-text">{{ cardForm.get('frontText')?.value }}</div>
           </div>
         </div>
         <div class="card-preview back">
           <h4>Back</h4>
           <div class="preview-card">
-            <pre>{{ getPreviewBack() }}</pre>
+            <div class="card-title" *ngIf="cardForm.get('title')?.value">{{ cardForm.get('title')?.value }}</div>
+            <div class="card-text">{{ cardForm.get('backText')?.value }}</div>
           </div>
         </div>
       </div>

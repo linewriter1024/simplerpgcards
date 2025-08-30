@@ -16,13 +16,19 @@ export class CardController {
   async getAllCards(req: Request, res: Response): Promise<void> {
     try {
       const filter: CardFilter = {
-        category: req.query.category as string,
-        level: req.query.level as string,
+        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
         search: req.query.search as string,
       };
 
       const cards = await this.cardService.getAllCards(filter);
-      res.json(cards);
+      
+      // Transform cards to include parsed tags
+      const transformedCards = cards.map(card => ({
+        ...card,
+        tags: card.tags ? JSON.parse(card.tags) : []
+      }));
+      
+      res.json(transformedCards);
     } catch (error) {
       console.error('Error fetching cards:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -131,22 +137,12 @@ export class CardController {
     }
   }
 
-  async getCategories(req: Request, res: Response): Promise<void> {
+  async getTags(req: Request, res: Response): Promise<void> {
     try {
-      const categories = await this.cardService.getCategories();
-      res.json(categories);
+      const tags = await this.cardService.getAllTags();
+      res.json(tags);
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-
-  async getLevels(req: Request, res: Response): Promise<void> {
-    try {
-      const levels = await this.cardService.getLevels();
-      res.json(levels);
-    } catch (error) {
-      console.error('Error fetching levels:', error);
+      console.error('Error fetching tags:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

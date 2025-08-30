@@ -14,29 +14,33 @@ This is a full-stack TypeScript application with:
 
 ### Card Management
 - ✅ Create, read, update, delete cards
-- ✅ Rich card details (title, front/back text, category, level, range, duration, notes)
-- ✅ Real-time search and filtering
-- ✅ Category and level management
+- ✅ Rich card details (title, front/back text, tags)
+- ✅ Real-time search and filtering by content and tags
+- ✅ Tag-based categorization system (e.g., "paladin", "druid", "spell-1", "cleric-3")
+- ✅ Multiple tag selection and filtering
 - ✅ Bulk selection for PDF generation
+- ✅ Sortable card list by title or creation date
 
 ### PDF Generation
-- ✅ Professional card layout (4 cards per page)
+- ✅ Professional index card layout (3×5 inch cards, 6 cards per page)
 - ✅ Duplex printing support (long/short edge)
-- ✅ Small caps formatting
+- ✅ Monospace fonts (Courier) for better readability
+- ✅ Centered front text, left-aligned back text
+- ✅ Index card appropriate font sizes (26pt title, 18pt body)
+- ✅ 72 DPI optimized for proper print scaling
 - ✅ Configurable fonts and margins
 - ✅ Cut lines for easy separation
 
-### Import/Export
-- ✅ Import cards from text files (original format compatible)
-- ✅ Export selected cards to PDF
-- ✅ Batch operations
-
 ### User Interface
-- ✅ Modern Material Design interface
-- ✅ Responsive layout
-- ✅ Live card preview while editing
-- ✅ Intuitive card selection
-- ✅ Advanced filtering and search
+- ✅ Dark theme throughout the application
+- ✅ Modern Material Design interface with dark styling
+- ✅ Monospace fonts for card text (JetBrains Mono/Roboto Mono)
+- ✅ Responsive layout optimized for dark theme
+- ✅ Live card preview while editing with accurate 3×5 aspect ratio scaling
+- ✅ Intuitive tag-based filtering system
+- ✅ Real-time search with debouncing
+- ✅ Advanced sorting and filtering options
+- ✅ Index card-sized preview with proper font scaling
 
 ## Getting Started
 
@@ -64,7 +68,7 @@ ng serve
 The frontend will start on `http://localhost:4200`
 
 ### Database
-The SQLite database will be created automatically on first run. No additional setup required.
+The SQLite database will be created automatically on first run with an empty database. You can add your own cards through the web interface.
 
 ## Project Structure
 
@@ -92,13 +96,12 @@ src/app/
 ## API Endpoints
 
 ### Cards
-- `GET /api/cards` - Get all cards (with optional filters)
+- `GET /api/cards` - Get all cards (with optional tag filters)
 - `GET /api/cards/:id` - Get single card
 - `POST /api/cards` - Create new card
 - `PUT /api/cards/:id` - Update card
 - `DELETE /api/cards/:id` - Delete card
-- `GET /api/cards/categories` - Get all categories
-- `GET /api/cards/levels` - Get all levels
+- `GET /api/cards/tags` - Get all tags
 
 ### PDF Generation
 - `POST /api/cards/pdf` - Generate PDF from selected cards

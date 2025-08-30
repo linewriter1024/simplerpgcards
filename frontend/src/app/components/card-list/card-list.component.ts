@@ -8,12 +8,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatSortModule } from '@angular/material/sort';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialog } from '@angular/material/dialog';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CardService } from '../../services/card.service';
 import { Card, CardFilter } from '../../models/card.model';
 import { SelectionModel } from '@angular/cdk/collections';
 import { CardFormComponent } from '../card-form/card-form.component';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-card-list',
@@ -28,6 +32,9 @@ import { CardFormComponent } from '../card-form/card-form.component';
     MatCheckboxModule,
     MatCardModule,
     MatToolbarModule,
+    MatChipsModule,
+    MatSortModule,
+    MatFormFieldModule,
     FormsModule,
     ReactiveFormsModule
   ],
@@ -37,47 +44,107 @@ import { CardFormComponent } from '../card-form/card-form.component';
 export class CardListComponent implements OnInit {
   cards: Card[] = [];
   filteredCards: Card[] = [];
-  categories: string[] = [];
-  levels: string[] = [];
-  filter: CardFilter = {};
+  allTags: string[] = [];
+  selectedTags: string[] = [];
+  searchControl = new FormControl('');
   selection = new SelectionModel<Card>(true, []);
+  sortBy: 'title' | 'createdAt' = 'createdAt';
+  sortDirection: 'asc' | 'desc' = 'desc';
   
-  displayedColumns: string[] = ['select', 'title', 'category', 'level', 'actions'];
+  displayedColumns: string[] = ['select', 'title', 'tags', 'createdAt', 'actions'];
 
   constructor(private cardService: CardService, private dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.loadCards();
-    this.loadCategories();
-    this.loadLevels();
+    this.loadTags();
+    
+    // Real-time search
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(searchTerm => {
+      this.applyFilters();
+    });
   }
 
   loadCards(): void {
-    this.cardService.getAllCards(this.filter).subscribe(cards => {
+    this.cardService.getAllCards().subscribe(cards => {
       this.cards = cards;
-      this.filteredCards = cards;
+      this.applyFilters();
     });
   }
 
-  loadCategories(): void {
-    this.cardService.getCategories().subscribe(categories => {
-      this.categories = categories;
+  loadTags(): void {
+    this.cardService.getTags().subscribe(tags => {
+      this.allTags = tags;
     });
   }
 
-  loadLevels(): void {
-    this.cardService.getLevels().subscribe(levels => {
-      this.levels = levels;
+  applyFilters(): void {
+    let filtered = [...this.cards];
+    
+    // Apply search filter
+    const searchTerm = this.searchControl.value?.toLowerCase().trim();
+    if (searchTerm) {
+      filtered = filtered.filter(card =>
+        card.title.toLowerCase().includes(searchTerm) ||
+        card.frontText?.toLowerCase().includes(searchTerm) ||
+        card.backText?.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    // Apply tag filter
+    if (this.selectedTags.length > 0) {
+      filtered = filtered.filter(card => {
+        if (!card.tags || card.tags.length === 0) return false;
+        return this.selectedTags.every(tag => 
+          card.tags!.some(cardTag => cardTag.toLowerCase().includes(tag.toLowerCase()))
+        );
+      });
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      if (this.sortBy === 'title') {
+        comparison = a.title.localeCompare(b.title);
+      } else if (this.sortBy === 'createdAt') {
+        const dateA = new Date(a.createdAt!).getTime();
+        const dateB = new Date(b.createdAt!).getTime();
+        comparison = dateB - dateA; // Newest first by default
+      }
+      
+      return this.sortDirection === 'desc' ? comparison : -comparison;
     });
+    
+    this.filteredCards = filtered;
   }
 
-  applyFilter(): void {
-    this.loadCards();
+  toggleTagFilter(tag: string): void {
+    const index = this.selectedTags.indexOf(tag);
+    if (index >= 0) {
+      this.selectedTags.splice(index, 1);
+    } else {
+      this.selectedTags.push(tag);
+    }
+    this.applyFilters();
   }
 
-  clearFilter(): void {
-    this.filter = {};
-    this.loadCards();
+  clearFilters(): void {
+    this.selectedTags = [];
+    this.searchControl.setValue('');
+    this.applyFilters();
+  }
+
+  setSortBy(field: 'title' | 'createdAt'): void {
+    if (this.sortBy === field) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = field;
+      this.sortDirection = field === 'createdAt' ? 'desc' : 'asc';
+    }
+    this.applyFilters();
   }
 
   isAllSelected(): boolean {
@@ -96,26 +163,30 @@ export class CardListComponent implements OnInit {
 
   editCard(card: Card): void {
     const dialogRef = this.dialog.open(CardFormComponent, {
-      width: '800px',
+      width: '1000px',
+      maxHeight: '90vh',
       data: { card }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadCards();
+        this.loadTags(); // Refresh tags in case new ones were added
       }
     });
   }
 
   createCard(): void {
     const dialogRef = this.dialog.open(CardFormComponent, {
-      width: '800px',
+      width: '1000px',
+      maxHeight: '90vh',
       data: {}
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadCards();
+        this.loadTags(); // Refresh tags in case new ones were added
       }
     });
   }
@@ -124,6 +195,7 @@ export class CardListComponent implements OnInit {
     if (confirm(`Delete card "${card.title}"?`)) {
       this.cardService.deleteCard(card.id!).subscribe(() => {
         this.loadCards();
+        this.loadTags(); // Refresh tags
       });
     }
   }
@@ -138,8 +210,8 @@ export class CardListComponent implements OnInit {
     const options = {
       cardIds: selectedCardIds,
       duplex: 'long' as const,
-      titleSize: 26,
-      bodySize: 18,
+      titleSize: 48,
+      bodySize: 36,
       marginMm: 4.0
     };
 
@@ -159,6 +231,7 @@ export class CardListComponent implements OnInit {
       this.cardService.importCards(file).subscribe(result => {
         alert(result.message);
         this.loadCards();
+        this.loadTags();
       });
     }
   }

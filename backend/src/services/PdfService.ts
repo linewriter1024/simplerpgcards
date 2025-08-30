@@ -17,11 +17,11 @@ export class PdfService {
     this.cardService = new CardService();
   }
 
-  private inToPx(inches: number, dpi: number = 300): number {
+  private inToPx(inches: number, dpi: number = 72): number {
     return Math.round(inches * dpi);
   }
 
-  private mmToPx(mm: number, dpi: number = 300): number {
+  private mmToPx(mm: number, dpi: number = 72): number {
     return Math.round(mm / 25.4 * dpi);
   }
 
@@ -59,7 +59,7 @@ export class PdfService {
     titleSize: number,
     bodySize: number,
     marginPx: number,
-    centerVertically: boolean = false
+    isFront: boolean = false
   ): void {
     const { x, y, width, height } = position;
     
@@ -74,39 +74,45 @@ export class PdfService {
     const innerWidth = width - 2 * marginPx;
     const innerHeight = height - 2 * marginPx;
 
+    // Use monospace font
+    const fontName = 'Courier';
+    
     // Draw title
-    const titleText = this.toSmallCaps(title);
-    if (titleText) {
+    if (title) {
       doc.fontSize(titleSize)
-         .font('Helvetica-Bold')
-         .text(titleText, innerX, innerY, {
+         .font(fontName + '-Bold')
+         .text(title, innerX, innerY, {
            width: innerWidth,
-           height: titleSize + 5,
-           align: 'left'
+           height: titleSize + 8, // Smaller spacing for index cards
+           align: isFront ? 'center' : 'left'
          });
     }
 
     // Draw body text
-    const bodyText = this.toSmallCaps(body);
-    if (bodyText) {
-      const bodyY = titleText ? innerY + titleSize + marginPx : innerY;
-      const availableHeight = innerHeight - (titleText ? titleSize + marginPx : 0);
+    if (body) {
+      const titleHeight = title ? titleSize + 12 : 0; // Less spacing after title for index cards
+      const bodyY = title ? innerY + titleHeight : innerY;
+      const availableHeight = innerHeight - titleHeight;
 
       let textY = bodyY;
-      if (centerVertically) {
-        // Estimate text height for centering
-        const estimatedLines = Math.ceil(bodyText.length / (innerWidth / (bodySize * 0.6)));
-        const textHeight = estimatedLines * bodySize * 1.2;
-        textY = bodyY + (availableHeight - textHeight) / 2;
+      
+      // For front cards, center both horizontally and vertically
+      if (isFront) {
+        // Better estimation for index card fonts
+        const avgCharsPerLine = Math.floor(innerWidth / (bodySize * 0.6));
+        const estimatedLines = Math.ceil(body.length / avgCharsPerLine);
+        const lineHeight = bodySize * 1.2; // Tighter line spacing for index cards
+        const textHeight = estimatedLines * lineHeight;
+        textY = bodyY + Math.max(0, (availableHeight - textHeight) / 2);
       }
 
       doc.fontSize(bodySize)
-         .font('Helvetica')
-         .text(bodyText, innerX, textY, {
+         .font(fontName)
+         .text(body, innerX, textY, {
            width: innerWidth,
            height: availableHeight,
-           align: 'left',
-           lineGap: 4
+           align: isFront ? 'center' : 'left',
+           lineGap: Math.max(1, bodySize * 0.1) // Tighter line gap for index cards
          });
     }
   }
@@ -117,8 +123,8 @@ export class PdfService {
     // Get cards from database
     const cards = await this.cardService.getCardsByIds(cardIds);
     
-    // Pad to multiple of 4
-    while (cards.length % 4 !== 0) {
+    // Pad to multiple of 6 (6 cards per page now)
+    while (cards.length % 6 !== 0) {
       cards.push({
         id: '_blank',
         title: '',
@@ -128,46 +134,56 @@ export class PdfService {
     }
 
     const doc = new PDFDocument({ 
-      size: [this.inToPx(11), this.inToPx(8.5)], // Landscape Letter
+      size: 'LETTER', // Use standard letter size
+      layout: 'landscape',
       margins: { top: 0, bottom: 0, left: 0, right: 0 }
     });
 
     const buffers: Buffer[] = [];
     doc.on('data', buffers.push.bind(buffers));
 
-    const pageWidth = this.inToPx(11);
-    const pageHeight = this.inToPx(8.5);
-    const cardWidth = this.inToPx(5);
-    const cardHeight = this.inToPx(3);
-    const marginX = this.inToPx(0.5);
-    const marginY = this.inToPx(1.25);
+    const pageWidth = 792; // 11 inches at 72 DPI
+    const pageHeight = 612; // 8.5 inches at 72 DPI
+    const cardWidth = 216; // 3 inches at 72 DPI (index card width)
+    const cardHeight = 360; // 5 inches at 72 DPI (index card height)
+    const marginX = 36; // 0.5 inches at 72 DPI
+    const marginY = 36; // 0.5 inches at 72 DPI (smaller margins for more cards per page)
     const marginPx = this.mmToPx(marginMm);
 
-    // Card positions on page
+    // Card positions on page (3x5 cards, 6 per page in 2x3 layout)
     const positions: CardPosition[] = [
       { x: marginX, y: marginY, width: cardWidth, height: cardHeight },
-      { x: pageWidth - marginX - cardWidth, y: marginY, width: cardWidth, height: cardHeight },
-      { x: marginX, y: pageHeight - marginY - cardHeight, width: cardWidth, height: cardHeight },
-      { x: pageWidth - marginX - cardWidth, y: pageHeight - marginY - cardHeight, width: cardWidth, height: cardHeight }
+      { x: marginX + cardWidth + marginX, y: marginY, width: cardWidth, height: cardHeight },
+      { x: marginX + 2 * (cardWidth + marginX), y: marginY, width: cardWidth, height: cardHeight },
+      { x: marginX, y: marginY + cardHeight + marginY, width: cardWidth, height: cardHeight },
+      { x: marginX + cardWidth + marginX, y: marginY + cardHeight + marginY, width: cardWidth, height: cardHeight },
+      { x: marginX + 2 * (cardWidth + marginX), y: marginY + cardHeight + marginY, width: cardWidth, height: cardHeight }
     ];
 
-    // Back position mapping based on duplex mode
-    const backMapping = duplex === 'long' ? [1, 0, 3, 2] : [2, 3, 0, 1];
+    // Back position mapping based on duplex mode (for 6 cards)
+    const backMapping = duplex === 'long' ? [2, 1, 0, 5, 4, 3] : [3, 4, 5, 0, 1, 2];
 
-    for (let i = 0; i < cards.length; i += 4) {
-      const pageCards = cards.slice(i, i + 4);
+    for (let i = 0; i < cards.length; i += 6) {
+      const pageCards = cards.slice(i, i + 6);
       
       // Draw front page
       if (i > 0) doc.addPage();
       
-      // Add cut lines
-      doc.moveTo(pageWidth / 2, marginY)
-         .lineTo(pageWidth / 2, pageHeight - marginY)
+      // Add cut lines for 3x2 grid
+      // Vertical lines
+      doc.moveTo(marginX + cardWidth, marginY)
+         .lineTo(marginX + cardWidth, pageHeight - marginY)
          .stroke('#000000')
          .lineWidth(1);
       
-      doc.moveTo(marginX, pageHeight / 2)
-         .lineTo(pageWidth - marginX, pageHeight / 2)
+      doc.moveTo(marginX + 2 * cardWidth + marginX, marginY)
+         .lineTo(marginX + 2 * cardWidth + marginX, pageHeight - marginY)
+         .stroke('#000000')
+         .lineWidth(1);
+      
+      // Horizontal line
+      doc.moveTo(marginX, marginY + cardHeight)
+         .lineTo(pageWidth - marginX, marginY + cardHeight)
          .stroke('#000000')
          .lineWidth(1);
 
@@ -182,7 +198,7 @@ export class PdfService {
             titleSize,
             bodySize,
             marginPx,
-            true // Center vertically for front
+            true // Is front card
           );
         }
       });
@@ -190,14 +206,21 @@ export class PdfService {
       // Draw back page
       doc.addPage();
       
-      // Add cut lines for back page
-      doc.moveTo(pageWidth / 2, marginY)
-         .lineTo(pageWidth / 2, pageHeight - marginY)
+      // Add cut lines for back page (same as front)
+      // Vertical lines
+      doc.moveTo(marginX + cardWidth, marginY)
+         .lineTo(marginX + cardWidth, pageHeight - marginY)
          .stroke('#000000')
          .lineWidth(1);
       
-      doc.moveTo(marginX, pageHeight / 2)
-         .lineTo(pageWidth - marginX, pageHeight / 2)
+      doc.moveTo(marginX + 2 * cardWidth + marginX, marginY)
+         .lineTo(marginX + 2 * cardWidth + marginX, pageHeight - marginY)
+         .stroke('#000000')
+         .lineWidth(1);
+      
+      // Horizontal line
+      doc.moveTo(marginX, marginY + cardHeight)
+         .lineTo(pageWidth - marginX, marginY + cardHeight)
          .stroke('#000000')
          .lineWidth(1);
 
@@ -213,7 +236,7 @@ export class PdfService {
             titleSize,
             bodySize,
             marginPx,
-            false // Top-aligned for back
+            false // Is back card
           );
         }
       });

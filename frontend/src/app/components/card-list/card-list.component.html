@@ -9,38 +9,45 @@
 
 <mat-card class="filter-card">
   <mat-card-header>
-    <mat-card-title>Filters & Actions</mat-card-title>
+    <mat-card-title>Filters & Search</mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <div class="filter-row">
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="search-field">
         <mat-label>Search</mat-label>
-        <input matInput [(ngModel)]="filter.search" placeholder="Search cards...">
+        <input matInput [formControl]="searchControl" placeholder="Search cards...">
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Category</mat-label>
-        <mat-select [(value)]="filter.category">
-          <mat-option value="">All Categories</mat-option>
-          <mat-option *ngFor="let category of categories" [value]="category">
-            {{category}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="sort-buttons">
+        <button mat-stroked-button 
+                [color]="sortBy === 'createdAt' ? 'primary' : undefined"
+                (click)="setSortBy('createdAt')">
+          <mat-icon>{{sortBy === 'createdAt' && sortDirection === 'desc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up'}}</mat-icon>
+          Date Created
+        </button>
+        <button mat-stroked-button 
+                [color]="sortBy === 'title' ? 'primary' : undefined"
+                (click)="setSortBy('title')">
+          <mat-icon>{{sortBy === 'title' && sortDirection === 'desc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up'}}</mat-icon>
+          Title
+        </button>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Level</mat-label>
-        <mat-select [(value)]="filter.level">
-          <mat-option value="">All Levels</mat-option>
-          <mat-option *ngFor="let level of levels" [value]="level">
-            {{level}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <button mat-button (click)="clearFilters()">Clear Filters</button>
+    </div>
 
-      <button mat-raised-button color="primary" (click)="applyFilter()">Apply</button>
-      <button mat-button (click)="clearFilter()">Clear</button>
+    <div class="tags-section" *ngIf="allTags.length > 0">
+      <h4>Filter by Tags:</h4>
+      <div class="tags-grid">
+        <mat-chip-listbox>
+          <mat-chip-option *ngFor="let tag of allTags" 
+                          [selected]="selectedTags.includes(tag)"
+                          (click)="toggleTagFilter(tag)">
+            {{ tag }}
+          </mat-chip-option>
+        </mat-chip-listbox>
+      </div>
     </div>
 
     <div class="action-row">
@@ -54,6 +61,8 @@
         <mat-icon>upload</mat-icon>
         Import Cards
       </button>
+
+      <span class="card-count">{{ filteredCards.length }} cards</span>
     </div>
   </mat-card-content>
 </mat-card>
@@ -79,20 +88,26 @@
       <th mat-header-cell *matHeaderCellDef>Title</th>
       <td mat-cell *matCellDef="let card">
         <div class="card-title">{{card.title}}</div>
-        <div class="card-preview" *ngIf="card.frontText">{{card.frontText | slice:0:100}}...</div>
+        <div class="card-preview card-text" *ngIf="card.frontText">
+          {{card.frontText.length > 100 ? (card.frontText | slice:0:100) + '...' : card.frontText}}
+        </div>
       </td>
     </ng-container>
 
-    <ng-container matColumnDef="category">
-      <th mat-header-cell *matHeaderCellDef>Category</th>
+    <ng-container matColumnDef="tags">
+      <th mat-header-cell *matHeaderCellDef>Tags</th>
       <td mat-cell *matCellDef="let card">
-        <span class="category-chip" *ngIf="card.category">{{card.category}}</span>
+        <div class="tags-container">
+          <span class="tag-chip" *ngFor="let tag of card.tags">{{tag}}</span>
+        </div>
       </td>
     </ng-container>
 
-    <ng-container matColumnDef="level">
-      <th mat-header-cell *matHeaderCellDef>Level</th>
-      <td mat-cell *matCellDef="let card">{{card.level}}</td>
+    <ng-container matColumnDef="createdAt">
+      <th mat-header-cell *matHeaderCellDef>Created</th>
+      <td mat-cell *matCellDef="let card">
+        <span class="date-text">{{card.createdAt | date:'short'}}</span>
+      </td>
     </ng-container>
 
     <ng-container matColumnDef="actions">

@@ -3,11 +3,7 @@ export interface Card {
   title: string;
   frontText?: string;
   backText?: string;
-  category?: string;
-  level?: string;
-  range?: string;
-  duration?: string;
-  notes?: string;
+  tags?: string[]; // Array of tag strings
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -16,16 +12,11 @@ export interface CreateCardDto {
   title: string;
   frontText?: string;
   backText?: string;
-  category?: string;
-  level?: string;
-  range?: string;
-  duration?: string;
-  notes?: string;
+  tags?: string[];
 }
 
 export interface CardFilter {
-  category?: string;
-  level?: string;
+  tags?: string[];
   search?: string;
 }
 

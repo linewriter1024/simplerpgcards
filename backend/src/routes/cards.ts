@@ -12,11 +12,8 @@ const cardValidation = [
   body('title').notEmpty().withMessage('Title is required'),
   body('frontText').optional().isString(),
   body('backText').optional().isString(),
-  body('category').optional().isString(),
-  body('level').optional().isString(),
-  body('range').optional().isString(),
-  body('duration').optional().isString(),
-  body('notes').optional().isString(),
+  body('tags').optional().isArray(),
+  body('tags.*').optional().isString(),
 ];
 
 const pdfValidation = [
@@ -33,8 +30,7 @@ const uuidValidation = [
 
 // Routes
 router.get('/cards', cardController.getAllCards.bind(cardController));
-router.get('/cards/categories', cardController.getCategories.bind(cardController));
-router.get('/cards/levels', cardController.getLevels.bind(cardController));
+router.get('/cards/tags', cardController.getTags.bind(cardController));
 router.get('/cards/:id', uuidValidation, cardController.getCardById.bind(cardController));
 router.post('/cards', cardValidation, cardController.createCard.bind(cardController));
 router.put('/cards/:id', [...uuidValidation, ...cardValidation], cardController.updateCard.bind(cardController));

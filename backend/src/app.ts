@@ -39,13 +39,6 @@ async function startServer() {
     await AppDataSource.initialize();
     console.log('Database connected successfully');
     
-    // Seed sample data in development
-    if (process.env.NODE_ENV !== 'production') {
-      const { DataSeeder } = await import('./utils/DataSeeder');
-      const seeder = new DataSeeder();
-      await seeder.seedCards();
-    }
-    
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

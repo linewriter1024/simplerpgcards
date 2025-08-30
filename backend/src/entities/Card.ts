@@ -14,20 +14,8 @@ export class Card {
   @Column({ type: 'text', nullable: true })
   backText: string;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  category: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  level: string;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  range: string;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  duration: string;
-
   @Column({ type: 'text', nullable: true })
-  notes: string;
+  tags: string; // JSON string array of tags
 
   @CreateDateColumn()
   createdAt: Date;

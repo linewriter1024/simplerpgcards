@@ -13,8 +13,9 @@ export class CardService {
 
   getAllCards(filter?: CardFilter): Observable<Card[]> {
     let params = new HttpParams();
-    if (filter?.category) params = params.set('category', filter.category);
-    if (filter?.level) params = params.set('level', filter.level);
+    if (filter?.tags && filter.tags.length > 0) {
+      params = params.set('tags', filter.tags.join(','));
+    }
     if (filter?.search) params = params.set('search', filter.search);
 
     return this.http.get<Card[]>(`${this.baseUrl}/cards`, { params });
@@ -36,12 +37,8 @@ export class CardService {
     return this.http.delete<void>(`${this.baseUrl}/cards/${id}`);
   }
 
-  getCategories(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.baseUrl}/cards/categories`);
-  }
-
-  getLevels(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.baseUrl}/cards/levels`);
+  getTags(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/cards/tags`);
   }
 
   generatePdf(options: PdfGenerationOptions): Observable<Blob> {

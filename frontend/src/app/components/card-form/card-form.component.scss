@@ -2,16 +2,27 @@
   display: flex;
   gap: 24px;
   min-height: 600px;
+  background-color: #1e1e1e;
+  padding: 16px;
+  border-radius: 8px;
 }
 
 .form-section {
   flex: 1;
   min-width: 400px;
+  background-color: #242424;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #404040;
 }
 
 .preview-section {
   flex: 1;
   min-width: 300px;
+  background-color: #242424;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #404040;
 }
 
 .full-width {
@@ -29,7 +40,7 @@
 
 h3 {
   margin: 0 0 16px 0;
-  color: #333;
+  color: #e0e0e0;
   font-weight: 500;
 }
 
@@ -37,6 +48,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  align-items: center; // Center the narrow preview cards
 }
 
 .card-preview {
@@ -44,24 +56,40 @@ h3 {
     margin: 0 0 8px 0;
     font-size: 14px;
     font-weight: 500;
-    color: #666;
+    color: #b0b0b0;
+    text-align: center; // Center the labels
   }
 }
 
 .preview-card {
-  border: 2px solid #ddd;
+  border: 2px solid #666666;
   border-radius: 8px;
   padding: 16px;
-  min-height: 120px;
-  background: #fafafa;
-  font-family: 'Roboto Mono', monospace;
+  min-height: 144px; // 3x5 aspect ratio scaled to fit preview
+  max-height: 240px; // 3x5 aspect ratio scaled to fit preview
+  width: 144px; // 3" scaled to fit preview (3" = 3*48px at preview scale)
+  height: 240px; // 5" scaled to fit preview (5" = 5*48px at preview scale)
+  background: #2a2a2a;
+  font-family: 'JetBrains Mono', 'Roboto Mono', 'Courier New', monospace;
+  color: #e0e0e0;
+  font-size: 12px; // Scaled down from 18pt for preview
+  line-height: 1.3;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  overflow: hidden; // Prevent content from overflowing
   
-  pre {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.4;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  &.front {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .card-title {
+    font-weight: bold;
+    font-size: 16px; // Scaled down from 26pt for preview
+    margin-bottom: 8px;
   }
 }
 
@@ -73,4 +101,23 @@ mat-dialog-content {
 mat-dialog-actions {
   margin: 0;
   padding: 16px 24px;
+}
+
+// Dark theme chip styling
+mat-chip-grid {
+  background: transparent !important;
+  border: 1px solid #666666 !important;
+  border-radius: 4px;
+  padding: 4px;
+  min-height: 48px;
+}
+
+.mat-mdc-chip {
+  background-color: #404040 !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #666666 !important;
+}
+
+.mat-mdc-chip.mdc-evolution-chip--selected {
+  background-color: #6200ea !important;
 }
