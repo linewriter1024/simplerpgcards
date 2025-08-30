@@ -163,8 +163,8 @@ export class CardListComponent implements OnInit {
 
   editCard(card: Card): void {
     const dialogRef = this.dialog.open(CardFormComponent, {
-      width: '1000px',
-      maxHeight: '90vh',
+      width: '1200px', // Increased from 1000px to accommodate larger preview cards
+      maxHeight: '95vh', // Increased from 90vh
       data: { card }
     });
 
@@ -178,8 +178,8 @@ export class CardListComponent implements OnInit {
 
   createCard(): void {
     const dialogRef = this.dialog.open(CardFormComponent, {
-      width: '1000px',
-      maxHeight: '90vh',
+      width: '1200px', // Increased from 1000px to accommodate larger preview cards
+      maxHeight: '95vh', // Increased from 90vh
       data: {}
     });
 

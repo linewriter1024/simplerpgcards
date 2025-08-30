@@ -21,26 +21,29 @@ This is a full-stack TypeScript application with:
 - ✅ Bulk selection for PDF generation
 - ✅ Sortable card list by title or creation date
 
-### PDF Generation
-- ✅ Professional index card layout (3×5 inch cards, 6 cards per page)
-- ✅ Duplex printing support (long/short edge)
-- ✅ Monospace fonts (Courier) for better readability
-- ✅ Centered front text, left-aligned back text
-- ✅ Index card appropriate font sizes (26pt title, 18pt body)
-- ✅ 72 DPI optimized for proper print scaling
-- ✅ Configurable fonts and margins
-- ✅ Cut lines for easy separation
+## Card Specifications
+
+- **Size**: Standard 5×3 inch index cards (landscape orientation)
+- **Layout**: 4 cards per page in 2×2 grid layout
+- **Font**: Courier (monospace) with proper small caps styling
+- **Font Sizes**: 
+  - Title: ~12pt (same as body, bold for distinction)
+  - Body: ~12pt (calculated as card height ÷ 18)
+- **Typography**: True small caps with `font-variant: small-caps`
+- **Preview**: Pixel-accurate 360×216px (5×3 inches at 72 DPI) 
+- **PDF Output**: Print-ready with inline browser viewing
 
 ### User Interface
 - ✅ Dark theme throughout the application
 - ✅ Modern Material Design interface with dark styling
 - ✅ Monospace fonts for card text (JetBrains Mono/Roboto Mono)
 - ✅ Responsive layout optimized for dark theme
-- ✅ Live card preview while editing with accurate 3×5 aspect ratio scaling
+- ✅ Live card preview with 5×3 landscape aspect ratio (200×120px)
 - ✅ Intuitive tag-based filtering system
 - ✅ Real-time search with debouncing
 - ✅ Advanced sorting and filtering options
-- ✅ Index card-sized preview with proper font scaling
+- ✅ Index card preview with dynamic font scaling (24px title, 16px body)
+- ✅ Compact tag input with proper styling
 
 ## Getting Started
 

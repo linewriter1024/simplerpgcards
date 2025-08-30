@@ -121,15 +121,13 @@ export class CardController {
       const options: PdfGenerationOptions = {
         cardIds: req.body.cardIds || [],
         duplex: req.body.duplex || 'long',
-        titleSize: req.body.titleSize || 26,
-        bodySize: req.body.bodySize || 18,
         marginMm: req.body.marginMm || 4.0,
       };
 
       const pdfBuffer = await this.pdfService.generatePdf(options);
       
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename=rpg-cards.pdf');
+      res.setHeader('Content-Disposition', 'inline; filename=rpg-cards.pdf');
       res.send(pdfBuffer);
     } catch (error) {
       console.error('Error generating PDF:', error);

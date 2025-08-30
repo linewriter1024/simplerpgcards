@@ -19,8 +19,8 @@ const cardValidation = [
 const pdfValidation = [
   body('cardIds').isArray({ min: 1 }).withMessage('At least one card ID is required'),
   body('duplex').optional().isIn(['long', 'short']),
-  body('titleSize').optional().isInt({ min: 8, max: 72 }),
-  body('bodySize').optional().isInt({ min: 8, max: 72 }),
+  body('titleSize').optional().isInt({ min: 8, max: 48 }),
+  body('bodySize').optional().isInt({ min: 6, max: 36 }),
   body('marginMm').optional().isFloat({ min: 0, max: 20 }),
 ];
 

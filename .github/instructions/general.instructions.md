@@ -9,3 +9,4 @@ applyTo: "**"
 * Do not run the frontend
 * Do not start development servers or any processes that would normally run continuously
 * Focus on code changes, file modifications, and documentation updates only
+* Do not ever add changes for debugging. I debug manually.

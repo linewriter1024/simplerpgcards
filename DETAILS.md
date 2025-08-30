@@ -5,17 +5,22 @@ This document contains detailed technical information about the RPG Cards full-s
 ## Recent Updates - Index Card Optimization
 
 ### PDF Generation Enhancements (August 30, 2025)
-- **Card Dimensions**: Updated to standard 3×5 inch index cards (216×360 pixels at 72 DPI)
-- **Layout**: Changed from 2×2 to 3×2 grid layout (6 cards per page)
-- **Font Sizing**: Optimized to 26pt titles and 18pt body text for index card readability
-- **DPI Setting**: 72 DPI for accurate print scaling
-- **Margins**: Reduced page margins for better card density
+- **Card Dimensions**: Standard 5×3 inch landscape index cards (360×216 pixels at 72 DPI)
+- **Layout**: 2×2 grid layout (4 cards per page) for optimal printing
+- **Dynamic Font Sizing**: Unified sizing - both title and body at height/18 (≈12pt) with bold for titles
+- **True Small Caps**: Proper small caps implementation using font-variant and character conversion
+- **DPI Setting**: 72 DPI for accurate print scaling (standard for PDFs)
+- **PDF Display**: Opens inline in browser instead of forced download
+- **Margins**: Calculated margins for centered card placement on page
+- **Typography**: Reduced font sizes for better fit and readability
 
 ### Frontend Preview Updates
-- **Aspect Ratio**: Preview cards now use accurate 3×5 proportions (144×240px)
-- **Font Scaling**: Preview fonts scaled appropriately (16pt title, 12pt body)
-- **Layout**: Centered preview cards with proper visual hierarchy
-- **Typography**: Maintained monospace fonts with better line spacing for index cards
+- **Pixel-Accurate Preview**: Exact 360×216px size matching PDF output for precise text fitting
+- **True Small Caps**: CSS `font-variant: small-caps` for proper typography rendering
+- **Unified Font Sizes**: Both title and body at 12px (matching PDF scaling) with bold distinction
+- **Enhanced Dialog**: Increased to 1200px width and 95vh height to accommodate larger previews
+- **Layout**: Optimized sections with proper spacing for full-size card previews
+- **Typography**: Monospace fonts with proper small caps and letter spacing
 
 ## Table of Contents
 - [Project Overview](#project-overview)

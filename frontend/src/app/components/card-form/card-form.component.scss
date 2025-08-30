@@ -1,7 +1,7 @@
 .form-container {
   display: flex;
   gap: 24px;
-  min-height: 600px;
+  min-height: 700px; // Increased to accommodate larger preview cards
   background-color: #1e1e1e;
   padding: 16px;
   border-radius: 8px;
@@ -9,7 +9,7 @@
 
 .form-section {
   flex: 1;
-  min-width: 400px;
+  min-width: 450px; // Slightly increased
   background-color: #242424;
   padding: 16px;
   border-radius: 8px;
@@ -18,7 +18,7 @@
 
 .preview-section {
   flex: 1;
-  min-width: 300px;
+  min-width: 400px; // Increased to accommodate 360px cards + padding
   background-color: #242424;
   padding: 16px;
   border-radius: 8px;
@@ -64,20 +64,23 @@ h3 {
 .preview-card {
   border: 2px solid #666666;
   border-radius: 8px;
-  padding: 16px;
-  min-height: 144px; // 3x5 aspect ratio scaled to fit preview
-  max-height: 240px; // 3x5 aspect ratio scaled to fit preview
-  width: 144px; // 3" scaled to fit preview (3" = 3*48px at preview scale)
-  height: 240px; // 5" scaled to fit preview (5" = 5*48px at preview scale)
+  padding: 12px;
+  // Exact 5x3 inch index card size at 72 DPI for pixel-accurate preview
+  width: 360px; // 5 inches * 72 DPI 
+  height: 216px; // 3 inches * 72 DPI
   background: #2a2a2a;
   font-family: 'JetBrains Mono', 'Roboto Mono', 'Courier New', monospace;
   color: #e0e0e0;
-  font-size: 12px; // Scaled down from 18pt for preview
-  line-height: 1.3;
+  // Reduced font size to match PDF: 3" height / 18 = 0.167" = 12pt
+  font-size: 12px; 
+  line-height: 1.2;
   white-space: pre-wrap;
   word-wrap: break-word;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  overflow: hidden; // Prevent content from overflowing
+  overflow: hidden;
+  // Proper small caps using CSS font-variant
+  font-variant: small-caps;
+  letter-spacing: 0.5px;
   
   &.front {
     text-align: center;
@@ -88,14 +91,24 @@ h3 {
 
   .card-title {
     font-weight: bold;
-    font-size: 16px; // Scaled down from 26pt for preview
-    margin-bottom: 8px;
+    // Same size as body - consistent 12px for both title and body
+    font-size: 12px; 
+    margin-bottom: 6px;
+    font-variant: small-caps;
+    letter-spacing: 1px;
+  }
+  
+  .card-text {
+    font-variant: small-caps;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
   }
 }
 
 mat-dialog-content {
-  max-height: 80vh;
+  max-height: 90vh; // Increased from 80vh to accommodate larger cards
   overflow-y: auto;
+  max-width: 95vw; // Add max width to handle wider dialog
 }
 
 mat-dialog-actions {
@@ -104,18 +117,39 @@ mat-dialog-actions {
 }
 
 // Dark theme chip styling
+mat-form-field:has(mat-chip-grid) {
+  .mat-mdc-form-field-flex {
+    background: transparent !important;
+  }
+  
+  .mdc-text-field {
+    background: transparent !important;
+  }
+  
+  // Reduce the height of the form field
+  .mat-mdc-form-field-infix {
+    min-height: auto;
+    padding: 8px 0;
+  }
+}
+
 mat-chip-grid {
   background: transparent !important;
-  border: 1px solid #666666 !important;
-  border-radius: 4px;
+  min-height: auto !important;
   padding: 4px;
-  min-height: 48px;
+}
+
+// Make sure the input inside chip grid is properly sized
+mat-chip-grid input {
+  min-height: 24px !important;
+  height: 24px !important;
 }
 
 .mat-mdc-chip {
   background-color: #404040 !important;
   color: #e0e0e0 !important;
   border: 1px solid #666666 !important;
+  height: 28px !important; // Reduce chip height
 }
 
 .mat-mdc-chip.mdc-evolution-chip--selected {

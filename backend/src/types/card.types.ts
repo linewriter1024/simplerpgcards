@@ -15,7 +15,7 @@ export interface CardFilter {
 export interface PdfGenerationOptions {
   cardIds: string[];
   duplex: 'long' | 'short';
-  titleSize: number;
-  bodySize: number;
+  titleSize?: number;  // Optional - will be calculated if not provided
+  bodySize?: number;   // Optional - will be calculated if not provided
   marginMm: number;
 }
