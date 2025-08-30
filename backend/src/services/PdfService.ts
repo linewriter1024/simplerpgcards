@@ -76,10 +76,10 @@ export class PdfService {
   ): void {
     const { x, y, width, height } = position;
     
-    // Draw border
+    // Draw border - thinner border
     doc.rect(x, y, width, height)
        .stroke('#000000')
-       .lineWidth(2);
+       .lineWidth(1);
 
     // Calculate inner bounds
     const innerX = x + marginPx;
@@ -135,13 +135,35 @@ export class PdfService {
         // Use smaller font size for title (0.75x)
         const titleFontSize = Math.round(bodySize * 0.75);
         
-        // Split body into lines to get first line
-        const bodyLines = bodyText.split('\n');
-        const firstBodyLine = bodyLines[0] || '';
-        const remainingBodyLines = bodyLines.slice(1).join('\n');
+        // Calculate how much width the title + separator takes up
+        const titleAndSeparator = `${titleText} | `;
+        const titleWidth = titleAndSeparator.length * (titleFontSize * 0.6); // Estimate width
+        const remainingWidth = innerWidth - titleWidth;
         
-        // Create first line with title and first body line
-        const firstLine = `${titleText} | ${firstBodyLine}`;
+        // Wrap body text accounting for the title space on first line
+        const avgCharWidth = bodySize * 0.6;
+        const firstLineMaxChars = Math.floor(remainingWidth / avgCharWidth);
+        const otherLinesMaxChars = Math.floor(innerWidth / avgCharWidth);
+        
+        // Split body text considering first line width constraint
+        const bodyWords = bodyText.split(' ');
+        const lines: string[] = [];
+        let currentLine = '';
+        let isFirstLine = true;
+        
+        for (const word of bodyWords) {
+          const maxChars = isFirstLine ? firstLineMaxChars : otherLinesMaxChars;
+          if (currentLine.length + word.length + 1 <= maxChars) {
+            currentLine += (currentLine ? ' ' : '') + word;
+          } else {
+            if (currentLine) {
+              lines.push(currentLine);
+              isFirstLine = false;
+            }
+            currentLine = word;
+          }
+        }
+        if (currentLine) lines.push(currentLine);
         
         // Draw the first line with title formatting for title part
         doc.fontSize(titleFontSize)
@@ -152,6 +174,7 @@ export class PdfService {
            });
            
         // Continue with first body line in normal font
+        const firstBodyLine = lines[0] || '';
         doc.fontSize(bodySize)
            .font(fontName)
            .text(firstBodyLine, {
@@ -160,10 +183,12 @@ export class PdfService {
            });
         
         // Draw remaining body lines if any
-        if (remainingBodyLines.trim()) {
+        const remainingLines = lines.slice(1);
+        if (remainingLines.length > 0) {
+          const remainingText = remainingLines.join('\n');
           doc.fontSize(bodySize)
              .font(fontName)
-             .text(remainingBodyLines, innerX, doc.y + Math.max(1, bodySize * 0.1), {
+             .text(remainingText, innerX, doc.y + Math.max(1, bodySize * 0.1), {
                width: innerWidth,
                align: 'left',
                lineGap: Math.max(1, bodySize * 0.1)

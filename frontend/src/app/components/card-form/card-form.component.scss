@@ -11,6 +11,27 @@
   }
 }
 
+.dialog-title-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  
+  .title-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .close-button {
+    color: #e0e0e0;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
 .form-container {
   display: flex;
   gap: 24px;
@@ -146,6 +167,27 @@ mat-dialog-content {
 mat-dialog-actions {
   margin: 0;
   padding: 16px 24px;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  
+  .bulk-add-section {
+    margin: 0;
+    padding: 8px 12px;
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    border: 1px solid #404040;
+    
+    mat-checkbox {
+      color: #e0e0e0;
+    }
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
 }
 
 // Dark theme chip styling

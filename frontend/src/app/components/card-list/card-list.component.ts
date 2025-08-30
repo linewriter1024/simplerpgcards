@@ -198,17 +198,29 @@ export class CardListComponent implements OnInit {
   }
 
   isAllSelected(): boolean {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.filteredCards.length;
-    return numSelected === numRows;
+    const numSelectedInFiltered = this.selection.selected.filter(card => 
+      this.filteredCards.includes(card)
+    ).length;
+    const numFilteredRows = this.filteredCards.length;
+    return numFilteredRows > 0 && numSelectedInFiltered === numFilteredRows;
+  }
+
+  isIndeterminate(): boolean {
+    const numSelectedInFiltered = this.selection.selected.filter(card => 
+      this.filteredCards.includes(card)
+    ).length;
+    const numFilteredRows = this.filteredCards.length;
+    return numSelectedInFiltered > 0 && numSelectedInFiltered < numFilteredRows;
   }
 
   toggleAllRows(): void {
     if (this.isAllSelected()) {
-      this.selection.clear();
-      return;
+      // Deselect only the currently filtered cards
+      this.filteredCards.forEach(card => this.selection.deselect(card));
+    } else {
+      // Select all currently filtered cards (preserving existing selections outside filter)
+      this.selection.select(...this.filteredCards);
     }
-    this.selection.select(...this.filteredCards);
   }
 
   toggleRowSelection(row: Card): void {
@@ -221,13 +233,31 @@ export class CardListComponent implements OnInit {
       maxWidth: '100vw',
       maxHeight: '95vh',
       panelClass: 'fullscreen-width-dialog',
-      data: { card }
+      data: { 
+        card,
+        onCardSaved: (savedCard: any) => {
+          // Refresh the list whenever a card is saved, even in bulk-add mode
+          this.loadCards();
+          this.loadTags();
+        }
+      }
+    });
+
+    // Focus the title input after the dialog has fully opened
+    dialogRef.afterOpened().subscribe(() => {
+      const titleInput = dialogRef.componentInstance.titleInput;
+      if (titleInput) {
+        setTimeout(() => {
+          titleInput.nativeElement.focus();
+        }, 50);
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        // Final refresh when dialog closes (for non-bulk-add cases)
         this.loadCards();
-        this.loadTags(); // Refresh tags in case new ones were added
+        this.loadTags();
       }
     });
   }
@@ -238,13 +268,30 @@ export class CardListComponent implements OnInit {
       maxWidth: '100vw',
       maxHeight: '95vh',
       panelClass: 'fullscreen-width-dialog',
-      data: {}
+      data: { 
+        onCardSaved: (card: any) => {
+          // Refresh the list whenever a card is saved, even in bulk-add mode
+          this.loadCards();
+          this.loadTags();
+        }
+      }
+    });
+
+    // Focus the title input after the dialog has fully opened
+    dialogRef.afterOpened().subscribe(() => {
+      const titleInput = dialogRef.componentInstance.titleInput;
+      if (titleInput) {
+        setTimeout(() => {
+          titleInput.nativeElement.focus();
+        }, 50);
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadCards();
         this.loadTags(); // Refresh tags in case new ones were added
+        // No need to handle bulk-add here anymore - it's handled within the dialog
       }
     });
   }
@@ -254,6 +301,34 @@ export class CardListComponent implements OnInit {
       this.cardService.deleteCard(card.id!).subscribe(() => {
         this.loadCards();
         this.loadTags(); // Refresh tags
+      });
+    }
+  }
+
+  deleteAllSelected(): void {
+    const selectedCards = this.selection.selected;
+    if (selectedCards.length === 0) {
+      return;
+    }
+
+    const count = selectedCards.length;
+    const message = count === 1 
+      ? `Delete the selected card "${selectedCards[0].title}"?`
+      : `Delete all ${count} selected cards?`;
+
+    if (confirm(message)) {
+      // Delete all selected cards
+      const deletePromises = selectedCards.map(card => 
+        this.cardService.deleteCard(card.id!).toPromise()
+      );
+
+      Promise.all(deletePromises).then(() => {
+        this.selection.clear(); // Clear selection
+        this.loadCards(); // Refresh the list
+        this.loadTags(); // Refresh tags
+      }).catch(error => {
+        console.error('Error deleting cards:', error);
+        alert('Error deleting some cards. Please try again.');
       });
     }
   }

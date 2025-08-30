@@ -22,6 +22,7 @@ This is a full-stack TypeScript application with:
 - ✅ Multiple tag selection and filtering
 - ✅ Bulk selection for PDF generation
 - ✅ Sortable card list by title or creation date
+- ✅ Bulk-add mode for creating multiple similar cards with shared tags and content
 
 ## Card Specifications
 
@@ -49,6 +50,16 @@ This is a full-stack TypeScript application with:
 - ✅ Sortable table headers for title and creation date
 - ✅ Index card preview with dynamic font scaling (24px title, 16px body)
 - ✅ Compact tag input with proper styling and improved vertical spacing
+- ✅ Bulk-add mode with checkbox for creating multiple similar cards efficiently
+- ✅ "Update, then add" feature for continuing with similar cards after editing
+- ✅ In-dialog bulk-add workflow that resets form without closing dialog
+- ✅ Real-time card list refresh during bulk-add sessions
+- ✅ Improved form navigation with optimized tab order, X close button, Ctrl+Enter shortcut, and auto-focus on title field
+- ✅ Card list displays front and back text separated by backslash with ellipsis overflow handling
+- ✅ Fixed table column width constraints (title column limited to 40% width) to prevent row overflow
+- ✅ Improved PDF card border thickness (reduced from 2px to 1px) and fixed text wrapping on card backs
+- ✅ Enhanced "Select All" checkbox to operate only on filtered results while preserving existing selections
+- ✅ Added "Delete All Selected" button in the filter section for bulk deletion of selected cards with confirmation dialog
 
 ## Getting Started
 
