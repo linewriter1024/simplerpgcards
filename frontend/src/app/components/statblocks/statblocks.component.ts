@@ -22,7 +22,7 @@ import { StatblockViewComponent } from './statblock-view/statblock-view.componen
   styleUrl: './statblocks.component.scss'
 })
 export class StatblocksComponent implements OnInit {
-  currentMode: 'edit' | 'view' = 'edit';
+  currentMode: 'edit' | 'view' = 'view';
 
   constructor(
     private router: Router,
@@ -32,17 +32,17 @@ export class StatblocksComponent implements OnInit {
   ngOnInit(): void {
     // Determine mode from route
     const url = this.router.url;
-    if (url.includes('/view')) {
-      this.currentMode = 'view';
-    } else {
+    if (url.includes('/edit')) {
       this.currentMode = 'edit';
+    } else {
+      this.currentMode = 'view';
     }
   }
 
   switchMode(mode: 'edit' | 'view'): void {
     this.currentMode = mode;
     const baseUrl = '/statblocks';
-    const targetUrl = mode === 'edit' ? baseUrl : `${baseUrl}/${mode}`;
+    const targetUrl = mode === 'view' ? baseUrl : `${baseUrl}/${mode}`;
     this.router.navigate([targetUrl]);
   }
 }

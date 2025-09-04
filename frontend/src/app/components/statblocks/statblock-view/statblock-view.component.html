@@ -1,6 +1,9 @@
 <div class="view-container">
   <!-- Left Sidebar -->
   <div class="sidebar">
+    <div class="sidebar-toggle">
+      <mat-icon>chevron_right</mat-icon>
+    </div>
     <div class="sidebar-content">
       <h3>Statblocks</h3>
       
@@ -126,6 +129,11 @@
               <div class="field compact-field">
                 <div class="field-label">CR</div>
                 <div class="field-value">{{statblock.cr}}</div>
+              </div>
+
+              <div class="field compact-field">
+                <div class="field-label">EXP</div>
+                <div class="field-value">{{calculateExperience(statblock.cr)}}</div>
               </div>
 
               <div class="field compact-field">

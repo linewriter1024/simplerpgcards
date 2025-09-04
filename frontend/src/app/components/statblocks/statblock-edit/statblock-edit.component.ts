@@ -363,6 +363,7 @@ export class StatblockEditComponent implements OnInit {
 
     const statblockData: CreateStatBlockDto = {
       name: row.name,
+      type: row.type,
       cr: row.cr,
       ac: row.ac,
       str: row.str,

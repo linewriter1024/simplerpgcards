@@ -49,11 +49,14 @@ This separation provides:
 - ✅ Bulk-add mode for creating multiple similar cards with shared tags and content
 
 #### Statblocks Mode (NEW)
-- ✅ **Edit Mode**: Left sidebar interface with comprehensive controls
-  - **Sidebar Layout**: 300px left sidebar containing search, actions, selection, and mode switching
+- ✅ **Edit Mode**: Collapsible left sidebar interface with comprehensive controls
+  - **Collapsible Sidebar**: 60px collapsed, expands to 300px on hover with visual indicator
+  - **Dark Theme**: Consistent dark theme matching the overall application design
+  - **Sidebar Layout**: Contains search, actions, selection, and mode switching in organized sections
   - **Main Content**: Flexible editing area with intelligent textarea sizing
   - Create and edit statblocks in space-efficient horizontal layouts
   - Support for D&D 5e statblock format with ability scores (STR, DEX, CON, INT, WIS, CHA)
+  - **Complete Type Field Support**: Type field now properly saves and persists across edit/view modes
   - Multi-line text-based attacks, spells, skills, resistances, tags, and notes inputs
   - **Smart Textarea Wrapping**: Automatic textarea height calculation based on real field dimensions (140px effective width, 7px character width = ~20 characters per line) with extra padding for editing
   - Individual save buttons per row with visual indicators for unsaved changes
@@ -63,13 +66,19 @@ This separation provides:
   - Visual indicators for new rows (green) and unsaved changes (yellow)
   - **Responsive Design**: Custom flex layout optimized for space efficiency
     - Desktop: Horizontal layout with abilities inline and text fields in bottom row
-    - Mobile: Vertical stack layout with proper field organization and collapsible sidebar
+    - Mobile: Vertical stack layout with proper field organization and full-width sidebar
     - Eliminates vertical scrolling by maximizing horizontal space usage
     - No table headers or unnecessary vertical padding
-- ✅ **View Mode**: Left sidebar interface matching edit mode design
-  - **Sidebar Layout**: 300px left sidebar with search, tag management, selection, and bulk actions
+- ✅ **View Mode**: Collapsible left sidebar interface matching edit mode design
+  - **Default Mode**: View mode is now the default when accessing /statblocks
+  - **Collapsible Sidebar**: 60px collapsed, expands to 300px on hover with visual indicator
+  - **Dark Theme**: Consistent dark theme across all interface elements
+  - **Sidebar Layout**: Contains search, tag management, selection, and bulk actions in organized sections
   - **Main Content**: Flexible view area optimized for readability and space efficiency
-  - **Two-Row Layout**: Basic info (name, CR, AC, abilities) in top row, text fields (attacks, spells, skills, etc.) in bottom row
+  - **Compact Name Field**: Name field only takes the space it needs (120-200px) instead of excessive space
+  - **EXP Calculation**: Added Experience Points field next to CR using official D&D 5e formula
+  - **Two-Row Layout**: Basic info (name, type, CR, EXP, AC, abilities) in top row, text fields (attacks, spells, skills, etc.) in bottom row
+  - **Type Field Display**: Type field now properly displays next to name when present
   - **Flexible Sizing**: All fields use flex-grow properties instead of fixed widths for better space utilization
   - **Improved Readability**: Larger text sizes (14px field values, 13px list items, 11px labels) for better visibility
   - **Generous Text Fields**: Attacks and spells fields given higher flex priority for more space
@@ -87,10 +96,12 @@ This separation provides:
   - Calculated D&D modifiers display (e.g., STR 16 → +3, DEX 14 → +2)
   - **Spell Slots**: Space-delimited input in edit mode, formatted as ordinals (1st, 2nd, 3rd, etc.) in view mode
 - ✅ **Integrated Mode Switching**: Mode switcher buttons integrated into component sidebars for seamless navigation
-- ✅ **Consistent UI**: Both edit and view modes use identical sidebar layouts for unified user experience
+- ✅ **Consistent UI**: Both edit and view modes use identical collapsible sidebar layouts for unified user experience
+- ✅ **Space Optimization**: Collapsible sidebars maximize content area while keeping controls accessible
 - ✅ Complete CRUD operations for statblocks
 - ✅ Tag-based categorization system for statblocks
 - ✅ Challenge Rating (CR) and Armor Class (AC) tracking
+- ✅ **Experience Points**: Automatic EXP calculation from CR using official D&D 5e values
 
 ### Navigation
 - ✅ Top navigation bar with mode switching buttons
