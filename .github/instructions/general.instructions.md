@@ -2,7 +2,7 @@
 applyTo: "**"
 ---
 
-* IMPORTANT: Whenever making any change, update the README.md file to reflect the change.
+* IMPORTANT: Whenever making any change, update the README.md file to reflect the change. Ensure the README file is not just a list of recent changes, but only an up-to-date README.
 * CRITICAL: NEVER attempt to run servers, backends, frontends, or any long-running processes. They are asynchronous and will be non-functional in this environment.
 * Do not try to run the servers. They are asynchronous, and will simply be un-runnable
 * Do not run the backend

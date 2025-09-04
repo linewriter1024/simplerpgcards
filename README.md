@@ -36,6 +36,10 @@ This separation provides:
 
 ## Features
 
+### Build Configuration
+- ✅ **No Bundle Size Limits**: Removed Angular budget constraints to allow unlimited bundle and component style sizes
+- ✅ **Optimized for Development**: Focus on functionality over arbitrary size restrictions
+
 ### Application Modes
 
 #### Printable Cards Mode
