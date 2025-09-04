@@ -192,7 +192,7 @@
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Resistances</mat-label>
                 <textarea matInput [(ngModel)]="row.resistancesText" (input)="onResistancesChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.resistancesText)"></textarea>
+                          placeholder="one per line" [rows]="getTextareaRows(row.resistancesText, resistancesTextarea)" #resistancesTextarea></textarea>
               </mat-form-field>
 
               <!-- Abilities with Material labels -->
@@ -227,25 +227,25 @@
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Attacks</mat-label>
                 <textarea matInput [(ngModel)]="row.attacksText" (input)="onAttacksChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.attacksText)"></textarea>
+                          placeholder="one per line" [rows]="getTextareaRows(row.attacksText, attacksTextarea)" #attacksTextarea></textarea>
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Spells</mat-label>
                 <textarea matInput [(ngModel)]="row.spellsText" (input)="onSpellsChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.spellsText)"></textarea>
+                          placeholder="one per line" [rows]="getTextareaRows(row.spellsText, spellsTextarea)" #spellsTextarea></textarea>
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Skills</mat-label>
                 <textarea matInput [(ngModel)]="row.skillsText" (input)="onSkillsChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.skillsText)"></textarea>
+                          placeholder="one per line" [rows]="getTextareaRows(row.skillsText, skillsTextarea)" #skillsTextarea></textarea>
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Notes</mat-label>
                 <textarea matInput [(ngModel)]="row.notes" (input)="onFieldChange(row)" 
-                          placeholder="general notes" [rows]="getTextareaRows(row.notes)"></textarea>
+                          placeholder="general notes" [rows]="getTextareaRows(row.notes, notesTextarea)" #notesTextarea></textarea>
               </mat-form-field>
             </div>
           </div>

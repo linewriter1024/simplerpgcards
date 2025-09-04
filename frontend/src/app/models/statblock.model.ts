@@ -18,6 +18,7 @@ export interface StatBlock {
   skills: string[];
   resistances: string[];
   tags: string[];
+  notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -55,6 +56,7 @@ export interface CreateStatBlockDto {
   skills: string[];
   resistances: string[];
   tags: string[];
+  notes?: string;
 }
 
 export interface StatBlockFilter {

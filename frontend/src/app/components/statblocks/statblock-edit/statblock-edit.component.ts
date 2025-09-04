@@ -206,7 +206,7 @@ export class StatblockEditComponent implements OnInit {
   convertToEditableRow(statblock: StatBlock): EditableStatBlock {
     return {
       ...statblock,
-      notes: '',
+      notes: statblock.notes || '',
       attacksText: statblock.attacks?.map(a => a.name).join('\n') || '',
       spellsText: statblock.spells?.map(s => s.name).join('\n') || '',
       spellSlotsText: statblock.spellSlots?.join(' ') || '',
@@ -321,13 +321,13 @@ export class StatblockEditComponent implements OnInit {
     this.onFieldChange(row);
   }
 
-  getTextareaRows(text: string): number {
+  getTextareaRows(text: string, textareaElement?: HTMLTextAreaElement): number {
     if (!text) return 2; // Minimum 2 rows for empty content - enough for typing
     
     const lines = text.split('\n');
     
-    // Get real measurements from an actual textarea in the DOM
-    const measurements = this.getRealDOMMeasurements();
+    // Get real measurements from the specific textarea or find one in the DOM
+    const measurements = this.getRealDOMMeasurements(textareaElement);
     if (!measurements) {
       // Fallback to simple line count if we can't measure
       return Math.max(lines.length, 2);
@@ -353,9 +353,9 @@ export class StatblockEditComponent implements OnInit {
     return Math.max(totalVisualRows, 2); // Minimum 2 rows total
   }
 
-  private getRealDOMMeasurements(): { availableWidth: number; canvas: CanvasRenderingContext2D; } | null {
-    // Find an actual textarea in the DOM to get real measurements
-    const textarea = document.querySelector('.text-field textarea') as HTMLTextAreaElement;
+  private getRealDOMMeasurements(specificTextarea?: HTMLTextAreaElement): { availableWidth: number; canvas: CanvasRenderingContext2D; } | null {
+    // Use the specific textarea if provided, otherwise find any textarea in the DOM
+    const textarea = specificTextarea || document.querySelector('.text-field textarea') as HTMLTextAreaElement;
     if (!textarea) {
       return null;
     }
@@ -426,7 +426,8 @@ export class StatblockEditComponent implements OnInit {
       spellSlots: row.spellSlots,
       skills: row.skills,
       resistances: row.resistances,
-      tags: row.tags
+      tags: row.tags,
+      notes: row.notes
     };
 
     if (row.isNew) {

@@ -205,7 +205,7 @@
 .text-field {
   min-width: 120px;
   flex: 1;
-  max-width: 200px;
+  /* Removed max-width to allow expansion */
 }
 
 /* Compact form field styling */
@@ -242,7 +242,7 @@
 }
 
 .text-field ::ng-deep textarea {
-  resize: vertical;
+  resize: both; /* Allow both horizontal and vertical resizing */
   /* Remove fixed min-height to allow dynamic row-based sizing */
 }
 

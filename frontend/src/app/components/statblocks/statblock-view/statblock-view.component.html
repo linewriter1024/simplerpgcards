@@ -313,6 +313,15 @@
                   }
                 </div>
               </div>
+
+              <div class="field text-field">
+                <div class="field-label">Notes</div>
+                <div class="field-value text-content">
+                  @if (statblock.notes && statblock.notes.trim()) {
+                    <div class="list-item">{{statblock.notes}}</div>
+                  }
+                </div>
+              </div>
             </div>
           </div>
         </div>
