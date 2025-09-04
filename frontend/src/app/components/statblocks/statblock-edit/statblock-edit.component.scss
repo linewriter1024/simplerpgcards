@@ -242,8 +242,8 @@
 }
 
 .text-field ::ng-deep textarea {
-  min-height: 60px;
   resize: vertical;
+  /* Remove fixed min-height to allow dynamic row-based sizing */
 }
 
 /* Responsive breakpoints */

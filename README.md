@@ -64,6 +64,7 @@ This separation provides:
     - Measures actual character width using selected font (JetBrains Mono, 14px)
     - Calculates field content width accounting for padding (24px total) and scrollbar (17px)
     - Determines precise characters per line for accurate wrapping calculation
+    - **Adaptive Height**: Dynamic sizing based on content - minimal height for short content, scales appropriately for longer text
     - Fallback to conservative estimates if Canvas API unavailable
   - **Optimized Input Types**: Single-line inputs for tags and spell slots (basic info row), expanding textareas for resistances, attacks, spells, skills, notes
   - **Efficient Layout**: Resistances moved to basic info section as compact expanding textarea for better organization while maintaining dynamic sizing

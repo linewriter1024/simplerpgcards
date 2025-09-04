@@ -322,66 +322,80 @@ export class StatblockEditComponent implements OnInit {
   }
 
   getTextareaRows(text: string): number {
-    if (!text) return 3; // Minimum 3 rows for better usability
-    
-    // Get actual measurements from DOM instead of estimates
-    const measurements = this.getActualTextMeasurements();
-    const charsPerLine = measurements.charsPerLine;
+    if (!text) return 2; // Minimum 2 rows for empty content - enough for typing
     
     const lines = text.split('\n');
-    let totalRows = 0;
+    
+    // Get real measurements from an actual textarea in the DOM
+    const measurements = this.getRealDOMMeasurements();
+    if (!measurements) {
+      // Fallback to simple line count if we can't measure
+      return Math.max(lines.length, 2);
+    }
+    
+    // Calculate exact visual rows by measuring actual text width
+    let totalVisualRows = 0;
     
     lines.forEach(line => {
       if (line.length === 0) {
-        totalRows += 1; // Empty line still takes one row
+        totalVisualRows += 1; // Empty line still takes one row
       } else {
-        // Calculate how many visual rows this line will take due to text wrapping
-        const wrappedRows = Math.ceil(line.length / charsPerLine);
-        totalRows += Math.max(wrappedRows, 1);
+        // Measure the actual rendered width of this line
+        const lineWidth = this.measureTextWidthDOM(line, measurements.canvas);
+        const availableWidth = measurements.availableWidth;
+        
+        // Calculate how many visual rows this line will actually take
+        const visualRowsForLine = Math.ceil(lineWidth / availableWidth);
+        totalVisualRows += Math.max(visualRowsForLine, 1);
       }
     });
     
-    // Add 1 extra row for editing comfort, minimum 3 rows for usability
-    return Math.max(totalRows + 1, 3);
+    return Math.max(totalVisualRows, 2); // Minimum 2 rows total
   }
 
-  private getActualTextMeasurements(): { charsPerLine: number; charWidth: number; } {
-    // Create a temporary measurement element with the exact same styling as the textarea
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    
-    if (!context) {
-      // Fallback to estimate if canvas not available
-      return { charsPerLine: 15, charWidth: 7.7 };
+  private getRealDOMMeasurements(): { availableWidth: number; canvas: CanvasRenderingContext2D; } | null {
+    // Find an actual textarea in the DOM to get real measurements
+    const textarea = document.querySelector('.text-field textarea') as HTMLTextAreaElement;
+    if (!textarea) {
+      return null;
     }
     
-    // Get the computed font from a textarea element or use the expected styling
-    // Font from global styles.scss: 'JetBrains Mono', 'Roboto Mono', 'Courier New', monospace
-    // Font size from text-field styling: 14px (Material Design default)
-    context.font = '14px JetBrains Mono, Roboto Mono, Courier New, monospace';
+    // Get the computed styles from the actual element
+    const computedStyles = window.getComputedStyle(textarea);
     
-    // Measure character width using a representative string
-    const testString = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const textMetrics = context.measureText(testString);
-    const avgCharWidth = textMetrics.width / testString.length;
+    // Create canvas with the exact same font settings
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return null;
+    }
     
-    // Calculate actual field dimensions
-    // .text-field CSS: min-width: 120px, flex: 1, max-width: 200px
-    // Material Design form field padding from CSS: 4px wrapper + 8px infix
-    const fieldMinWidth = 120;
-    const fieldMaxWidth = 200;
-    const fieldPadding = 24; // 4px wrapper + 8px infix * 2 sides + some margin
-    const scrollbarWidth = 17; // Standard scrollbar width on most browsers
+    // Use the exact font from the DOM element
+    const fontSize = computedStyles.fontSize || '14px';
+    const fontFamily = computedStyles.fontFamily || 'JetBrains Mono, monospace';
+    const fontWeight = computedStyles.fontWeight || 'normal';
+    context.font = `${fontWeight} ${fontSize} ${fontFamily}`;
     
-    // Use average field width for calculation
-    const avgFieldWidth = (fieldMinWidth + fieldMaxWidth) / 2; // 160px
-    const contentWidth = avgFieldWidth - fieldPadding - scrollbarWidth; // ~119px
-    const charsPerLine = Math.floor(contentWidth / avgCharWidth);
+    // Get the actual content width of the textarea
+    const textareaRect = textarea.getBoundingClientRect();
+    const paddingLeft = parseFloat(computedStyles.paddingLeft || '0');
+    const paddingRight = parseFloat(computedStyles.paddingRight || '0');
+    const borderLeft = parseFloat(computedStyles.borderLeftWidth || '0');
+    const borderRight = parseFloat(computedStyles.borderRightWidth || '0');
     
-    return { 
-      charsPerLine: Math.max(charsPerLine, 10), // Minimum 10 chars per line
-      charWidth: avgCharWidth 
+    // Calculate actual available width for text
+    const availableWidth = textareaRect.width - paddingLeft - paddingRight - borderLeft - borderRight - 17; // 17px for scrollbar
+    
+    return {
+      availableWidth: Math.max(availableWidth, 50), // Minimum 50px
+      canvas: context
     };
+  }
+
+  private measureTextWidthDOM(text: string, context: CanvasRenderingContext2D): number {
+    // Measure actual text width using the DOM-derived canvas context
+    const textMetrics = context.measureText(text);
+    return textMetrics.width;
   }
 
   addNewRow(): void {
