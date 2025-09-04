@@ -303,7 +303,7 @@ export class StatblockEditComponent implements OnInit {
   }
 
   onResistancesChange(row: EditableStatBlock): void {
-    // Convert text to resistances array
+    // Convert text to resistances array (line-separated for textarea)
     const lines = row.resistancesText.split('\n').filter(line => line.trim());
     row.resistances = lines.map(line => line.trim());
     this.onFieldChange(row);
@@ -324,29 +324,64 @@ export class StatblockEditComponent implements OnInit {
   getTextareaRows(text: string): number {
     if (!text) return 3; // Minimum 3 rows for better usability
     
-    // More accurate calculation based on actual text field constraints
-    // Text fields: min-width 120px, max-width 200px, typical width ~160px
-    // Account for padding, borders, and scrollbar: ~140px effective content width
-    // Default font size (14px) with typical character width ~7-8px
-    const effectiveWidth = 140; // Content width in pixels after padding/borders
-    const charWidth = 7; // More conservative character width estimate
-    const charsPerLine = Math.floor(effectiveWidth / charWidth); // ~20 chars per line
+    // Get actual measurements from DOM instead of estimates
+    const measurements = this.getActualTextMeasurements();
+    const charsPerLine = measurements.charsPerLine;
     
     const lines = text.split('\n');
     let totalRows = 0;
     
     lines.forEach(line => {
       if (line.length === 0) {
-        totalRows += 1;
+        totalRows += 1; // Empty line still takes one row
       } else {
-        // Calculate how many visual rows this line will take due to wrapping
+        // Calculate how many visual rows this line will take due to text wrapping
         const wrappedRows = Math.ceil(line.length / charsPerLine);
         totalRows += Math.max(wrappedRows, 1);
       }
     });
     
-    // Add extra row for cursor/editing space, minimum 3 rows
-    return Math.max(totalRows + 2, 3);
+    // Add 1 extra row for editing comfort, minimum 3 rows for usability
+    return Math.max(totalRows + 1, 3);
+  }
+
+  private getActualTextMeasurements(): { charsPerLine: number; charWidth: number; } {
+    // Create a temporary measurement element with the exact same styling as the textarea
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    
+    if (!context) {
+      // Fallback to estimate if canvas not available
+      return { charsPerLine: 15, charWidth: 7.7 };
+    }
+    
+    // Get the computed font from a textarea element or use the expected styling
+    // Font from global styles.scss: 'JetBrains Mono', 'Roboto Mono', 'Courier New', monospace
+    // Font size from text-field styling: 14px (Material Design default)
+    context.font = '14px JetBrains Mono, Roboto Mono, Courier New, monospace';
+    
+    // Measure character width using a representative string
+    const testString = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const textMetrics = context.measureText(testString);
+    const avgCharWidth = textMetrics.width / testString.length;
+    
+    // Calculate actual field dimensions
+    // .text-field CSS: min-width: 120px, flex: 1, max-width: 200px
+    // Material Design form field padding from CSS: 4px wrapper + 8px infix
+    const fieldMinWidth = 120;
+    const fieldMaxWidth = 200;
+    const fieldPadding = 24; // 4px wrapper + 8px infix * 2 sides + some margin
+    const scrollbarWidth = 17; // Standard scrollbar width on most browsers
+    
+    // Use average field width for calculation
+    const avgFieldWidth = (fieldMinWidth + fieldMaxWidth) / 2; // 160px
+    const contentWidth = avgFieldWidth - fieldPadding - scrollbarWidth; // ~119px
+    const charsPerLine = Math.floor(contentWidth / avgCharWidth);
+    
+    return { 
+      charsPerLine: Math.max(charsPerLine, 10), // Minimum 10 chars per line
+      charWidth: avgCharWidth 
+    };
   }
 
   addNewRow(): void {

@@ -1,75 +1,151 @@
 <div class="view-container">
   <!-- Left Sidebar -->
   <div class="sidebar">
-    <div class="sidebar-toggle">
-      <mat-icon>chevron_right</mat-icon>
-    </div>
-    <div class="sidebar-content">
-      <h3>Statblocks</h3>
-      
-      <!-- Mode Switcher -->
-      <div class="sidebar-section">
-        <button mat-raised-button 
-                color="primary"
-                (click)="switchToEditMode()"
-                class="sidebar-button">
-          <mat-icon>edit</mat-icon>
-          Edit Mode
-        </button>
+    <!-- Compact Toolbar Layout (visible on small screens) -->
+    <div class="toolbar-layout">
+      <!-- Row 1: Title, Mode Switcher, Search -->
+      <div class="toolbar-row">
+        <span class="toolbar-title">Statblocks</span>
         
-        <button mat-raised-button 
-                color="accent"
-                class="sidebar-button">
-          <mat-icon>view_list</mat-icon>
-          View Mode (Current)
+        <div class="mode-buttons">
+          <button mat-raised-button color="primary" (click)="switchToEditMode()" class="mode-button">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button mat-raised-button color="accent" class="mode-button current-mode">
+            <mat-icon>view_list</mat-icon>
+            View
+          </button>
+        </div>
+        
+        <mat-form-field appearance="outline" class="toolbar-search">
+          <mat-label>Search</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        
+        <button mat-button (click)="clearFilters()" class="toolbar-button">
+          <mat-icon>clear</mat-icon>
         </button>
       </div>
       
-      <h4>Search & Filters</h4>
-      
-      <!-- Search -->
-      <mat-form-field appearance="outline" class="sidebar-field">
-        <mat-label>Search</mat-label>
-        <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-      
-      <button mat-button (click)="clearFilters()" class="sidebar-button">Clear Filters</button>
-      
-      <!-- Tags Section -->
-      @if (allTags.length > 0) {
-        <div class="sidebar-section">
-          <h4>Tags</h4>
-          <div class="tags-grid">
+      <!-- Row 2: Tags, Actions and Selection -->
+      <div class="toolbar-row">
+        @if (allTags.length > 0) {
+          <div class="tag-chips">
             <mat-chip-listbox>
               @for (tag of allTags; track tag) {
                 <mat-chip-option
                   [selected]="isTagHighlighted(tag)"
                   (click)="toggleTagFilter(tag)"
-                  [class.highlighted-tag]="isTagHighlighted(tag)">
+                  [class.highlighted-tag]="isTagHighlighted(tag)"
+                  class="tag-chip">
                   {{ tag }}
                 </mat-chip-option>
               }
             </mat-chip-listbox>
           </div>
-        </div>
-      }
-      
-      <!-- Selection Controls -->
-      <div class="sidebar-section">
-        <h4>Selection</h4>
+        }
+        
         <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                     [checked]="isAllSelected()"
-                     [indeterminate]="isIndeterminate()"
-                     class="sidebar-checkbox">
+                      [checked]="isAllSelected()"
+                      [indeterminate]="isIndeterminate()"
+                      class="toolbar-checkbox">
           Select All
         </mat-checkbox>
         
+        <span class="toolbar-spacer"></span>
         <span class="statblock-count">{{ filteredStatblocks.length }} statblocks</span>
       </div>
       
-      <!-- Bulk Actions -->
-      @if (selection.selected.length > 0) {
+      <!-- Row 3: Bulk Actions -->
+      <div class="toolbar-row">
+        <mat-form-field appearance="outline" class="toolbar-search">
+          <mat-label>Tag for Bulk Action</mat-label>
+          <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag">
+        </mat-form-field>
+        
+        <button mat-raised-button color="primary" (click)="addTagToSelected()" 
+                [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="toolbar-button">
+          <mat-icon>add</mat-icon>
+          Add Tag
+        </button>
+        
+        <button mat-raised-button color="accent" (click)="removeTagFromSelected()" 
+                [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="toolbar-button">
+          <mat-icon>remove</mat-icon>
+          Remove Tag
+        </button>
+      </div>
+    </div>
+
+    <!-- Sidebar Layout (visible on large screens) -->
+    <div class="sidebar-layout">
+      <div class="sidebar-content">
+        <h3>Statblocks</h3>
+        
+        <!-- Mode Switcher -->
+        <div class="sidebar-section">
+          <button mat-raised-button 
+                  color="primary"
+                  (click)="switchToEditMode()"
+                  class="sidebar-button">
+            <mat-icon>edit</mat-icon>
+            Edit Mode
+          </button>
+          
+          <button mat-raised-button 
+                  color="accent"
+                  class="sidebar-button">
+            <mat-icon>view_list</mat-icon>
+            View Mode (Current)
+          </button>
+        </div>
+        
+        <h4>Search & Filters</h4>
+        
+        <!-- Search -->
+        <mat-form-field appearance="outline" class="sidebar-field">
+          <mat-label>Search</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        
+        <button mat-button (click)="clearFilters()" class="sidebar-button">Clear Filters</button>
+        
+        <!-- Tags Section -->
+        @if (allTags.length > 0) {
+          <div class="sidebar-section">
+            <h4>Tags</h4>
+            <div class="tags-grid">
+              <mat-chip-listbox>
+                @for (tag of allTags; track tag) {
+                  <mat-chip-option
+                    [selected]="isTagHighlighted(tag)"
+                    (click)="toggleTagFilter(tag)"
+                    [class.highlighted-tag]="isTagHighlighted(tag)">
+                    {{ tag }}
+                  </mat-chip-option>
+                }
+              </mat-chip-listbox>
+            </div>
+          </div>
+        }
+        
+        <!-- Selection Controls -->
+        <div class="sidebar-section">
+          <h4>Selection</h4>
+          <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                       [checked]="isAllSelected()"
+                       [indeterminate]="isIndeterminate()"
+                       class="sidebar-checkbox">
+            Select All
+          </mat-checkbox>
+          
+          <span class="statblock-count">{{ filteredStatblocks.length }} statblocks</span>
+        </div>
+        
+        <!-- Bulk Actions -->
         <div class="sidebar-section">
           <h4>Bulk Actions</h4>
           <mat-form-field appearance="outline" class="sidebar-field">
@@ -77,17 +153,17 @@
             <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag">
           </mat-form-field>
           <button mat-raised-button color="primary" (click)="addTagToSelected()" 
-                  [disabled]="!bulkTagInput.trim()" class="sidebar-button">
+                  [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="sidebar-button">
             <mat-icon>add</mat-icon>
             Add Tag
           </button>
           <button mat-raised-button color="accent" (click)="removeTagFromSelected()" 
-                  [disabled]="!bulkTagInput.trim()" class="sidebar-button">
+                  [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="sidebar-button">
             <mat-icon>remove</mat-icon>
             Remove Tag
           </button>
         </div>
-      }
+      </div>
     </div>
   </div>
 
@@ -141,6 +217,31 @@
                 <div class="field-value">{{statblock.ac}}</div>
               </div>
 
+              @if (statblock.spellSlots && statblock.spellSlots.length > 0) {
+                <div class="field spell-slots-field">
+                  <div class="field-label">Spell Slots</div>
+                  <div class="field-value spell-slots">{{formatSpellSlots(statblock.spellSlots)}}</div>
+                </div>
+              }
+
+              @if (statblock.resistances && statblock.resistances.length > 0) {
+                <div class="field text-field">
+                  <div class="field-label">Resistances</div>
+                  <div class="field-value">{{statblock.resistances.join(', ')}}</div>
+                </div>
+              }
+
+              @if (statblock.tags && statblock.tags.length > 0) {
+                <div class="field text-field">
+                  <div class="field-label">Tags</div>
+                  <div class="field-value">
+                    @for (tag of statblock.tags; track tag) {
+                      <span class="tag-chip">{{tag}}</span>
+                    }
+                  </div>
+                </div>
+              }
+
               <div class="abilities-group">
                 <div class="field ability-field">
                   <div class="field-label">STR</div>
@@ -182,25 +283,23 @@
                 </div>
               </div>
 
-              <div class="field spells-field">
-                <div class="field-label">Spells</div>
-                <div class="field-value">
-                  @if (statblock.spells && statblock.spells.length > 0) {
-                    @for (spell of statblock.spells; track spell.name) {
-                      <div class="list-item">{{spell.name}}</div>
-                    }
-                  }
+              @if (statblock.spells && statblock.spells.length > 0) {
+                <div class="field spells-field-container">
+                  <div class="field-label">Spells</div>
+                  <div class="spells-two-column">
+                    <div class="spells-column">
+                      @for (spell of getFirstHalfSpells(statblock.spells); track spell.name) {
+                        <div class="list-item">{{spell.name}}</div>
+                      }
+                    </div>
+                    <div class="spells-column">
+                      @for (spell of getSecondHalfSpells(statblock.spells); track spell.name) {
+                        <div class="list-item">{{spell.name}}</div>
+                      }
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div class="field spell-slots-field">
-                <div class="field-label">Spell Slots</div>
-                <div class="field-value spell-slots">
-                  @if (statblock.spellSlots && statblock.spellSlots.length > 0) {
-                    {{formatSpellSlots(statblock.spellSlots)}}
-                  }
-                </div>
-              </div>
+              }
 
               <div class="field text-field">
                 <div class="field-label">Skills</div>
@@ -208,28 +307,6 @@
                   @if (statblock.skills && statblock.skills.length > 0) {
                     @for (skill of statblock.skills; track skill) {
                       <div class="list-item">{{skill}}</div>
-                    }
-                  }
-                </div>
-              </div>
-
-              <div class="field text-field">
-                <div class="field-label">Resistances</div>
-                <div class="field-value">
-                  @if (statblock.resistances && statblock.resistances.length > 0) {
-                    @for (resistance of statblock.resistances; track resistance) {
-                      <div class="list-item">{{resistance}}</div>
-                    }
-                  }
-                </div>
-              </div>
-
-              <div class="field tags-field">
-                <div class="field-label">Tags</div>
-                <div class="field-value">
-                  @if (statblock.tags && statblock.tags.length > 0) {
-                    @for (tag of statblock.tags; track tag) {
-                      <span class="tag-chip">{{tag}}</span>
                     }
                   }
                 </div>

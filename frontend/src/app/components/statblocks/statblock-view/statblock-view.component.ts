@@ -182,6 +182,18 @@ export class StatblockViewComponent implements OnInit {
       .join(', ');
   }
 
+  getFirstHalfSpells(spells: { name: string }[]): { name: string }[] {
+    if (!spells || spells.length === 0) return [];
+    const halfIndex = Math.ceil(spells.length / 2);
+    return spells.slice(0, halfIndex);
+  }
+
+  getSecondHalfSpells(spells: { name: string }[]): { name: string }[] {
+    if (!spells || spells.length === 0) return [];
+    const halfIndex = Math.ceil(spells.length / 2);
+    return spells.slice(halfIndex);
+  }
+
   isAllSelected(): boolean {
     const numSelectedInFiltered = this.selection.selected.filter(statblock => 
       this.filteredStatblocks.includes(statblock)

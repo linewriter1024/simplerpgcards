@@ -49,35 +49,52 @@ This separation provides:
 - ✅ Bulk-add mode for creating multiple similar cards with shared tags and content
 
 #### Statblocks Mode (NEW)
-- ✅ **Edit Mode**: Collapsible left sidebar interface with comprehensive controls
-  - **Collapsible Sidebar**: 60px collapsed, expands to 300px on hover with visual indicator
+- ✅ **Edit Mode**: Responsive left sidebar interface with comprehensive controls
+  - **Responsive Design**: Fixed 300px sidebar on desktop, converts to compact horizontal toolbar on tablets/mobile
   - **Dark Theme**: Consistent dark theme matching the overall application design
   - **Sidebar Layout**: Contains search, actions, selection, and mode switching in organized sections
+  - **Compact Toolbar**: On smaller screens (≤1024px), sidebar converts to space-efficient 2-row horizontal toolbar
+    - **Row 1**: Title, mode buttons, search field, and clear button
+    - **Row 2**: Actions (Add New, Select All, Delete) and statblock count
   - **Main Content**: Flexible editing area with intelligent textarea sizing
   - Create and edit statblocks in space-efficient horizontal layouts
   - Support for D&D 5e statblock format with ability scores (STR, DEX, CON, INT, WIS, CHA)
   - **Complete Type Field Support**: Type field now properly saves and persists across edit/view modes
-  - Multi-line text-based attacks, spells, skills, resistances, tags, and notes inputs
-  - **Smart Textarea Wrapping**: Automatic textarea height calculation based on real field dimensions (140px effective width, 7px character width = ~20 characters per line) with extra padding for editing
+  - **Smart Textarea Sizing**: Enhanced textarea height calculation using **actual DOM font measurements** (Canvas API) instead of estimates
+    - Measures actual character width using selected font (JetBrains Mono, 14px)
+    - Calculates field content width accounting for padding (24px total) and scrollbar (17px)
+    - Determines precise characters per line for accurate wrapping calculation
+    - Fallback to conservative estimates if Canvas API unavailable
+  - **Optimized Input Types**: Single-line inputs for tags and spell slots (basic info row), expanding textareas for resistances, attacks, spells, skills, notes
+  - **Efficient Layout**: Resistances moved to basic info section as compact expanding textarea for better organization while maintaining dynamic sizing
   - Individual save buttons per row with visual indicators for unsaved changes
   - Save/check icons on each row (save icon for unsaved, checkmark for saved)
-  - Manual row management with "Add New Statblock" button in sidebar
-  - Bulk delete operations for selected statblocks with sidebar controls
+  - Manual row management with "Add New Statblock" button
+  - Bulk delete operations for selected statblocks
   - Visual indicators for new rows (green) and unsaved changes (yellow)
-  - **Responsive Design**: Custom flex layout optimized for space efficiency
+  - **Mobile Optimization**: On phones (≤768px), toolbar elements stack vertically for maximum usability
     - Desktop: Horizontal layout with abilities inline and text fields in bottom row
-    - Mobile: Vertical stack layout with proper field organization and full-width sidebar
+    - Tablet: Compact 2-row toolbar with grouped controls
+    - Mobile: Vertical stack layout with proper field organization and single-column toolbar elements
     - Eliminates vertical scrolling by maximizing horizontal space usage
     - No table headers or unnecessary vertical padding
-- ✅ **View Mode**: Collapsible left sidebar interface matching edit mode design
+- ✅ **View Mode**: Responsive left sidebar interface matching edit mode design
   - **Default Mode**: View mode is now the default when accessing /statblocks
-  - **Collapsible Sidebar**: 60px collapsed, expands to 300px on hover with visual indicator
+  - **Responsive Design**: Fixed 300px sidebar on desktop, converts to compact horizontal toolbar on tablets/mobile
   - **Dark Theme**: Consistent dark theme across all interface elements
   - **Sidebar Layout**: Contains search, tag management, selection, and bulk actions in organized sections
+  - **Compact Toolbar**: On smaller screens (≤1024px), sidebar converts to space-efficient 2-row horizontal toolbar
+    - **Row 1**: Title, mode buttons, search field, and clear button
+    - **Row 2**: Tag chips, selection controls, and statblock count
   - **Main Content**: Flexible view area optimized for readability and space efficiency
   - **Compact Name Field**: Name field only takes the space it needs (120-200px) instead of excessive space
   - **EXP Calculation**: Added Experience Points field next to CR using official D&D 5e formula
-  - **Two-Row Layout**: Basic info (name, type, CR, EXP, AC, abilities) in top row, text fields (attacks, spells, skills, etc.) in bottom row
+  - **Two-Row Layout**: Basic info (name, type, CR, EXP, AC, spell slots, abilities) in top row, text fields (attacks, spells, skills, etc.) in bottom row
+  - **Spell Slots Repositioned**: Moved spell slots to basic info section for better organization instead of text fields area
+  - **Two-Column Spells Layout**: Spells display in side-by-side columns to reduce vertical space consumption
+    - Splits spell list in half based on count (first half in left column, second half in right column)
+    - Responsive: Columns stack vertically on mobile devices for optimal readability
+    - Maintains proper text wrapping and spacing for spell names
   - **Type Field Display**: Type field now properly displays next to name when present
   - **Flexible Sizing**: All fields use flex-grow properties instead of fixed widths for better space utilization
   - **Improved Readability**: Larger text sizes (14px field values, 13px list items, 11px labels) for better visibility
@@ -85,6 +102,7 @@ This separation provides:
   - **No Horizontal Scrolling**: Responsive flex layout that wraps appropriately instead of forcing horizontal scroll
   - **Integrated Tag Search**: Click on any tag to add/remove it from the search field, with visual highlighting of active search terms
   - **Advanced Search**: Support for quoted exact matches and multiple search terms (space-separated)
+  - **Always-Available Bulk Operations**: Add or remove tags from multiple selected statblocks with persistent bulk actions interface
   - **Bulk Tag Operations**: Add or remove tags from multiple selected statblocks simultaneously with automatic duplicate prevention
   - **Select All Control**: Convenient select all/deselect all checkbox with indeterminate state for partial selections
   - **Tag Validation**: Bulk operations prevent tags with spaces; individual tags must not contain spaces (use underscores or hyphens instead)

@@ -1,80 +1,132 @@
 <div class="edit-container">
   <!-- Left Sidebar -->
   <div class="sidebar">
-    <div class="sidebar-toggle">
-      <mat-icon>chevron_right</mat-icon>
-    </div>
-    
-    <!-- Mode Switcher Header -->
-    <div class="sidebar-header">
-      <h3>Statblocks</h3>
-      <div class="mode-buttons">
-        <button mat-raised-button 
-                color="accent"
-                class="mode-button current-mode">
-          <mat-icon>edit</mat-icon>
-          Edit
+    <!-- Compact Toolbar Layout (visible on small screens) -->
+    <div class="toolbar-layout">
+      <!-- Row 1: Title, Mode Switcher, Search -->
+      <div class="toolbar-row">
+        <span class="toolbar-title">Statblocks</span>
+        
+        <div class="mode-buttons">
+          <button mat-raised-button color="accent" class="mode-button current-mode">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button mat-raised-button color="primary" (click)="switchToViewMode()" class="mode-button">
+            <mat-icon>view_list</mat-icon>
+            View
+          </button>
+        </div>
+        
+        <mat-form-field appearance="outline" class="toolbar-search">
+          <mat-label>Search</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        
+        <button mat-button (click)="clearFilters()" class="toolbar-button">
+          <mat-icon>clear</mat-icon>
+        </button>
+      </div>
+      
+      <!-- Row 2: Actions and Selection Controls -->
+      <div class="toolbar-row">
+        <button mat-raised-button color="primary" (click)="addNewRow()" class="toolbar-button">
+          <mat-icon>add</mat-icon>
+          Add New
         </button>
         
+        <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                      [checked]="isAllSelected()"
+                      [indeterminate]="isIndeterminate()"
+                      class="toolbar-checkbox">
+          Select All
+        </mat-checkbox>
+        
+        <button mat-raised-button color="warn" (click)="deleteSelected()" 
+                [disabled]="selection.selected.length === 0" class="toolbar-button">
+          <mat-icon>delete</mat-icon>
+          Delete ({{selection.selected.length}})
+        </button>
+        
+        <span class="toolbar-spacer"></span>
+        <span class="statblock-count">{{ editableRows.length }} statblocks</span>
+      </div>
+    </div>
+
+    <!-- Sidebar Layout (visible on large screens) -->
+    <div class="sidebar-layout">
+      <!-- Mode Switcher Header -->
+      <div class="sidebar-header">
+        <h3>Statblocks</h3>
+        <div class="mode-buttons">
+          <button mat-raised-button 
+                  color="accent"
+                  class="mode-button current-mode">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          
+          <button mat-raised-button 
+                  color="primary"
+                  (click)="switchToViewMode()"
+                  class="mode-button">
+            <mat-icon>view_list</mat-icon>
+            View
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Section -->
+      <div class="sidebar-section">
+        <h4>Search & Filters</h4>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Search</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        
+        <div class="filter-actions">
+          <button mat-button (click)="clearFilters()" class="clear-button">
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Actions Section -->
+      <div class="sidebar-section">
+        <h4>Actions</h4>
+        <button mat-raised-button color="primary" (click)="addNewRow()" class="full-width action-button">
+          <mat-icon>add</mat-icon>
+          Add New Statblock
+        </button>
+      </div>
+
+      <!-- Selection Section -->
+      <div class="sidebar-section">
+        <h4>Selection</h4>
+        <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                      [checked]="isAllSelected()"
+                      [indeterminate]="isIndeterminate()"
+                      class="select-all-checkbox">
+          Select All
+        </mat-checkbox>
+        
         <button mat-raised-button 
-                color="primary"
-                (click)="switchToViewMode()"
-                class="mode-button">
-          <mat-icon>view_list</mat-icon>
-          View
+                color="warn" 
+                (click)="deleteSelected()" 
+                [disabled]="selection.selected.length === 0"
+                class="full-width action-button delete-button">
+          <mat-icon>delete</mat-icon>
+          Delete Selected ({{selection.selected.length}})
         </button>
       </div>
-    </div>
 
-    <!-- Search Section -->
-    <div class="sidebar-section">
-      <h4>Search & Filters</h4>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Search</mat-label>
-        <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-      
-      <div class="filter-actions">
-        <button mat-button (click)="clearFilters()" class="clear-button">
-          <mat-icon>clear</mat-icon>
-          Clear Filters
-        </button>
+      <!-- Info Section -->
+      <div class="sidebar-section">
+        <span class="statblock-count">{{ editableRows.length }} statblocks</span>
       </div>
-    </div>
-
-    <!-- Actions Section -->
-    <div class="sidebar-section">
-      <h4>Actions</h4>
-      <button mat-raised-button color="primary" (click)="addNewRow()" class="full-width action-button">
-        <mat-icon>add</mat-icon>
-        Add New Statblock
-      </button>
-    </div>
-
-    <!-- Selection Section -->
-    <div class="sidebar-section">
-      <h4>Selection</h4>
-      <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                    [checked]="isAllSelected()"
-                    [indeterminate]="isIndeterminate()"
-                    class="select-all-checkbox">
-        Select All
-      </mat-checkbox>
-      
-      <button mat-raised-button 
-              color="warn" 
-              (click)="deleteSelected()" 
-              [disabled]="selection.selected.length === 0"
-              class="full-width action-button delete-button">
-        <mat-icon>delete</mat-icon>
-        Delete Selected ({{selection.selected.length}})
-      </button>
-    </div>
-
-    <!-- Info Section -->
-    <div class="sidebar-section">
-      <span class="statblock-count">{{ editableRows.length }} statblocks</span>
     </div>
   </div>
 
@@ -125,6 +177,24 @@
                 <input matInput [(ngModel)]="row.ac" (input)="onFieldChange(row)" placeholder="e.g., 15 (natural armor)">
               </mat-form-field>
 
+              <mat-form-field appearance="outline" class="compact-field">
+                <mat-label>Spell Slots</mat-label>
+                <input matInput [(ngModel)]="row.spellSlotsText" (input)="onSpellSlotsChange(row)" 
+                       placeholder="e.g., 1 2 3 4">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Tags</mat-label>
+                <input matInput [(ngModel)]="row.tagsText" (input)="onTagsChange(row)" 
+                       placeholder="humanoid paladin spellcaster">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Resistances</mat-label>
+                <textarea matInput [(ngModel)]="row.resistancesText" (input)="onResistancesChange(row)" 
+                          placeholder="one per line" [rows]="getTextareaRows(row.resistancesText)"></textarea>
+              </mat-form-field>
+
               <!-- Abilities with Material labels -->
               <mat-form-field appearance="outline" class="ability-field">
                 <mat-label>STR</mat-label>
@@ -167,27 +237,9 @@
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="text-field">
-                <mat-label>Spell Slots</mat-label>
-                <input matInput [(ngModel)]="row.spellSlotsText" (input)="onSpellSlotsChange(row)" 
-                       placeholder="space delimited (e.g., 1 2 3 4)">
-              </mat-form-field>
-              
-              <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Skills</mat-label>
                 <textarea matInput [(ngModel)]="row.skillsText" (input)="onSkillsChange(row)" 
                           placeholder="one per line" [rows]="getTextareaRows(row.skillsText)"></textarea>
-              </mat-form-field>
-              
-              <mat-form-field appearance="outline" class="text-field">
-                <mat-label>Resistances</mat-label>
-                <textarea matInput [(ngModel)]="row.resistancesText" (input)="onResistancesChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.resistancesText)"></textarea>
-              </mat-form-field>
-              
-              <mat-form-field appearance="outline" class="text-field">
-                <mat-label>Tags</mat-label>
-                <textarea matInput [(ngModel)]="row.tagsText" (input)="onTagsChange(row)" 
-                          placeholder="space separated" [rows]="getTextareaRows(row.tagsText)"></textarea>
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="text-field">
