@@ -1,30 +1,7 @@
 <div class="statblocks-container">
-  <mat-toolbar class="mode-toolbar">
-    <span>Statblocks</span>
-    <span class="spacer"></span>
-    
-    <button mat-raised-button 
-            [color]="currentMode === 'edit' ? 'accent' : 'primary'"
-            (click)="switchMode('edit')"
-            class="mode-button">
-      <mat-icon>edit</mat-icon>
-      Edit Mode
-    </button>
-    
-    <button mat-raised-button 
-            [color]="currentMode === 'view' ? 'accent' : 'primary'"
-            (click)="switchMode('view')"
-            class="mode-button">
-      <mat-icon>view_list</mat-icon>
-      View Mode
-    </button>
-  </mat-toolbar>
-
-  <div class="content">
-    @if (currentMode === 'edit') {
-      <app-statblock-edit></app-statblock-edit>
-    } @else {
-      <app-statblock-view></app-statblock-view>
-    }
-  </div>
+  @if (currentMode === 'edit') {
+    <app-statblock-edit></app-statblock-edit>
+  } @else {
+    <app-statblock-view></app-statblock-view>
+  }
 </div>

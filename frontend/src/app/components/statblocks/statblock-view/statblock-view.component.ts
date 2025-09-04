@@ -216,6 +216,10 @@ export class StatblockViewComponent implements OnInit {
     });
   }
 
+  switchToEditMode(): void {
+    this.router.navigate(['/statblocks']);
+  }
+
   addTagToSelected(): void {
     const tagToAdd = this.bulkTagInput.trim();
     if (!tagToAdd || this.selection.selected.length === 0) return;

@@ -1,31 +1,72 @@
 .view-container {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.filter-card {
-  margin-bottom: 24px;
-}
-
-.filter-row {
+  height: 100%;
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  align-items: center;
+  flex-direction: row;
 }
 
-.search-field {
-  flex: 1;
-  max-width: 400px;
+.sidebar {
+  width: 300px;
+  min-width: 300px;
+  background-color: #2d2d2d;
+  border-right: 1px solid #444;
+  overflow-y: auto;
 }
 
-.tags-section {
-  margin: 16px 0;
+.sidebar-content {
+  padding: 16px;
 }
 
-.tags-section h4 {
-  margin-bottom: 8px;
+.sidebar h3 {
+  margin: 0 0 16px 0;
   color: #e0e0e0;
+  font-size: 16px;
+}
+
+.sidebar h4 {
+  margin: 16px 0 8px 0;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.sidebar-field {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.sidebar-button {
+  width: 100%;
+  margin-bottom: 8px;
+  justify-content: flex-start;
+}
+
+.sidebar-checkbox {
+  margin-bottom: 8px;
+}
+
+.sidebar-section {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #444;
+}
+
+.sidebar-section:last-child {
+  border-bottom: none;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.statblocks-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .highlighted-tag {
@@ -33,54 +74,11 @@
   color: white !important;
 }
 
-.action-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-top: 16px;
-  gap: 16px;
-}
-
-.selection-controls {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.bulk-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1;
-}
-
-.tag-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.tag-input {
-  min-width: 200px;
-  flex: 1;
-  max-width: 300px;
-}
-
 .statblock-count {
-  color: #aaa;
+  color: #999;
   font-size: 14px;
-}
-
-.statblocks-display {
-  overflow-x: auto;
-}
-
-.statblocks-table {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
+  margin-top: 8px;
+  display: block;
 }
 
 .statblock-row {

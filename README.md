@@ -49,22 +49,26 @@ This separation provides:
 - ✅ Bulk-add mode for creating multiple similar cards with shared tags and content
 
 #### Statblocks Mode (NEW)
-- ✅ **Edit Mode**: Compact flex-based editing interface with intelligent textarea sizing
+- ✅ **Edit Mode**: Left sidebar interface with comprehensive controls
+  - **Sidebar Layout**: 300px left sidebar containing search, actions, selection, and mode switching
+  - **Main Content**: Flexible editing area with intelligent textarea sizing
   - Create and edit statblocks in space-efficient horizontal layouts
   - Support for D&D 5e statblock format with ability scores (STR, DEX, CON, INT, WIS, CHA)
   - Multi-line text-based attacks, spells, skills, resistances, tags, and notes inputs
   - **Smart Textarea Wrapping**: Automatic textarea height calculation based on real field dimensions (140px effective width, 7px character width = ~20 characters per line) with extra padding for editing
   - Individual save buttons per row with visual indicators for unsaved changes
   - Save/check icons on each row (save icon for unsaved, checkmark for saved)
-  - Manual row management with "Add New Statblock" buttons at top and bottom
-  - Bulk delete operations for selected statblocks
+  - Manual row management with "Add New Statblock" button in sidebar
+  - Bulk delete operations for selected statblocks with sidebar controls
   - Visual indicators for new rows (green) and unsaved changes (yellow)
   - **Responsive Design**: Custom flex layout optimized for space efficiency
     - Desktop: Horizontal layout with abilities inline and text fields in bottom row
-    - Mobile: Vertical stack layout with proper field organization
+    - Mobile: Vertical stack layout with proper field organization and collapsible sidebar
     - Eliminates vertical scrolling by maximizing horizontal space usage
     - No table headers or unnecessary vertical padding
-- ✅ **View Mode**: Flexible flex-based layout optimized for readability and space efficiency
+- ✅ **View Mode**: Left sidebar interface matching edit mode design
+  - **Sidebar Layout**: 300px left sidebar with search, tag management, selection, and bulk actions
+  - **Main Content**: Flexible view area optimized for readability and space efficiency
   - **Two-Row Layout**: Basic info (name, CR, AC, abilities) in top row, text fields (attacks, spells, skills, etc.) in bottom row
   - **Flexible Sizing**: All fields use flex-grow properties instead of fixed widths for better space utilization
   - **Improved Readability**: Larger text sizes (14px field values, 13px list items, 11px labels) for better visibility
@@ -82,7 +86,8 @@ This separation provides:
   - Filterable by tags and search terms
   - Calculated D&D modifiers display (e.g., STR 16 → +3, DEX 14 → +2)
   - **Spell Slots**: Space-delimited input in edit mode, formatted as ordinals (1st, 2nd, 3rd, etc.) in view mode
-- ✅ Navigation between edit and view modes via toolbar buttons
+- ✅ **Integrated Mode Switching**: Mode switcher buttons integrated into component sidebars for seamless navigation
+- ✅ **Consistent UI**: Both edit and view modes use identical sidebar layouts for unified user experience
 - ✅ Complete CRUD operations for statblocks
 - ✅ Tag-based categorization system for statblocks
 - ✅ Challenge Rating (CR) and Armor Class (AC) tracking

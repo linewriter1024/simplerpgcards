@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -52,7 +52,8 @@ export class StatblockEditComponent implements OnInit {
   constructor(
     private statblockService: StatblockService,
     private cdr: ChangeDetectorRef,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -191,6 +192,15 @@ export class StatblockEditComponent implements OnInit {
     
     // Update search control with new terms
     this.searchControl.setValue(searchTerms.join(' '));
+  }
+
+  clearFilters(): void {
+    this.searchControl.setValue('');
+    this.applySearch();
+  }
+
+  switchToViewMode(): void {
+    this.router.navigate(['/statblocks/view']);
   }
 
   convertToEditableRow(statblock: StatBlock): EditableStatBlock {

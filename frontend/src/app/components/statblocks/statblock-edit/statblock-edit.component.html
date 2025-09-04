@@ -1,38 +1,81 @@
 <div class="edit-container">
-  <!-- Search Bar -->
-  <div class="search-container">
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-label>Search</mat-label>
-      <input matInput [formControl]="searchControl" placeholder="Search names and tags... Use quotes for exact matches">
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
-    <div class="search-results">
+  <!-- Left Sidebar -->
+  <div class="sidebar">
+    <!-- Mode Switcher Header -->
+    <div class="sidebar-header">
+      <h3>Statblocks</h3>
+      <div class="mode-buttons">
+        <button mat-raised-button 
+                color="accent"
+                class="mode-button current-mode">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        
+        <button mat-raised-button 
+                color="primary"
+                (click)="switchToViewMode()"
+                class="mode-button">
+          <mat-icon>view_list</mat-icon>
+          View
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="sidebar-section">
+      <h4>Search & Filters</h4>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Search</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      
+      <div class="filter-actions">
+        <button mat-button (click)="clearFilters()" class="clear-button">
+          <mat-icon>clear</mat-icon>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="sidebar-section">
+      <h4>Actions</h4>
+      <button mat-raised-button color="primary" (click)="addNewRow()" class="full-width action-button">
+        <mat-icon>add</mat-icon>
+        Add New Statblock
+      </button>
+    </div>
+
+    <!-- Selection Section -->
+    <div class="sidebar-section">
+      <h4>Selection</h4>
+      <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                    [checked]="isAllSelected()"
+                    [indeterminate]="isIndeterminate()"
+                    class="select-all-checkbox">
+        Select All
+      </mat-checkbox>
+      
+      <button mat-raised-button 
+              color="warn" 
+              (click)="deleteSelected()" 
+              [disabled]="selection.selected.length === 0"
+              class="full-width action-button delete-button">
+        <mat-icon>delete</mat-icon>
+        Delete Selected ({{selection.selected.length}})
+      </button>
+    </div>
+
+    <!-- Info Section -->
+    <div class="sidebar-section">
       <span class="statblock-count">{{ editableRows.length }} statblocks</span>
     </div>
   </div>
-  
-  <div class="toolbar">
-    <button mat-raised-button color="primary" (click)="addNewRow()">
-      <mat-icon>add</mat-icon>
-      Add New Statblock
-    </button>
-    
-    <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                  [checked]="isAllSelected()"
-                  [indeterminate]="isIndeterminate()">
-      Select All
-    </mat-checkbox>
-    
-    <button mat-raised-button color="warn" (click)="deleteSelected()" [disabled]="selection.selected.length === 0">
-      <mat-icon>delete</mat-icon>
-      Delete Selected ({{selection.selected.length}})
-    </button>
 
-    <span class="spacer"></span>
-    <span class="row-count">{{ editableRows.length }} statblocks</span>
-  </div>
-
-  <div class="table-container">
+  <!-- Main Content Area -->
+  <div class="main-content">
     <div class="statblocks-list">
       @for (row of editableRows; track row) {
         <div class="statblock-row" 
@@ -143,19 +186,6 @@
                           placeholder="space separated" [rows]="getTextareaRows(row.tagsText)"></textarea>
               </mat-form-field>
               
-              <!-- Tags Preview as Clickable Chips -->
-              @if (row.tags && row.tags.length > 0) {
-                <div class="tags-preview">
-                  @for (tag of row.tags; track tag) {
-                    <mat-chip class="tag-chip" 
-                              [class.highlighted]="isTagHighlighted(tag)"
-                              (click)="toggleTagFilter(tag)">
-                      {{ tag }}
-                    </mat-chip>
-                  }
-                </div>
-              }
-              
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Notes</mat-label>
                 <textarea matInput [(ngModel)]="row.notes" (input)="onFieldChange(row)" 
@@ -166,12 +196,5 @@
         </div>
       }
     </div>
-  </div>
-  
-  <div class="bottom-toolbar">
-    <button mat-raised-button color="primary" (click)="addNewRow()">
-      <mat-icon>add</mat-icon>
-      Add New Statblock
-    </button>
   </div>
 </div>

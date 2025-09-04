@@ -1,22 +1,42 @@
 <div class="view-container">
-  <mat-card class="filter-card">
-    <mat-card-header>
-      <mat-card-title>Filters & Search</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="filter-row">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search</mat-label>
-          <input matInput [formControl]="searchControl" placeholder="Search names and tags... Use quotes for exact matches">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-
-        <button mat-button (click)="clearFilters()">Clear Filters</button>
+  <!-- Left Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-content">
+      <h3>Statblocks</h3>
+      
+      <!-- Mode Switcher -->
+      <div class="sidebar-section">
+        <button mat-raised-button 
+                color="primary"
+                (click)="switchToEditMode()"
+                class="sidebar-button">
+          <mat-icon>edit</mat-icon>
+          Edit Mode
+        </button>
+        
+        <button mat-raised-button 
+                color="accent"
+                class="sidebar-button">
+          <mat-icon>view_list</mat-icon>
+          View Mode (Current)
+        </button>
       </div>
-
+      
+      <h4>Search & Filters</h4>
+      
+      <!-- Search -->
+      <mat-form-field appearance="outline" class="sidebar-field">
+        <mat-label>Search</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      
+      <button mat-button (click)="clearFilters()" class="sidebar-button">Clear Filters</button>
+      
+      <!-- Tags Section -->
       @if (allTags.length > 0) {
-        <div class="tags-section">
-          <h4>Search Tags:</h4>
+        <div class="sidebar-section">
+          <h4>Tags</h4>
           <div class="tags-grid">
             <mat-chip-listbox>
               @for (tag of allTags; track tag) {
@@ -31,41 +51,45 @@
           </div>
         </div>
       }
-
-      <div class="action-row">
-        <div class="selection-controls">
-          <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                       [checked]="isAllSelected()"
-                       [indeterminate]="isIndeterminate()">
-            Select All
-          </mat-checkbox>
-        </div>
-
-        <div class="bulk-actions">
-          @if (selection.selected.length > 0) {
-            <div class="tag-actions">
-              <mat-form-field appearance="outline" class="tag-input">
-                <mat-label>Bulk Tag Action</mat-label>
-                <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter single tag (no spaces)">
-              </mat-form-field>
-              <button mat-raised-button color="primary" (click)="addTagToSelected()" [disabled]="!bulkTagInput.trim()">
-                <mat-icon>add</mat-icon>
-                Add Tag
-              </button>
-              <button mat-raised-button color="accent" (click)="removeTagFromSelected()" [disabled]="!bulkTagInput.trim()">
-                <mat-icon>remove</mat-icon>
-                Remove Tag
-              </button>
-            </div>
-          }
-        </div>
-
+      
+      <!-- Selection Controls -->
+      <div class="sidebar-section">
+        <h4>Selection</h4>
+        <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                     [checked]="isAllSelected()"
+                     [indeterminate]="isIndeterminate()"
+                     class="sidebar-checkbox">
+          Select All
+        </mat-checkbox>
+        
         <span class="statblock-count">{{ filteredStatblocks.length }} statblocks</span>
       </div>
-    </mat-card-content>
-  </mat-card>
+      
+      <!-- Bulk Actions -->
+      @if (selection.selected.length > 0) {
+        <div class="sidebar-section">
+          <h4>Bulk Actions</h4>
+          <mat-form-field appearance="outline" class="sidebar-field">
+            <mat-label>Tag for Bulk Action</mat-label>
+            <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag">
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="addTagToSelected()" 
+                  [disabled]="!bulkTagInput.trim()" class="sidebar-button">
+            <mat-icon>add</mat-icon>
+            Add Tag
+          </button>
+          <button mat-raised-button color="accent" (click)="removeTagFromSelected()" 
+                  [disabled]="!bulkTagInput.trim()" class="sidebar-button">
+            <mat-icon>remove</mat-icon>
+            Remove Tag
+          </button>
+        </div>
+      }
+    </div>
+  </div>
 
-  <mat-card class="statblocks-display">
+  <!-- Main Content -->
+  <div class="main-content">
     <div class="statblocks-table">
       @for (statblock of filteredStatblocks; track statblock.id) {
         <div class="statblock-row" 
@@ -207,5 +231,5 @@
         </div>
       }
     </div>
-  </mat-card>
+  </div>
 </div>
