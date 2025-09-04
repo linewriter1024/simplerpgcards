@@ -27,10 +27,11 @@ This is a full-stack TypeScript application with:
 - ✅ Bulk-add mode for creating multiple similar cards with shared tags and content
 
 #### Statblocks Mode (NEW)
-- ✅ **Edit Mode**: Compact flex-based editing interface
+- ✅ **Edit Mode**: Compact flex-based editing interface with intelligent textarea sizing
   - Create and edit statblocks in space-efficient horizontal layouts
   - Support for D&D 5e statblock format with ability scores (STR, DEX, CON, INT, WIS, CHA)
   - Multi-line text-based attacks, spells, skills, resistances, tags, and notes inputs
+  - **Smart Textarea Wrapping**: Automatic textarea height calculation based on real field dimensions (140px effective width, 7px character width = ~20 characters per line) with extra padding for editing
   - Individual save buttons per row with visual indicators for unsaved changes
   - Save/check icons on each row (save icon for unsaved, checkmark for saved)
   - Manual row management with "Add New Statblock" buttons at top and bottom
@@ -41,13 +42,15 @@ This is a full-stack TypeScript application with:
     - Mobile: Vertical stack layout with proper field organization
     - Eliminates vertical scrolling by maximizing horizontal space usage
     - No table headers or unnecessary vertical padding
-- ✅ **View Mode**: Read-only sortable and filterable table view
-  - Full statblock data display in organized table format including calculated D&D ability score modifiers
-  - Sortable by name, CR, AC
+- ✅ **View Mode**: Flex-based layout optimized for readability and space efficiency
+  - **Two-Row Layout**: Basic info (name, CR, AC, abilities) in top row, text fields (attacks, spells, skills, etc.) in bottom row
+  - **Generous Text Fields**: Attacks and spells fields given wider space (180-250px) for better readability
+  - **No Horizontal Scrolling**: Responsive flex layout that wraps appropriately instead of forcing horizontal scroll
+  - **Enhanced Field Sizing**: Attacks, spells, and tags fields sized appropriately for their content
+  - Sortable by name, CR, AC with preserved selection state
   - Filterable by tags and search terms
-  - Easy-to-read attack and spell listings
-  - Skills and resistances display
-  - Calculated D&D modifiers column (e.g., STR 16 → +3, DEX 14 → +2)
+  - Calculated D&D modifiers display (e.g., STR 16 → +3, DEX 14 → +2)
+  - **Spell Slots**: Space-delimited input in edit mode, formatted as ordinals (1st, 2nd, 3rd, etc.) in view mode
 - ✅ Navigation between edit and view modes via toolbar buttons
 - ✅ Complete CRUD operations for statblocks
 - ✅ Tag-based categorization system for statblocks

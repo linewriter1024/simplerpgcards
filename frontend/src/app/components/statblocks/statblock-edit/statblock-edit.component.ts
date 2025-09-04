@@ -512,8 +512,30 @@ export class StatblockEditComponent implements OnInit {
 
   getTextareaRows(text: string): number {
     if (!text) return 3; // Minimum 3 rows for better usability
-    const lines = text.split('\n').length;
-    return Math.max(lines + 1, 3); // Always have at least one empty line at bottom, minimum 3 rows
+    
+    // More accurate calculation based on actual text field constraints
+    // Text fields: min-width 120px, max-width 200px, typical width ~160px
+    // Account for padding, borders, and scrollbar: ~140px effective content width
+    // Default font size (14px) with typical character width ~7-8px
+    const effectiveWidth = 140; // Content width in pixels after padding/borders
+    const charWidth = 7; // More conservative character width estimate
+    const charsPerLine = Math.floor(effectiveWidth / charWidth); // ~20 chars per line
+    
+    const lines = text.split('\n');
+    let totalRows = 0;
+    
+    lines.forEach(line => {
+      if (line.length === 0) {
+        totalRows += 1;
+      } else {
+        // Calculate how many visual rows this line will take due to wrapping
+        const wrappedRows = Math.ceil(line.length / charsPerLine);
+        totalRows += Math.max(wrappedRows, 1);
+      }
+    });
+    
+    // Add extra row for cursor/editing space, minimum 3 rows
+    return Math.max(totalRows + 2, 3);
   }
 
   addNewRow(): void {

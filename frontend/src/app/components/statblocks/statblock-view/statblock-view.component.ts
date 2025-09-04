@@ -73,128 +73,138 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
       </mat-card>
 
       <mat-card class="statblocks-display">
-        <div class="statblocks-list">
+        <div class="statblocks-table">
           @for (statblock of filteredStatblocks; track statblock.id) {
-            <div class="statblock-card" 
+            <div class="statblock-row" 
                  [class.selected]="selection.isSelected(statblock)"
                  (click)="toggleRowSelection(statblock)">
               
-              <!-- Card Header with Selection and Actions -->
-              <div class="card-header">
+              <!-- Row Actions -->
+              <div class="row-actions">
                 <mat-checkbox (change)="$event ? selection.toggle(statblock) : null"
                              [checked]="selection.isSelected(statblock)"
                              (click)="$event.stopPropagation()">
                 </mat-checkbox>
-                <h3 class="statblock-name">{{statblock.name}}</h3>
-                <div class="card-actions">
-                  <button mat-icon-button color="primary" (click)="editStatblock(statblock); $event.stopPropagation()">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" (click)="deleteStatblock(statblock); $event.stopPropagation()">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
+                <button mat-icon-button color="primary" (click)="editStatblock(statblock); $event.stopPropagation()">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteStatblock(statblock); $event.stopPropagation()">
+                  <mat-icon>delete</mat-icon>
+                </button>
               </div>
 
-              <!-- Card Content -->
-              <div class="card-content">
+              <!-- All Fields in Flex Layout -->
+              <div class="row-content">
                 <!-- Basic Info Row -->
-                <div class="basic-info-row">
-                  <div class="info-item">
-                    <span class="label">CR:</span>
-                    <span class="value">{{statblock.cr}}</span>
+                <div class="basic-info-section">
+                  <div class="field name-field">
+                    <div class="field-label">Name</div>
+                    <div class="field-value">{{statblock.name}}</div>
                   </div>
-                  <div class="info-item">
-                    <span class="label">AC:</span>
-                    <span class="value">{{statblock.ac}}</span>
+
+                  <div class="field compact-field">
+                    <div class="field-label">CR</div>
+                    <div class="field-value">{{statblock.cr}}</div>
+                  </div>
+
+                  <div class="field compact-field">
+                    <div class="field-label">AC</div>
+                    <div class="field-value">{{statblock.ac}}</div>
+                  </div>
+
+                  <div class="abilities-group">
+                    <div class="field ability-field">
+                      <div class="field-label">STR</div>
+                      <div class="field-value">{{statblock.str}}</div>
+                    </div>
+                    <div class="field ability-field">
+                      <div class="field-label">DEX</div>
+                      <div class="field-value">{{statblock.dex}}</div>
+                    </div>
+                    <div class="field ability-field">
+                      <div class="field-label">CON</div>
+                      <div class="field-value">{{statblock.con}}</div>
+                    </div>
+                    <div class="field ability-field">
+                      <div class="field-label">INT</div>
+                      <div class="field-value">{{statblock.int}}</div>
+                    </div>
+                    <div class="field ability-field">
+                      <div class="field-label">WIS</div>
+                      <div class="field-value">{{statblock.wis}}</div>
+                    </div>
+                    <div class="field ability-field">
+                      <div class="field-label">CHA</div>
+                      <div class="field-value">{{statblock.cha}}</div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Abilities Row -->
-                <div class="abilities-row">
-                  <div class="ability-item">
-                    <span class="ability-label">STR</span>
-                    <span class="ability-value">{{statblock.str}} ({{getModifier(statblock.str)}})</span>
-                  </div>
-                  <div class="ability-item">
-                    <span class="ability-label">DEX</span>
-                    <span class="ability-value">{{statblock.dex}} ({{getModifier(statblock.dex)}})</span>
-                  </div>
-                  <div class="ability-item">
-                    <span class="ability-label">CON</span>
-                    <span class="ability-value">{{statblock.con}} ({{getModifier(statblock.con)}})</span>
-                  </div>
-                  <div class="ability-item">
-                    <span class="ability-label">INT</span>
-                    <span class="ability-value">{{statblock.int}} ({{getModifier(statblock.int)}})</span>
-                  </div>
-                  <div class="ability-item">
-                    <span class="ability-label">WIS</span>
-                    <span class="ability-value">{{statblock.wis}} ({{getModifier(statblock.wis)}})</span>
-                  </div>
-                  <div class="ability-item">
-                    <span class="ability-label">CHA</span>
-                    <span class="ability-value">{{statblock.cha}} ({{getModifier(statblock.cha)}})</span>
-                  </div>
-                </div>
-
-                <!-- Details Rows -->
-                <div class="details-section">
-                  @if (statblock.attacks && statblock.attacks.length > 0) {
-                    <div class="detail-row">
-                      <span class="detail-label">Attacks:</span>
-                      <div class="detail-content">
+                <!-- Text Fields Row -->
+                <div class="text-fields-section">
+                  <div class="field attacks-field">
+                    <div class="field-label">Attacks</div>
+                    <div class="field-value">
+                      @if (statblock.attacks && statblock.attacks.length > 0) {
                         @for (attack of statblock.attacks; track attack.name) {
-                          <div class="attack-item">{{attack.name}}</div>
+                          <div class="list-item">{{attack.name}}</div>
                         }
-                      </div>
+                      }
                     </div>
-                  }
+                  </div>
 
-                  @if (statblock.spells && statblock.spells.length > 0) {
-                    <div class="detail-row">
-                      <span class="detail-label">Spells:</span>
-                      <div class="detail-content">
+                  <div class="field spells-field">
+                    <div class="field-label">Spells</div>
+                    <div class="field-value">
+                      @if (statblock.spells && statblock.spells.length > 0) {
                         @for (spell of statblock.spells; track spell.name) {
-                          <div class="spell-item">{{spell.name}}</div>
+                          <div class="list-item">{{spell.name}}</div>
                         }
-                      </div>
+                      }
                     </div>
-                  }
+                  </div>
 
-                  @if (statblock.spellSlots && statblock.spellSlots.length > 0) {
-                    <div class="detail-row">
-                      <span class="detail-label">Spell Slots:</span>
-                      <div class="detail-content spell-slots">
+                  <div class="field spell-slots-field">
+                    <div class="field-label">Spell Slots</div>
+                    <div class="field-value spell-slots">
+                      @if (statblock.spellSlots && statblock.spellSlots.length > 0) {
                         {{formatSpellSlots(statblock.spellSlots)}}
-                      </div>
+                      }
                     </div>
-                  }
+                  </div>
 
-                  @if (statblock.skills && statblock.skills.length > 0) {
-                    <div class="detail-row">
-                      <span class="detail-label">Skills:</span>
-                      <div class="detail-content">{{statblock.skills.join(', ')}}</div>
+                  <div class="field text-field">
+                    <div class="field-label">Skills</div>
+                    <div class="field-value">
+                      @if (statblock.skills && statblock.skills.length > 0) {
+                        @for (skill of statblock.skills; track skill) {
+                          <div class="list-item">{{skill}}</div>
+                        }
+                      }
                     </div>
-                  }
+                  </div>
 
-                  @if (statblock.resistances && statblock.resistances.length > 0) {
-                    <div class="detail-row">
-                      <span class="detail-label">Resistances:</span>
-                      <div class="detail-content">{{statblock.resistances.join(', ')}}</div>
+                  <div class="field text-field">
+                    <div class="field-label">Resistances</div>
+                    <div class="field-value">
+                      @if (statblock.resistances && statblock.resistances.length > 0) {
+                        @for (resistance of statblock.resistances; track resistance) {
+                          <div class="list-item">{{resistance}}</div>
+                        }
+                      }
                     </div>
-                  }
+                  </div>
 
-                  @if (statblock.tags && statblock.tags.length > 0) {
-                    <div class="detail-row">
-                      <span class="detail-label">Tags:</span>
-                      <div class="detail-content tags-content">
+                  <div class="field tags-field">
+                    <div class="field-label">Tags</div>
+                    <div class="field-value">
+                      @if (statblock.tags && statblock.tags.length > 0) {
                         @for (tag of statblock.tags; track tag) {
                           <span class="tag-chip">{{tag}}</span>
                         }
-                      </div>
+                      }
                     </div>
-                  }
+                  </div>
                 </div>
               </div>
             </div>
@@ -250,189 +260,201 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
       overflow-x: auto;
     }
 
-    .statblocks-list {
+    .statblocks-table {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 8px;
       padding: 16px;
     }
 
-    .statblock-card {
+    .statblock-row {
+      display: flex;
       background-color: #2d2d2d;
       border: 1px solid #444;
       border-radius: 8px;
-      padding: 16px;
+      padding: 12px;
+      gap: 12px;
+      align-items: stretch;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
-    .statblock-card:hover {
+    .statblock-row:hover {
       background-color: rgba(255, 255, 255, 0.04);
       border-color: #666;
     }
 
-    .statblock-card.selected {
+    .statblock-row.selected {
       background-color: rgba(63, 81, 181, 0.2);
       border-color: rgba(63, 81, 181, 0.5);
     }
 
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #444;
-    }
-
-    .statblock-name {
-      flex: 1;
-      margin: 0;
-      font-size: 18px;
-      font-weight: 500;
-      color: #e0e0e0;
-    }
-
-    .card-actions {
-      display: flex;
-      gap: 4px;
-    }
-
-    .card-content {
+    .row-actions {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-    }
-
-    .basic-info-row {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-    }
-
-    .info-item {
-      display: flex;
       align-items: center;
       gap: 4px;
+      min-width: 60px;
+      justify-content: flex-start;
     }
 
-    .label {
-      font-weight: 500;
-      color: #ccc;
-    }
-
-    .value {
-      color: #e0e0e0;
-    }
-
-    .abilities-row {
+    .row-content {
+      flex: 1;
       display: flex;
-      gap: 16px;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .basic-info-section {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
       flex-wrap: wrap;
     }
 
-    .ability-item {
+    .abilities-group {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-width: 60px;
+      gap: 8px;
     }
 
-    .ability-label {
+    .text-fields-section {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .field-label {
       font-size: 10px;
       color: #ccc;
       font-weight: 500;
       text-transform: uppercase;
+      margin-bottom: 2px;
     }
 
-    .ability-value {
+    .field-value {
+      color: #e0e0e0;
       font-size: 12px;
-      color: #e0e0e0;
-      text-align: center;
+      min-height: 16px;
     }
 
-    .details-section {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .detail-row {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-    }
-
-    .detail-label {
-      font-weight: 500;
-      color: #ccc;
-      min-width: 80px;
-      flex-shrink: 0;
-    }
-
-    .detail-content {
+    .name-field {
+      min-width: 150px;
       flex: 1;
-      color: #e0e0e0;
-      font-size: 14px;
+      max-width: 250px;
     }
 
-    .attack-item, .spell-item {
-      margin-bottom: 4px;
-      font-size: 13px;
-      line-height: 1.3;
+    .compact-field {
+      width: 60px;
+      min-width: 60px;
     }
 
-    .attack-item:last-child, .spell-item:last-child {
+    .ability-field {
+      width: 45px;
+      min-width: 45px;
+    }
+
+    .attacks-field,
+    .spells-field {
+      min-width: 180px;
+      flex: 1;
+      max-width: 250px;
+    }
+
+    .spell-slots-field {
+      min-width: 120px;
+      width: 120px;
+    }
+
+    .text-field {
+      min-width: 100px;
+      flex: 1;
+      max-width: 150px;
+    }
+
+    .tags-field {
+      min-width: 120px;
+      flex: 1;
+      max-width: 200px;
+    }
+
+    .list-item {
+      font-size: 11px;
+      line-height: 1.2;
+      margin-bottom: 1px;
+    }
+
+    .list-item:last-child {
       margin-bottom: 0;
     }
 
     .spell-slots {
       font-family: monospace;
       color: #4CAF50;
-    }
-
-    .tags-content {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
+      font-size: 10px;
     }
 
     .tag-chip {
       background-color: #3f51b5;
       color: white;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 11px;
+      padding: 1px 4px;
+      border-radius: 8px;
+      font-size: 9px;
+      margin-right: 2px;
+      margin-bottom: 2px;
+      display: inline-block;
       white-space: nowrap;
     }
 
     /* Mobile responsive */
     @media (max-width: 768px) {
-      .basic-info-row {
+      .basic-info-section {
         flex-direction: column;
-        align-items: flex-start;
         gap: 8px;
       }
 
-      .abilities-row {
+      .abilities-group {
+        flex-wrap: wrap;
         justify-content: space-between;
       }
 
-      .detail-row {
+      .text-fields-section {
         flex-direction: column;
-        gap: 4px;
+        gap: 8px;
       }
 
-      .detail-label {
+      .attacks-field,
+      .spells-field,
+      .text-field,
+      .tags-field,
+      .name-field {
+        max-width: none;
+      }
+
+      .statblock-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .row-actions {
+        flex-direction: row;
+        justify-content: space-between;
         min-width: auto;
       }
 
-      .card-header {
-        flex-wrap: wrap;
+      .filter-row {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
       }
 
-      .statblock-name {
-        font-size: 16px;
+      .search-field {
+        max-width: none;
       }
     }
   `]
