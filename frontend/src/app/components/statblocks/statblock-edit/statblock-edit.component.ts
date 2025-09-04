@@ -523,7 +523,10 @@ export class StatblockEditComponent implements OnInit {
   onTagsChange(row: EditableStatBlock): void {
     // Convert space-separated text to tags array (across multiple lines)
     const allText = row.tagsText.replace(/\n/g, ' '); // Replace newlines with spaces
-    row.tags = allText.split(' ').filter(tag => tag.trim()).map(tag => tag.trim());
+    const tags = allText.split(' ').filter(tag => tag.trim()).map(tag => tag.trim());
+    
+    // Remove duplicates by converting to Set and back to array
+    row.tags = Array.from(new Set(tags));
     this.onFieldChange(row);
   }
 

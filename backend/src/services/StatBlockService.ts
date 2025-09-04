@@ -42,11 +42,14 @@ export class StatBlockService {
   }
 
   async createStatBlock(statblockData: CreateStatBlockDto): Promise<StatBlock> {
+    // Deduplicate tags to prevent duplicates
+    const uniqueTags = statblockData.tags ? Array.from(new Set(statblockData.tags)) : [];
+    
     const statblock = this.statblockRepository.create({
       ...statblockData,
       attacks: statblockData.attacks || [],
       spells: statblockData.spells || [],
-      tags: statblockData.tags || []
+      tags: uniqueTags
     });
 
     return await this.statblockRepository.save(statblock);
@@ -57,6 +60,11 @@ export class StatBlockService {
     
     if (!statblock) {
       return null;
+    }
+
+    // Deduplicate tags if they are being updated
+    if (updates.tags) {
+      updates.tags = Array.from(new Set(updates.tags));
     }
 
     // Merge updates

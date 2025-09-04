@@ -48,7 +48,13 @@ This is a full-stack TypeScript application with:
   - **Improved Readability**: Larger text sizes (14px field values, 13px list items, 11px labels) for better visibility
   - **Generous Text Fields**: Attacks and spells fields given higher flex priority for more space
   - **No Horizontal Scrolling**: Responsive flex layout that wraps appropriately instead of forcing horizontal scroll
-  - **Bulk Tag Operations**: Add or remove tags from multiple selected statblocks simultaneously
+  - **Integrated Tag Search**: Click on any tag to add/remove it from the search field, with visual highlighting of active search terms
+  - **Advanced Search**: Support for quoted exact matches and multiple search terms (space-separated)
+  - **Bulk Tag Operations**: Add or remove tags from multiple selected statblocks simultaneously with automatic duplicate prevention
+  - **Select All Control**: Convenient select all/deselect all checkbox with indeterminate state for partial selections
+  - **Tag Validation**: Bulk operations prevent tags with spaces; individual tags must not contain spaces (use underscores or hyphens instead)
+  - **Tag Deduplication**: All tag operations automatically prevent duplicate tags in the same statblock
+  - **Selection Preservation**: Bulk operations maintain selection state after completing updates
   - **Always Sorted**: Statblocks automatically sorted alphabetically by name for consistent organization
   - Sortable by name, CR, AC with preserved selection state
   - Filterable by tags and search terms

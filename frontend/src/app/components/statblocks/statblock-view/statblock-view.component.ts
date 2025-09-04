@@ -38,7 +38,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
           <div class="filter-row">
             <mat-form-field appearance="outline" class="search-field">
               <mat-label>Search</mat-label>
-              <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
+              <input matInput [formControl]="searchControl" placeholder="Search names and tags... Use quotes for exact matches">
               <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
 
@@ -47,13 +47,14 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
           @if (allTags.length > 0) {
             <div class="tags-section">
-              <h4>Filter by Tags:</h4>
+              <h4>Search Tags:</h4>
               <div class="tags-grid">
                 <mat-chip-listbox>
                   @for (tag of allTags; track tag) {
                     <mat-chip-option
-                      [selected]="isTagSelected(tag)"
-                      (click)="toggleTagFilter(tag)">
+                      [selected]="isTagHighlighted(tag)"
+                      (click)="toggleTagFilter(tag)"
+                      [class.highlighted-tag]="isTagHighlighted(tag)">
                       {{ tag }}
                     </mat-chip-option>
                   }
@@ -63,6 +64,14 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
           }
 
           <div class="action-row">
+            <div class="selection-controls">
+              <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                           [checked]="isAllSelected()"
+                           [indeterminate]="isIndeterminate()">
+                Select All
+              </mat-checkbox>
+            </div>
+
             <div class="bulk-actions">
               <button mat-raised-button color="warn" (click)="deleteSelected()" [disabled]="selection.selected.length === 0">
                 <mat-icon>delete</mat-icon>
@@ -73,7 +82,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
                 <div class="tag-actions">
                   <mat-form-field appearance="outline" class="tag-input">
                     <mat-label>Bulk Tag Action</mat-label>
-                    <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag name">
+                    <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter single tag (no spaces)">
                   </mat-form-field>
                   <button mat-raised-button color="primary" (click)="addTagToSelected()" [disabled]="!bulkTagInput.trim()">
                     <mat-icon>add</mat-icon>
@@ -271,12 +280,23 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
       color: #e0e0e0;
     }
 
+    .highlighted-tag {
+      background-color: #4CAF50 !important;
+      color: white !important;
+    }
+
     .action-row {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       margin-top: 16px;
       gap: 16px;
+    }
+
+    .selection-controls {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
     }
 
     .bulk-actions {
@@ -508,6 +528,10 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
         align-items: stretch;
       }
 
+      .selection-controls {
+        justify-content: center;
+      }
+
       .tag-actions {
         flex-direction: column;
         gap: 8px;
@@ -528,7 +552,6 @@ export class StatblockViewComponent implements OnInit {
   filteredStatblocks: StatBlock[] = [];
   allTags: string[] = [];
   searchControl = new FormControl('');
-  selectedTags: string[] = [];
   selection = new SelectionModel<StatBlock>(true, []);
   bulkTagInput: string = '';
 
@@ -546,16 +569,20 @@ export class StatblockViewComponent implements OnInit {
     });
   }
 
-  loadStatblocks(): void {
-    this.statblockService.getStatblocks().subscribe({
-      next: (statblocks) => {
-        this.statblocks = statblocks;
-        this.extractTags();
-        this.applyFilters();
-      },
-      error: (error) => {
-        console.error('Error loading statblocks:', error);
-      }
+  loadStatblocks(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.statblockService.getStatblocks().subscribe({
+        next: (statblocks) => {
+          this.statblocks = statblocks;
+          this.extractTags();
+          this.applyFilters();
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error loading statblocks:', error);
+          reject(error);
+        }
+      });
     });
   }
 
@@ -575,18 +602,13 @@ export class StatblockViewComponent implements OnInit {
     // Apply search filter
     const searchTerm = this.searchControl.value?.toLowerCase().trim();
     if (searchTerm) {
+      const searchTerms = this.parseSearchTerms(searchTerm);
       filtered = filtered.filter(statblock => {
-        return statblock.name.toLowerCase().includes(searchTerm) ||
-               (statblock.tags && statblock.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
-      });
-    }
-    
-    // Apply tag filters
-    if (this.selectedTags.length > 0) {
-      filtered = filtered.filter(statblock => {
-        return this.selectedTags.every(selectedTag => 
-          statblock.tags && statblock.tags.includes(selectedTag)
-        );
+        return searchTerms.every(term => {
+          const searchText = term.toLowerCase();
+          return statblock.name.toLowerCase().includes(searchText) ||
+                 (statblock.tags && statblock.tags.some(tag => tag.toLowerCase().includes(searchText)));
+        });
       });
     }
     
@@ -596,23 +618,65 @@ export class StatblockViewComponent implements OnInit {
     this.filteredStatblocks = filtered;
   }
 
-  isTagSelected(tag: string): boolean {
-    return this.selectedTags.includes(tag);
+  private parseSearchTerms(searchText: string): string[] {
+    const terms: string[] = [];
+    let currentTerm = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < searchText.length; i++) {
+      const char = searchText[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ' ' && !inQuotes) {
+        if (currentTerm.trim()) {
+          terms.push(currentTerm.trim());
+          currentTerm = '';
+        }
+      } else {
+        currentTerm += char;
+      }
+    }
+    
+    if (currentTerm.trim()) {
+      terms.push(currentTerm.trim());
+    }
+    
+    return terms;
+  }
+
+  isTagHighlighted(tag: string): boolean {
+    const searchTerm = this.searchControl.value?.toLowerCase().trim();
+    if (!searchTerm) return false;
+    
+    const searchTerms = this.parseSearchTerms(searchTerm);
+    return searchTerms.some(term => tag.toLowerCase().includes(term.toLowerCase()));
   }
 
   toggleTagFilter(tag: string): void {
-    const index = this.selectedTags.indexOf(tag);
-    if (index >= 0) {
-      this.selectedTags.splice(index, 1);
+    const currentSearch = this.searchControl.value || '';
+    const searchTerms = this.parseSearchTerms(currentSearch);
+    
+    // Check if tag is already in search
+    const tagIndex = searchTerms.findIndex(term => term.toLowerCase() === tag.toLowerCase());
+    
+    if (tagIndex >= 0) {
+      // Remove tag from search
+      searchTerms.splice(tagIndex, 1);
     } else {
-      this.selectedTags.push(tag);
+      // Add tag to search
+      searchTerms.push(tag);
     }
+    
+    // Update search control
+    const newSearchText = searchTerms.join(' ');
+    this.searchControl.setValue(newSearchText);
+    
     this.applyFilters();
   }
 
   clearFilters(): void {
     this.searchControl.setValue('');
-    this.selectedTags = [];
     this.applyFilters();
   }
 
@@ -703,6 +767,12 @@ export class StatblockViewComponent implements OnInit {
     const tagToAdd = this.bulkTagInput.trim();
     if (!tagToAdd || this.selection.selected.length === 0) return;
 
+    // Prevent tags with spaces
+    if (tagToAdd.includes(' ')) {
+      alert('Tags cannot contain spaces. Please use underscores or hyphens instead.');
+      return;
+    }
+
     const selectedStatblocks = this.selection.selected;
     const updates: Promise<any>[] = [];
 
@@ -714,6 +784,8 @@ export class StatblockViewComponent implements OnInit {
       // Add tag if it doesn't already exist
       if (!statblock.tags.includes(tagToAdd)) {
         const updatedTags = [...statblock.tags, tagToAdd];
+        // Remove duplicates just in case
+        const uniqueTags = Array.from(new Set(updatedTags));
         const updateData = {
           name: statblock.name,
           type: statblock.type,
@@ -730,7 +802,7 @@ export class StatblockViewComponent implements OnInit {
           spellSlots: statblock.spellSlots || [],
           skills: statblock.skills || [],
           resistances: statblock.resistances || [],
-          tags: updatedTags
+          tags: uniqueTags
         };
 
         updates.push(this.statblockService.updateStatblock(statblock.id!, updateData).toPromise());
@@ -738,9 +810,15 @@ export class StatblockViewComponent implements OnInit {
     });
 
     if (updates.length > 0) {
+      // Preserve selected IDs to restore selection after reload
+      const selectedIds = this.selection.selected.map(s => s.id);
+      
       Promise.all(updates).then(() => {
         this.bulkTagInput = '';
-        this.loadStatblocks();
+        this.loadStatblocks().then(() => {
+          // Restore selection based on IDs
+          this.restoreSelection(selectedIds);
+        });
       }).catch(error => {
         console.error('Error adding tags:', error);
       });
@@ -752,6 +830,12 @@ export class StatblockViewComponent implements OnInit {
   removeTagFromSelected(): void {
     const tagToRemove = this.bulkTagInput.trim();
     if (!tagToRemove || this.selection.selected.length === 0) return;
+
+    // Prevent tags with spaces
+    if (tagToRemove.includes(' ')) {
+      alert('Tags cannot contain spaces. Please use underscores or hyphens instead.');
+      return;
+    }
 
     const selectedStatblocks = this.selection.selected;
     const updates: Promise<any>[] = [];
@@ -783,14 +867,32 @@ export class StatblockViewComponent implements OnInit {
     });
 
     if (updates.length > 0) {
+      // Preserve selected IDs to restore selection after reload
+      const selectedIds = this.selection.selected.map(s => s.id);
+      
       Promise.all(updates).then(() => {
         this.bulkTagInput = '';
-        this.loadStatblocks();
+        this.loadStatblocks().then(() => {
+          // Restore selection based on IDs
+          this.restoreSelection(selectedIds);
+        });
       }).catch(error => {
         console.error('Error removing tags:', error);
       });
     } else {
       this.bulkTagInput = '';
     }
+  }
+
+  restoreSelection(selectedIds: (string | undefined)[]): void {
+    // Clear current selection first
+    this.selection.clear();
+    
+    // Restore selection for items that still exist
+    this.statblocks.forEach(statblock => {
+      if (selectedIds.includes(statblock.id)) {
+        this.selection.select(statblock);
+      }
+    });
   }
 }
