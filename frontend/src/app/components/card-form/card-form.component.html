@@ -15,48 +15,56 @@
     <form [formGroup]="cardForm" (ngSubmit)="onSubmit()" (keydown)="onKeyDown($event)">
       <div class="form-section">
         <h3>Card Details</h3>
-        
+
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Title *</mat-label>
           <input matInput formControlName="title" placeholder="Enter card title" #titleInput>
-          <mat-error *ngIf="cardForm.get('title')?.hasError('required')">
-            Title is required
-          </mat-error>
-          <mat-error *ngIf="cardForm.get('title')?.hasError('maxlength')">
-            Title cannot exceed 255 characters
-          </mat-error>
+          @if (cardForm.get('title')?.hasError('required')) {
+            <mat-error>
+              Title is required
+            </mat-error>
+          }
+          @if (cardForm.get('title')?.hasError('maxlength')) {
+            <mat-error>
+              Title cannot exceed 255 characters
+            </mat-error>
+          }
           <mat-hint>Press Ctrl+Enter to submit the form quickly</mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Tags</mat-label>
-          <input matInput formControlName="tags" 
-                 placeholder="Enter tags separated by spaces (e.g., 'paladin druid spell-1')">
+          <input matInput formControlName="tags"
+            placeholder="Enter tags separated by spaces (e.g., 'paladin druid spell-1')">
           <mat-hint>Enter tags separated by spaces. Example: paladin druid spell-1</mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Front Text</mat-label>
-          <textarea matInput formControlName="frontText" rows="6" 
-                    placeholder="Text to appear on the front of the card"></textarea>
+          <textarea matInput formControlName="frontText" rows="6"
+          placeholder="Text to appear on the front of the card"></textarea>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Back Text</mat-label>
           <textarea matInput formControlName="backText" rows="6"
-                    placeholder="Text to appear on the back of the card"></textarea>
+          placeholder="Text to appear on the back of the card"></textarea>
         </mat-form-field>
       </div>
     </form>
 
     <div class="preview-section">
       <h3>Live PDF Preview</h3>
-      <div class="pdf-preview-container" *ngIf="previewPdfUrl">
-        <embed [src]="previewPdfUrl" type="application/pdf" width="100%" height="600px" tabindex="-1" />
-      </div>
-      <div class="no-preview" *ngIf="!previewPdfUrl">
-        <p>Enter card details to see live PDF preview</p>
-      </div>
+      @if (previewPdfUrl) {
+        <div class="pdf-preview-container">
+          <embed [src]="previewPdfUrl" type="application/pdf" width="100%" height="600px" tabindex="-1" />
+        </div>
+      }
+      @if (!previewPdfUrl) {
+        <div class="no-preview">
+          <p>Enter card details to see live PDF preview</p>
+        </div>
+      }
     </div>
   </div>
 </mat-dialog-content>
@@ -70,9 +78,15 @@
   <div class="button-group">
     <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!cardForm.valid">
       <mat-icon>save</mat-icon>
-      <span *ngIf="!isEditing">{{ 'Create' }}</span>
-      <span *ngIf="isEditing && !isBulkAddEnabled">{{ 'Update' }}</span>
-      <span *ngIf="isEditing && isBulkAddEnabled">{{ 'Update, then add' }}</span>
+      @if (!isEditing) {
+        <span>{{ 'Create' }}</span>
+      }
+      @if (isEditing && !isBulkAddEnabled) {
+        <span>{{ 'Update' }}</span>
+      }
+      @if (isEditing && isBulkAddEnabled) {
+        <span>{{ 'Update, then add' }}</span>
+      }
     </button>
     <button mat-button (click)="onCancel()">Cancel</button>
   </div>

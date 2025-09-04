@@ -1,8 +1,8 @@
 <mat-toolbar color="primary">
   <h1>RPG Card Manager</h1>
   <span class="spacer"></span>
-  <a mat-icon-button href="https://github.com/linewriter1024/simplerpgcards" target="_blank" 
-     matTooltip="View on GitHub" aria-label="GitHub repository">
+  <a mat-icon-button href="https://github.com/linewriter1024/simplerpgcards" target="_blank"
+    matTooltip="View on GitHub" aria-label="GitHub repository">
     <mat-icon>code</mat-icon>
   </a>
   <button mat-raised-button color="accent" (click)="generatePdf()" [disabled]="selection.selected.length === 0">
@@ -26,19 +26,23 @@
       <button mat-button (click)="clearFilters()">Clear Filters</button>
     </div>
 
-    <div class="tags-section" *ngIf="allTags.length > 0">
-      <h4>Search Tags:</h4>
-      <div class="tags-grid">
-        <mat-chip-listbox>
-          <mat-chip-option *ngFor="let tag of allTags" 
-                          [selected]="isTagHighlighted(tag)"
-                          (click)="toggleTagFilter(tag)"
-                          [class.highlighted-tag]="isTagHighlighted(tag)">
-            {{ tag }}
-          </mat-chip-option>
-        </mat-chip-listbox>
+    @if (allTags.length > 0) {
+      <div class="tags-section">
+        <h4>Search Tags:</h4>
+        <div class="tags-grid">
+          <mat-chip-listbox>
+            @for (tag of allTags; track tag) {
+              <mat-chip-option
+                [selected]="isTagHighlighted(tag)"
+                (click)="toggleTagFilter(tag)"
+                [class.highlighted-tag]="isTagHighlighted(tag)">
+                {{ tag }}
+              </mat-chip-option>
+            }
+          </mat-chip-listbox>
+        </div>
       </div>
-    </div>
+    }
 
     <div class="action-row">
       <button mat-raised-button color="primary" (click)="createCard()">
@@ -61,14 +65,14 @@
     <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef>
         <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                      [checked]="isAllSelected()"
-                      [indeterminate]="isIndeterminate()">
+          [checked]="isAllSelected()"
+          [indeterminate]="isIndeterminate()">
         </mat-checkbox>
       </th>
       <td mat-cell *matCellDef="let row">
         <mat-checkbox (click)="$event.stopPropagation()"
-                      (change)="$event ? selection.toggle(row) : null"
-                      [checked]="selection.isSelected(row)">
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)">
         </mat-checkbox>
       </td>
     </ng-container>
@@ -76,17 +80,21 @@
     <ng-container matColumnDef="title">
       <th mat-header-cell *matHeaderCellDef class="sortable-header" (click)="setSortBy('title')">
         <span>Title</span>
-        <mat-icon *ngIf="sortBy === 'title'">
-          {{sortDirection === 'desc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up'}}
-        </mat-icon>
+        @if (sortBy === 'title') {
+          <mat-icon>
+            {{sortDirection === 'desc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up'}}
+          </mat-icon>
+        }
       </th>
       <td mat-cell *matCellDef="let card">
         <div class="card-title">{{card.title}}</div>
-        <div class="card-content-preview" *ngIf="card.frontText || card.backText">
-          <span class="front-text">{{card.frontText || '(empty)'}}</span>
-          <span class="separator"> \ </span>
-          <span class="back-text">{{card.backText || '(empty)'}}</span>
-        </div>
+        @if (card.frontText || card.backText) {
+          <div class="card-content-preview">
+            <span class="front-text">{{card.frontText || '(empty)'}}</span>
+            <span class="separator"> \ </span>
+            <span class="back-text">{{card.backText || '(empty)'}}</span>
+          </div>
+        }
       </td>
     </ng-container>
 
@@ -94,7 +102,9 @@
       <th mat-header-cell *matHeaderCellDef>Tags</th>
       <td mat-cell *matCellDef="let card">
         <div class="tags-container">
-          <span class="tag-chip" *ngFor="let tag of card.tags">{{tag}}</span>
+          @for (tag of card.tags; track tag) {
+            <span class="tag-chip">{{tag}}</span>
+          }
         </div>
       </td>
     </ng-container>
@@ -102,9 +112,11 @@
     <ng-container matColumnDef="createdAt">
       <th mat-header-cell *matHeaderCellDef class="sortable-header" (click)="setSortBy('createdAt')">
         <span>Created</span>
-        <mat-icon *ngIf="sortBy === 'createdAt'">
-          {{sortDirection === 'desc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up'}}
-        </mat-icon>
+        @if (sortBy === 'createdAt') {
+          <mat-icon>
+            {{sortDirection === 'desc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up'}}
+          </mat-icon>
+        }
       </th>
       <td mat-cell *matCellDef="let card">
         <span class="date-text">{{card.createdAt | date:'short'}}</span>
@@ -124,9 +136,9 @@
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
-        (click)="toggleRowSelection(row)" 
-        [class.row-selected]="selection.isSelected(row)"
-        class="clickable-row"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+      (click)="toggleRowSelection(row)"
+      [class.row-selected]="selection.isSelected(row)"
+    class="clickable-row"></tr>
   </table>
 </mat-card>

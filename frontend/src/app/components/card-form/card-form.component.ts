@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, Inject, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,17 +16,16 @@ import { Card, CreateCardDto } from '../../models/card.model';
 @Component({
     selector: 'app-card-form',
     imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        FormsModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatButtonModule,
-        MatIconModule,
-        MatCheckboxModule
-    ],
+    ReactiveFormsModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCheckboxModule
+],
     templateUrl: './card-form.component.html',
     styleUrl: './card-form.component.scss'
 })
