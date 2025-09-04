@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { AppDataSource } from './config/database';
 import cardRoutes from './routes/cards';
+import statblockRoutes from './routes/statblocks';
 
 const app = express();
 const PORT = Number(process.env.SRC_PORT) || 3000;
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api', cardRoutes);
+app.use('/api', statblockRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

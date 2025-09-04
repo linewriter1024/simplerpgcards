@@ -1,16 +1,3 @@
-<mat-toolbar color="primary">
-  <h1>RPG Card Manager</h1>
-  <span class="spacer"></span>
-  <a mat-icon-button href="https://github.com/linewriter1024/simplerpgcards" target="_blank"
-    matTooltip="View on GitHub" aria-label="GitHub repository">
-    <mat-icon>code</mat-icon>
-  </a>
-  <button mat-raised-button color="accent" (click)="generatePdf()" [disabled]="selection.selected.length === 0">
-    <mat-icon>picture_as_pdf</mat-icon>
-    Generate PDF ({{selection.selected.length}})
-  </button>
-</mat-toolbar>
-
 <mat-card class="filter-card">
   <mat-card-header>
     <mat-card-title>Filters & Search</mat-card-title>
@@ -24,6 +11,11 @@
       </mat-form-field>
 
       <button mat-button (click)="clearFilters()">Clear Filters</button>
+
+      <button mat-raised-button color="accent" (click)="generatePdf()" [disabled]="selection.selected.length === 0">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Generate PDF ({{selection.selected.length}})
+      </button>
     </div>
 
     @if (allTags.length > 0) {

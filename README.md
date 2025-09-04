@@ -14,7 +14,9 @@ This is a full-stack TypeScript application with:
 
 ## Features
 
-### Card Management
+### Application Modes
+
+#### Printable Cards Mode
 - ✅ Create, read, update, delete cards
 - ✅ Rich card details (title, front/back text, tags)
 - ✅ Real-time search and filtering by content and tags
@@ -23,6 +25,39 @@ This is a full-stack TypeScript application with:
 - ✅ Bulk selection for PDF generation
 - ✅ Sortable card list by title or creation date
 - ✅ Bulk-add mode for creating multiple similar cards with shared tags and content
+
+#### Statblocks Mode (NEW)
+- ✅ **Edit Mode**: Compact flex-based editing interface
+  - Create and edit statblocks in space-efficient horizontal layouts
+  - Support for D&D 5e statblock format with ability scores (STR, DEX, CON, INT, WIS, CHA)
+  - Multi-line text-based attacks, spells, skills, resistances, tags, and notes inputs
+  - Individual save buttons per row with visual indicators for unsaved changes
+  - Save/check icons on each row (save icon for unsaved, checkmark for saved)
+  - Manual row management with "Add New Statblock" buttons at top and bottom
+  - Bulk delete operations for selected statblocks
+  - Visual indicators for new rows (green) and unsaved changes (yellow)
+  - **Responsive Design**: Custom flex layout optimized for space efficiency
+    - Desktop: Horizontal layout with abilities inline and text fields in bottom row
+    - Mobile: Vertical stack layout with proper field organization
+    - Eliminates vertical scrolling by maximizing horizontal space usage
+    - No table headers or unnecessary vertical padding
+- ✅ **View Mode**: Read-only sortable and filterable table view
+  - Full statblock data display in organized table format including calculated D&D ability score modifiers
+  - Sortable by name, CR, AC
+  - Filterable by tags and search terms
+  - Easy-to-read attack and spell listings
+  - Skills and resistances display
+  - Calculated D&D modifiers column (e.g., STR 16 → +3, DEX 14 → +2)
+- ✅ Navigation between edit and view modes via toolbar buttons
+- ✅ Complete CRUD operations for statblocks
+- ✅ Tag-based categorization system for statblocks
+- ✅ Challenge Rating (CR) and Armor Class (AC) tracking
+
+### Navigation
+- ✅ Top navigation bar with mode switching buttons
+- ✅ "Printable Cards" button for traditional card management
+- ✅ "Statblocks" button for D&D creature/NPC management
+- ✅ GitHub repository link in navigation
 
 ## Card Specifications
 
@@ -96,10 +131,10 @@ The SQLite database will be created automatically on first run with an empty dat
 ### Backend (`/backend`)
 ```
 src/
-├── entities/          # TypeORM entities
-├── services/          # Business logic
-├── controllers/       # Route handlers
-├── routes/           # Express routes
+├── entities/          # TypeORM entities (Card, StatBlock)
+├── services/          # Business logic (CardService, StatBlockService)
+├── controllers/       # Route handlers (CardController, StatBlockController)
+├── routes/           # Express routes (cards, statblocks)
 ├── config/           # Database and app config
 ├── types/            # TypeScript type definitions
 └── utils/            # Utility functions
@@ -109,8 +144,13 @@ src/
 ```
 src/app/
 ├── components/       # Angular components
-├── services/         # Angular services
-├── models/          # TypeScript interfaces
+│   ├── card-form/    # Card creation/editing dialog
+│   ├── card-list/    # Card management interface  
+│   └── statblocks/   # Statblock management
+│       ├── statblock-edit/  # Spreadsheet-style editing
+│       └── statblock-view/  # Read-only table view
+├── services/         # Angular services (CardService, StatblockService)
+├── models/          # TypeScript interfaces (Card, StatBlock models)
 └── ...              # Standard Angular structure
 ```
 
@@ -123,6 +163,14 @@ src/app/
 - `PUT /api/cards/:id` - Update card
 - `DELETE /api/cards/:id` - Delete card
 - `GET /api/cards/tags` - Get all tags
+
+### Statblocks (NEW)
+- `GET /api/statblocks` - Get all statblocks (with optional filters)
+- `GET /api/statblocks/:id` - Get single statblock
+- `POST /api/statblocks` - Create new statblock
+- `PUT /api/statblocks/:id` - Update statblock
+- `DELETE /api/statblocks/:id` - Delete statblock
+- `DELETE /api/statblocks/bulk` - Delete multiple statblocks
 
 ### PDF Generation
 - `POST /api/cards/pdf` - Generate PDF from selected cards
