@@ -227,7 +227,7 @@
               @if (statblock.resistances && statblock.resistances.length > 0) {
                 <div class="field text-field">
                   <div class="field-label">Resistances</div>
-                  <div class="field-value">{{statblock.resistances.join(', ')}}</div>
+                  <div class="field-value text-content">{{statblock.resistances.join(', ')}}</div>
                 </div>
               }
 
@@ -274,7 +274,7 @@
             <div class="text-fields-section">
               <div class="field attacks-field">
                 <div class="field-label">Attacks</div>
-                <div class="field-value">
+                <div class="field-value text-content">
                   @if (statblock.attacks && statblock.attacks.length > 0) {
                     @for (attack of statblock.attacks; track attack.name) {
                       <div class="list-item">{{attack.name}}</div>
@@ -286,16 +286,18 @@
               @if (statblock.spells && statblock.spells.length > 0) {
                 <div class="field spells-field-container">
                   <div class="field-label">Spells</div>
-                  <div class="spells-two-column">
-                    <div class="spells-column">
-                      @for (spell of getFirstHalfSpells(statblock.spells); track spell.name) {
-                        <div class="list-item">{{spell.name}}</div>
-                      }
-                    </div>
-                    <div class="spells-column">
-                      @for (spell of getSecondHalfSpells(statblock.spells); track spell.name) {
-                        <div class="list-item">{{spell.name}}</div>
-                      }
+                  <div class="field-value text-content">
+                    <div class="spells-two-column">
+                      <div class="spells-column">
+                        @for (spell of getFirstHalfSpells(statblock.spells); track spell.name) {
+                          <div class="list-item">{{spell.name}}</div>
+                        }
+                      </div>
+                      <div class="spells-column">
+                        @for (spell of getSecondHalfSpells(statblock.spells); track spell.name) {
+                          <div class="list-item">{{spell.name}}</div>
+                        }
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -303,7 +305,7 @@
 
               <div class="field text-field">
                 <div class="field-label">Skills</div>
-                <div class="field-value">
+                <div class="field-value text-content">
                   @if (statblock.skills && statblock.skills.length > 0) {
                     @for (skill of statblock.skills; track skill) {
                       <div class="list-item">{{skill}}</div>
