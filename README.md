@@ -8,7 +8,7 @@ A modern web application for creating, managing, and generating RPG cards with a
 
 This is a full-stack TypeScript application with:
 - **Backend**: Node.js + Express + TypeORM + SQLite
-- **Frontend**: Angular 17 + Angular Material
+- **Frontend**: Angular 20 + Angular Material
 - **PDF Generation**: PDFKit with custom card layouts
 - **Database**: SQLite with TypeORM migrations
 
