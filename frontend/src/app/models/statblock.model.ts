@@ -1,8 +1,9 @@
 export interface StatBlock {
   id?: string;
   name: string;
+  type?: string;
   cr: string;
-  ac: number;
+  ac: string;
   spellSaveDC?: number;
   spellAttackModifier?: number;
   str: number;
@@ -37,8 +38,9 @@ export interface Spell {
 
 export interface CreateStatBlockDto {
   name: string;
+  type?: string;
   cr: string;
-  ac: number;
+  ac: string;
   spellSaveDC?: number;
   spellAttackModifier?: number;
   str: number;

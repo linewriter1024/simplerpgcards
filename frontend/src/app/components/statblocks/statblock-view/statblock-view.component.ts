@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -19,6 +19,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatButtonModule,
     MatIconModule,
     MatInputModule,
@@ -62,10 +63,29 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
           }
 
           <div class="action-row">
-            <button mat-raised-button color="warn" (click)="deleteSelected()" [disabled]="selection.selected.length === 0">
-              <mat-icon>delete</mat-icon>
-              Delete Selected ({{selection.selected.length}})
-            </button>
+            <div class="bulk-actions">
+              <button mat-raised-button color="warn" (click)="deleteSelected()" [disabled]="selection.selected.length === 0">
+                <mat-icon>delete</mat-icon>
+                Delete Selected ({{selection.selected.length}})
+              </button>
+
+              @if (selection.selected.length > 0) {
+                <div class="tag-actions">
+                  <mat-form-field appearance="outline" class="tag-input">
+                    <mat-label>Bulk Tag Action</mat-label>
+                    <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag name">
+                  </mat-form-field>
+                  <button mat-raised-button color="primary" (click)="addTagToSelected()" [disabled]="!bulkTagInput.trim()">
+                    <mat-icon>add</mat-icon>
+                    Add Tag
+                  </button>
+                  <button mat-raised-button color="accent" (click)="removeTagFromSelected()" [disabled]="!bulkTagInput.trim()">
+                    <mat-icon>remove</mat-icon>
+                    Remove Tag
+                  </button>
+                </div>
+              }
+            </div>
 
             <span class="statblock-count">{{ filteredStatblocks.length }} statblocks</span>
           </div>
@@ -102,6 +122,13 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
                     <div class="field-value">{{statblock.name}}</div>
                   </div>
 
+                  @if (statblock.type) {
+                    <div class="field type-field">
+                      <div class="field-label">Type</div>
+                      <div class="field-value">{{statblock.type}}</div>
+                    </div>
+                  }
+
                   <div class="field compact-field">
                     <div class="field-label">CR</div>
                     <div class="field-value">{{statblock.cr}}</div>
@@ -115,27 +142,27 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
                   <div class="abilities-group">
                     <div class="field ability-field">
                       <div class="field-label">STR</div>
-                      <div class="field-value">{{statblock.str}}</div>
+                      <div class="field-value">{{statblock.str}} ({{getModifier(statblock.str)}})</div>
                     </div>
                     <div class="field ability-field">
                       <div class="field-label">DEX</div>
-                      <div class="field-value">{{statblock.dex}}</div>
+                      <div class="field-value">{{statblock.dex}} ({{getModifier(statblock.dex)}})</div>
                     </div>
                     <div class="field ability-field">
                       <div class="field-label">CON</div>
-                      <div class="field-value">{{statblock.con}}</div>
+                      <div class="field-value">{{statblock.con}} ({{getModifier(statblock.con)}})</div>
                     </div>
                     <div class="field ability-field">
                       <div class="field-label">INT</div>
-                      <div class="field-value">{{statblock.int}}</div>
+                      <div class="field-value">{{statblock.int}} ({{getModifier(statblock.int)}})</div>
                     </div>
                     <div class="field ability-field">
                       <div class="field-label">WIS</div>
-                      <div class="field-value">{{statblock.wis}}</div>
+                      <div class="field-value">{{statblock.wis}} ({{getModifier(statblock.wis)}})</div>
                     </div>
                     <div class="field ability-field">
                       <div class="field-label">CHA</div>
-                      <div class="field-value">{{statblock.cha}}</div>
+                      <div class="field-value">{{statblock.cha}} ({{getModifier(statblock.cha)}})</div>
                     </div>
                   </div>
                 </div>
@@ -247,8 +274,29 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     .action-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       margin-top: 16px;
+      gap: 16px;
+    }
+
+    .bulk-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .tag-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tag-input {
+      min-width: 200px;
+      flex: 1;
+      max-width: 300px;
     }
 
     .statblock-count {
@@ -330,7 +378,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     }
 
     .field-label {
-      font-size: 10px;
+      font-size: 11px;
       color: #ccc;
       font-weight: 500;
       text-transform: uppercase;
@@ -339,54 +387,55 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
     .field-value {
       color: #e0e0e0;
-      font-size: 12px;
-      min-height: 16px;
+      font-size: 14px;
+      min-height: 18px;
     }
 
     .name-field {
       min-width: 150px;
+      flex: 2;
+    }
+
+    .type-field {
+      min-width: 100px;
       flex: 1;
-      max-width: 250px;
     }
 
     .compact-field {
-      width: 60px;
       min-width: 60px;
+      flex: 0 0 auto;
     }
 
     .ability-field {
-      width: 45px;
-      min-width: 45px;
+      min-width: 60px;
+      flex: 0 0 auto;
     }
 
     .attacks-field,
     .spells-field {
       min-width: 180px;
-      flex: 1;
-      max-width: 250px;
+      flex: 2;
     }
 
     .spell-slots-field {
       min-width: 120px;
-      width: 120px;
+      flex: 1;
     }
 
     .text-field {
       min-width: 100px;
       flex: 1;
-      max-width: 150px;
     }
 
     .tags-field {
       min-width: 120px;
       flex: 1;
-      max-width: 200px;
     }
 
     .list-item {
-      font-size: 11px;
-      line-height: 1.2;
-      margin-bottom: 1px;
+      font-size: 13px;
+      line-height: 1.3;
+      margin-bottom: 2px;
     }
 
     .list-item:last-child {
@@ -396,7 +445,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     .spell-slots {
       font-family: monospace;
       color: #4CAF50;
-      font-size: 10px;
+      font-size: 12px;
     }
 
     .tag-chip {
@@ -453,6 +502,21 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
         align-items: stretch;
       }
 
+      .action-row {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .tag-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .tag-input {
+        max-width: none;
+      }
+
       .search-field {
         max-width: none;
       }
@@ -466,6 +530,7 @@ export class StatblockViewComponent implements OnInit {
   searchControl = new FormControl('');
   selectedTags: string[] = [];
   selection = new SelectionModel<StatBlock>(true, []);
+  bulkTagInput: string = '';
 
   constructor(private statblockService: StatblockService) {}
 
@@ -524,6 +589,9 @@ export class StatblockViewComponent implements OnInit {
         );
       });
     }
+    
+    // Always sort by name in view mode
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
     
     this.filteredStatblocks = filtered;
   }
@@ -628,6 +696,101 @@ export class StatblockViewComponent implements OnInit {
           console.error('Error deleting statblocks:', error);
         }
       });
+    }
+  }
+
+  addTagToSelected(): void {
+    const tagToAdd = this.bulkTagInput.trim();
+    if (!tagToAdd || this.selection.selected.length === 0) return;
+
+    const selectedStatblocks = this.selection.selected;
+    const updates: Promise<any>[] = [];
+
+    selectedStatblocks.forEach(statblock => {
+      if (!statblock.tags) {
+        statblock.tags = [];
+      }
+      
+      // Add tag if it doesn't already exist
+      if (!statblock.tags.includes(tagToAdd)) {
+        const updatedTags = [...statblock.tags, tagToAdd];
+        const updateData = {
+          name: statblock.name,
+          type: statblock.type,
+          cr: statblock.cr,
+          ac: statblock.ac,
+          str: statblock.str,
+          dex: statblock.dex,
+          con: statblock.con,
+          int: statblock.int,
+          wis: statblock.wis,
+          cha: statblock.cha,
+          attacks: statblock.attacks || [],
+          spells: statblock.spells || [],
+          spellSlots: statblock.spellSlots || [],
+          skills: statblock.skills || [],
+          resistances: statblock.resistances || [],
+          tags: updatedTags
+        };
+
+        updates.push(this.statblockService.updateStatblock(statblock.id!, updateData).toPromise());
+      }
+    });
+
+    if (updates.length > 0) {
+      Promise.all(updates).then(() => {
+        this.bulkTagInput = '';
+        this.loadStatblocks();
+      }).catch(error => {
+        console.error('Error adding tags:', error);
+      });
+    } else {
+      this.bulkTagInput = '';
+    }
+  }
+
+  removeTagFromSelected(): void {
+    const tagToRemove = this.bulkTagInput.trim();
+    if (!tagToRemove || this.selection.selected.length === 0) return;
+
+    const selectedStatblocks = this.selection.selected;
+    const updates: Promise<any>[] = [];
+
+    selectedStatblocks.forEach(statblock => {
+      if (statblock.tags && statblock.tags.includes(tagToRemove)) {
+        const updatedTags = statblock.tags.filter(tag => tag !== tagToRemove);
+        const updateData = {
+          name: statblock.name,
+          type: statblock.type,
+          cr: statblock.cr,
+          ac: statblock.ac,
+          str: statblock.str,
+          dex: statblock.dex,
+          con: statblock.con,
+          int: statblock.int,
+          wis: statblock.wis,
+          cha: statblock.cha,
+          attacks: statblock.attacks || [],
+          spells: statblock.spells || [],
+          spellSlots: statblock.spellSlots || [],
+          skills: statblock.skills || [],
+          resistances: statblock.resistances || [],
+          tags: updatedTags
+        };
+
+        updates.push(this.statblockService.updateStatblock(statblock.id!, updateData).toPromise());
+      }
+    });
+
+    if (updates.length > 0) {
+      Promise.all(updates).then(() => {
+        this.bulkTagInput = '';
+        this.loadStatblocks();
+      }).catch(error => {
+        console.error('Error removing tags:', error);
+      });
+    } else {
+      this.bulkTagInput = '';
     }
   }
 }

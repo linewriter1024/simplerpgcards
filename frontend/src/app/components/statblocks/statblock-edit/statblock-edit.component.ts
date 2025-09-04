@@ -85,6 +85,11 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
                     <input matInput [(ngModel)]="row.name" (input)="onFieldChange(row)">
                   </mat-form-field>
                   
+                  <mat-form-field appearance="outline" class="type-field">
+                    <mat-label>Type</mat-label>
+                    <input matInput [(ngModel)]="row.type" (input)="onFieldChange(row)" placeholder="e.g., monstrosity, beast">
+                  </mat-form-field>
+                  
                   <mat-form-field appearance="outline" class="compact-field">
                     <mat-label>CR</mat-label>
                     <input matInput [(ngModel)]="row.cr" (input)="onFieldChange(row)">
@@ -92,7 +97,7 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
                   
                   <mat-form-field appearance="outline" class="compact-field">
                     <mat-label>AC</mat-label>
-                    <input matInput type="number" [(ngModel)]="row.ac" (input)="onFieldChange(row)">
+                    <input matInput [(ngModel)]="row.ac" (input)="onFieldChange(row)" placeholder="e.g., 15 (natural armor)">
                   </mat-form-field>
 
                   <!-- Abilities with Material labels -->
@@ -280,6 +285,12 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
       max-width: 250px;
     }
 
+    .type-field {
+      min-width: 120px;
+      flex: 1;
+      max-width: 180px;
+    }
+
     .compact-field {
       width: 80px;
       min-width: 80px;
@@ -295,7 +306,8 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
     .compact-field ::ng-deep .mat-mdc-form-field-subscript-wrapper,
     .ability-field ::ng-deep .mat-mdc-form-field-subscript-wrapper,
     .text-field ::ng-deep .mat-mdc-form-field-subscript-wrapper,
-    .name-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    .name-field ::ng-deep .mat-mdc-form-field-subscript-wrapper,
+    .type-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
       display: none;
     }
 
@@ -311,12 +323,14 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
     }
 
     .text-field ::ng-deep .mat-mdc-text-field-wrapper,
-    .name-field ::ng-deep .mat-mdc-text-field-wrapper {
+    .name-field ::ng-deep .mat-mdc-text-field-wrapper,
+    .type-field ::ng-deep .mat-mdc-text-field-wrapper {
       padding: 4px;
     }
 
     .text-field ::ng-deep .mat-mdc-form-field-infix,
-    .name-field ::ng-deep .mat-mdc-form-field-infix {
+    .name-field ::ng-deep .mat-mdc-form-field-infix,
+    .type-field ::ng-deep .mat-mdc-form-field-infix {
       padding: 8px 0;
       min-height: 32px;
     }
@@ -387,7 +401,9 @@ export class StatblockEditComponent implements OnInit {
   loadStatblocks(): void {
     this.statblockService.getStatblocks().subscribe({
       next: (statblocks) => {
-        this.editableRows = statblocks.map(sb => this.convertToEditableRow(sb));
+        // Sort by name initially in edit mode, but preserve order for new rows later
+        const sortedStatblocks = statblocks.sort((a, b) => a.name.localeCompare(b.name));
+        this.editableRows = sortedStatblocks.map(sb => this.convertToEditableRow(sb));
         this.dataSource.data = this.editableRows;
         // Trigger change detection to ensure textareas resize properly
         setTimeout(() => this.cdr.detectChanges(), 0);
@@ -416,8 +432,9 @@ export class StatblockEditComponent implements OnInit {
   addNewRowInternal(): void {
     const newRow: EditableStatBlock = {
       name: '',
+      type: '',
       cr: '',
-      ac: 10,
+      ac: '10',
       str: 10,
       dex: 10,
       con: 10,

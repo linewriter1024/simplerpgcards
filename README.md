@@ -42,11 +42,14 @@ This is a full-stack TypeScript application with:
     - Mobile: Vertical stack layout with proper field organization
     - Eliminates vertical scrolling by maximizing horizontal space usage
     - No table headers or unnecessary vertical padding
-- ✅ **View Mode**: Flex-based layout optimized for readability and space efficiency
+- ✅ **View Mode**: Flexible flex-based layout optimized for readability and space efficiency
   - **Two-Row Layout**: Basic info (name, CR, AC, abilities) in top row, text fields (attacks, spells, skills, etc.) in bottom row
-  - **Generous Text Fields**: Attacks and spells fields given wider space (180-250px) for better readability
+  - **Flexible Sizing**: All fields use flex-grow properties instead of fixed widths for better space utilization
+  - **Improved Readability**: Larger text sizes (14px field values, 13px list items, 11px labels) for better visibility
+  - **Generous Text Fields**: Attacks and spells fields given higher flex priority for more space
   - **No Horizontal Scrolling**: Responsive flex layout that wraps appropriately instead of forcing horizontal scroll
-  - **Enhanced Field Sizing**: Attacks, spells, and tags fields sized appropriately for their content
+  - **Bulk Tag Operations**: Add or remove tags from multiple selected statblocks simultaneously
+  - **Always Sorted**: Statblocks automatically sorted alphabetically by name for consistent organization
   - Sortable by name, CR, AC with preserved selection state
   - Filterable by tags and search terms
   - Calculated D&D modifiers display (e.g., STR 16 → +3, DEX 14 → +2)

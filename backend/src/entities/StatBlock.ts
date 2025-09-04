@@ -22,11 +22,14 @@ export class StatBlock {
   @Column({ type: 'varchar', length: 255 })
   name!: string;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  type?: string;
+
   @Column({ type: 'varchar', length: 50 })
   cr!: string;
 
-  @Column({ type: 'integer' })
-  ac!: number;
+  @Column({ type: 'varchar', length: 50 })
+  ac!: string;
 
   @Column({ type: 'integer', nullable: true })
   spellSaveDC?: number;
