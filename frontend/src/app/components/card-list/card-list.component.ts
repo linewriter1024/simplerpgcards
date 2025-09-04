@@ -20,26 +20,25 @@ import { CardFormComponent } from '../card-form/card-form.component';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-card-list',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatCardModule,
-    MatToolbarModule,
-    MatChipsModule,
-    MatSortModule,
-    MatFormFieldModule,
-    FormsModule,
-    ReactiveFormsModule
-  ],
-  templateUrl: './card-list.component.html',
-  styleUrl: './card-list.component.scss'
+    selector: 'app-card-list',
+    imports: [
+        CommonModule,
+        MatTableModule,
+        MatButtonModule,
+        MatIconModule,
+        MatInputModule,
+        MatSelectModule,
+        MatCheckboxModule,
+        MatCardModule,
+        MatToolbarModule,
+        MatChipsModule,
+        MatSortModule,
+        MatFormFieldModule,
+        FormsModule,
+        ReactiveFormsModule
+    ],
+    templateUrl: './card-list.component.html',
+    styleUrl: './card-list.component.scss'
 })
 export class CardListComponent implements OnInit {
   cards: Card[] = [];

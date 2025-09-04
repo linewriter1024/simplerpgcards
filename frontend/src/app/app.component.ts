@@ -5,15 +5,14 @@ import { CardListComponent } from './components/card-list/card-list.component';
 import { CardFormComponent } from './components/card-form/card-form.component';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, CardListComponent],
-  template: `
+    selector: 'app-root',
+    imports: [CommonModule, CardListComponent],
+    template: `
     <div class="app-container">
       <app-card-list></app-card-list>
     </div>
   `,
-  styleUrls: ['./app.component.scss']
+    styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
   title = 'RPG Card Manager';

@@ -14,22 +14,21 @@ import { CardService } from '../../services/card.service';
 import { Card, CreateCardDto } from '../../models/card.model';
 
 @Component({
-  selector: 'app-card-form',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCheckboxModule
-  ],
-  templateUrl: './card-form.component.html',
-  styleUrl: './card-form.component.scss'
+    selector: 'app-card-form',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        FormsModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatButtonModule,
+        MatIconModule,
+        MatCheckboxModule
+    ],
+    templateUrl: './card-form.component.html',
+    styleUrl: './card-form.component.scss'
 })
 export class CardFormComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('titleInput') titleInput!: ElementRef<HTMLInputElement>;
