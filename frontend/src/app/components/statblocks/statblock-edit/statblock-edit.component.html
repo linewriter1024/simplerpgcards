@@ -1,0 +1,177 @@
+<div class="edit-container">
+  <!-- Search Bar -->
+  <div class="search-container">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="Search names and tags... Use quotes for exact matches">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <div class="search-results">
+      <span class="statblock-count">{{ editableRows.length }} statblocks</span>
+    </div>
+  </div>
+  
+  <div class="toolbar">
+    <button mat-raised-button color="primary" (click)="addNewRow()">
+      <mat-icon>add</mat-icon>
+      Add New Statblock
+    </button>
+    
+    <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                  [checked]="isAllSelected()"
+                  [indeterminate]="isIndeterminate()">
+      Select All
+    </mat-checkbox>
+    
+    <button mat-raised-button color="warn" (click)="deleteSelected()" [disabled]="selection.selected.length === 0">
+      <mat-icon>delete</mat-icon>
+      Delete Selected ({{selection.selected.length}})
+    </button>
+
+    <span class="spacer"></span>
+    <span class="row-count">{{ editableRows.length }} statblocks</span>
+  </div>
+
+  <div class="table-container">
+    <div class="statblocks-list">
+      @for (row of editableRows; track row) {
+        <div class="statblock-row" 
+             [class.new-row]="row.isNew"
+             [class.unsaved-row]="row.hasUnsavedChanges">
+          
+          <!-- Row Header with Actions and Selection -->
+          <div class="row-header">
+            <mat-checkbox (change)="$event ? selection.toggle(row) : null"
+                         [checked]="selection.isSelected(row)">
+            </mat-checkbox>
+            <button mat-icon-button color="primary" (click)="saveRow(row)" 
+                    [disabled]="!row.hasUnsavedChanges" 
+                    [matTooltip]="row.hasUnsavedChanges ? 'Save changes' : 'No changes to save'">
+              <mat-icon>{{ row.hasUnsavedChanges ? 'save' : 'check' }}</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteRow(row)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+          <!-- Main Content Area -->
+          <div class="row-content">
+            <!-- Top Row: Basic Info -->
+            <div class="basic-info-row">
+              <mat-form-field appearance="outline" class="name-field">
+                <mat-label>Name</mat-label>
+                <input matInput [(ngModel)]="row.name" (input)="onFieldChange(row)">
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="type-field">
+                <mat-label>Type</mat-label>
+                <input matInput [(ngModel)]="row.type" (input)="onFieldChange(row)" placeholder="e.g., monstrosity, beast">
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="compact-field">
+                <mat-label>CR</mat-label>
+                <input matInput [(ngModel)]="row.cr" (input)="onFieldChange(row)">
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="compact-field">
+                <mat-label>AC</mat-label>
+                <input matInput [(ngModel)]="row.ac" (input)="onFieldChange(row)" placeholder="e.g., 15 (natural armor)">
+              </mat-form-field>
+
+              <!-- Abilities with Material labels -->
+              <mat-form-field appearance="outline" class="ability-field">
+                <mat-label>STR</mat-label>
+                <input matInput type="number" [(ngModel)]="row.str" (input)="onFieldChange(row)">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="ability-field">
+                <mat-label>DEX</mat-label>
+                <input matInput type="number" [(ngModel)]="row.dex" (input)="onFieldChange(row)">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="ability-field">
+                <mat-label>CON</mat-label>
+                <input matInput type="number" [(ngModel)]="row.con" (input)="onFieldChange(row)">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="ability-field">
+                <mat-label>INT</mat-label>
+                <input matInput type="number" [(ngModel)]="row.int" (input)="onFieldChange(row)">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="ability-field">
+                <mat-label>WIS</mat-label>
+                <input matInput type="number" [(ngModel)]="row.wis" (input)="onFieldChange(row)">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="ability-field">
+                <mat-label>CHA</mat-label>
+                <input matInput type="number" [(ngModel)]="row.cha" (input)="onFieldChange(row)">
+              </mat-form-field>
+            </div>
+
+            <!-- Bottom Row: Text Fields -->
+            <div class="text-fields-row">
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Attacks</mat-label>
+                <textarea matInput [(ngModel)]="row.attacksText" (input)="onAttacksChange(row)" 
+                          placeholder="one per line" [rows]="getTextareaRows(row.attacksText)"></textarea>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Spells</mat-label>
+                <textarea matInput [(ngModel)]="row.spellsText" (input)="onSpellsChange(row)" 
+                          placeholder="one per line" [rows]="getTextareaRows(row.spellsText)"></textarea>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Spell Slots</mat-label>
+                <input matInput [(ngModel)]="row.spellSlotsText" (input)="onSpellSlotsChange(row)" 
+                       placeholder="space delimited (e.g., 1 2 3 4)">
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Skills</mat-label>
+                <textarea matInput [(ngModel)]="row.skillsText" (input)="onSkillsChange(row)" 
+                          placeholder="one per line" [rows]="getTextareaRows(row.skillsText)"></textarea>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Resistances</mat-label>
+                <textarea matInput [(ngModel)]="row.resistancesText" (input)="onResistancesChange(row)" 
+                          placeholder="one per line" [rows]="getTextareaRows(row.resistancesText)"></textarea>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Tags</mat-label>
+                <textarea matInput [(ngModel)]="row.tagsText" (input)="onTagsChange(row)" 
+                          placeholder="space separated" [rows]="getTextareaRows(row.tagsText)"></textarea>
+              </mat-form-field>
+              
+              <!-- Tags Preview as Clickable Chips -->
+              @if (row.tags && row.tags.length > 0) {
+                <div class="tags-preview">
+                  @for (tag of row.tags; track tag) {
+                    <mat-chip class="tag-chip" 
+                              [class.highlighted]="isTagHighlighted(tag)"
+                              (click)="toggleTagFilter(tag)">
+                      {{ tag }}
+                    </mat-chip>
+                  }
+                </div>
+              }
+              
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Notes</mat-label>
+                <textarea matInput [(ngModel)]="row.notes" (input)="onFieldChange(row)" 
+                          placeholder="general notes" [rows]="getTextareaRows(row.notes)"></textarea>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+  
+  <div class="bottom-toolbar">
+    <button mat-raised-button color="primary" (click)="addNewRow()">
+      <mat-icon>add</mat-icon>
+      Add New Statblock
+    </button>
+  </div>
+</div>

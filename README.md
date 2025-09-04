@@ -12,6 +12,28 @@ This is a full-stack TypeScript application with:
 - **PDF Generation**: PDFKit with custom card layouts
 - **Database**: SQLite with TypeORM migrations
 
+### Component Architecture
+
+All Angular components follow best practices with **separated template and style files**:
+- **Templates**: `.component.html` files for better HTML editing experience and IDE support
+- **Styles**: `.component.scss` files for improved CSS syntax highlighting and organization
+- **Logic**: `.component.ts` files focused on component logic without inline templates/styles
+
+Each component follows the structure:
+```
+component-name/
+├── component-name.component.ts     # Component logic and configuration
+├── component-name.component.html   # Template markup
+├── component-name.component.scss   # Component-specific styles
+```
+
+This separation provides:
+- ✅ Better maintainability and code organization
+- ✅ Enhanced IDE support with full syntax highlighting
+- ✅ Easier debugging and development workflow
+- ✅ Cleaner component files focused on business logic
+- ✅ Better team collaboration with clear file separation
+
 ## Features
 
 ### Application Modes

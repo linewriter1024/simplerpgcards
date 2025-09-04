@@ -1,0 +1,211 @@
+<div class="view-container">
+  <mat-card class="filter-card">
+    <mat-card-header>
+      <mat-card-title>Filters & Search</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="filter-row">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search names and tags... Use quotes for exact matches">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <button mat-button (click)="clearFilters()">Clear Filters</button>
+      </div>
+
+      @if (allTags.length > 0) {
+        <div class="tags-section">
+          <h4>Search Tags:</h4>
+          <div class="tags-grid">
+            <mat-chip-listbox>
+              @for (tag of allTags; track tag) {
+                <mat-chip-option
+                  [selected]="isTagHighlighted(tag)"
+                  (click)="toggleTagFilter(tag)"
+                  [class.highlighted-tag]="isTagHighlighted(tag)">
+                  {{ tag }}
+                </mat-chip-option>
+              }
+            </mat-chip-listbox>
+          </div>
+        </div>
+      }
+
+      <div class="action-row">
+        <div class="selection-controls">
+          <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                       [checked]="isAllSelected()"
+                       [indeterminate]="isIndeterminate()">
+            Select All
+          </mat-checkbox>
+        </div>
+
+        <div class="bulk-actions">
+          @if (selection.selected.length > 0) {
+            <div class="tag-actions">
+              <mat-form-field appearance="outline" class="tag-input">
+                <mat-label>Bulk Tag Action</mat-label>
+                <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter single tag (no spaces)">
+              </mat-form-field>
+              <button mat-raised-button color="primary" (click)="addTagToSelected()" [disabled]="!bulkTagInput.trim()">
+                <mat-icon>add</mat-icon>
+                Add Tag
+              </button>
+              <button mat-raised-button color="accent" (click)="removeTagFromSelected()" [disabled]="!bulkTagInput.trim()">
+                <mat-icon>remove</mat-icon>
+                Remove Tag
+              </button>
+            </div>
+          }
+        </div>
+
+        <span class="statblock-count">{{ filteredStatblocks.length }} statblocks</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="statblocks-display">
+    <div class="statblocks-table">
+      @for (statblock of filteredStatblocks; track statblock.id) {
+        <div class="statblock-row" 
+             [class.selected]="selection.isSelected(statblock)"
+             (click)="toggleRowSelection(statblock)">
+          
+          <!-- Row Actions -->
+          <div class="row-actions">
+            <mat-checkbox (change)="$event ? selection.toggle(statblock) : null"
+                         [checked]="selection.isSelected(statblock)"
+                         (click)="$event.stopPropagation()">
+            </mat-checkbox>
+            <button mat-icon-button color="primary" (click)="editStatblock(statblock); $event.stopPropagation()">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+
+          <!-- All Fields in Flex Layout -->
+          <div class="row-content">
+            <!-- Basic Info Row -->
+            <div class="basic-info-section">
+              <div class="field name-field">
+                <div class="field-label">Name</div>
+                <div class="field-value">{{statblock.name}}</div>
+              </div>
+
+              @if (statblock.type) {
+                <div class="field type-field">
+                  <div class="field-label">Type</div>
+                  <div class="field-value">{{statblock.type}}</div>
+                </div>
+              }
+
+              <div class="field compact-field">
+                <div class="field-label">CR</div>
+                <div class="field-value">{{statblock.cr}}</div>
+              </div>
+
+              <div class="field compact-field">
+                <div class="field-label">AC</div>
+                <div class="field-value">{{statblock.ac}}</div>
+              </div>
+
+              <div class="abilities-group">
+                <div class="field ability-field">
+                  <div class="field-label">STR</div>
+                  <div class="field-value">{{statblock.str}} ({{getModifier(statblock.str)}})</div>
+                </div>
+                <div class="field ability-field">
+                  <div class="field-label">DEX</div>
+                  <div class="field-value">{{statblock.dex}} ({{getModifier(statblock.dex)}})</div>
+                </div>
+                <div class="field ability-field">
+                  <div class="field-label">CON</div>
+                  <div class="field-value">{{statblock.con}} ({{getModifier(statblock.con)}})</div>
+                </div>
+                <div class="field ability-field">
+                  <div class="field-label">INT</div>
+                  <div class="field-value">{{statblock.int}} ({{getModifier(statblock.int)}})</div>
+                </div>
+                <div class="field ability-field">
+                  <div class="field-label">WIS</div>
+                  <div class="field-value">{{statblock.wis}} ({{getModifier(statblock.wis)}})</div>
+                </div>
+                <div class="field ability-field">
+                  <div class="field-label">CHA</div>
+                  <div class="field-value">{{statblock.cha}} ({{getModifier(statblock.cha)}})</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Text Fields Row -->
+            <div class="text-fields-section">
+              <div class="field attacks-field">
+                <div class="field-label">Attacks</div>
+                <div class="field-value">
+                  @if (statblock.attacks && statblock.attacks.length > 0) {
+                    @for (attack of statblock.attacks; track attack.name) {
+                      <div class="list-item">{{attack.name}}</div>
+                    }
+                  }
+                </div>
+              </div>
+
+              <div class="field spells-field">
+                <div class="field-label">Spells</div>
+                <div class="field-value">
+                  @if (statblock.spells && statblock.spells.length > 0) {
+                    @for (spell of statblock.spells; track spell.name) {
+                      <div class="list-item">{{spell.name}}</div>
+                    }
+                  }
+                </div>
+              </div>
+
+              <div class="field spell-slots-field">
+                <div class="field-label">Spell Slots</div>
+                <div class="field-value spell-slots">
+                  @if (statblock.spellSlots && statblock.spellSlots.length > 0) {
+                    {{formatSpellSlots(statblock.spellSlots)}}
+                  }
+                </div>
+              </div>
+
+              <div class="field text-field">
+                <div class="field-label">Skills</div>
+                <div class="field-value">
+                  @if (statblock.skills && statblock.skills.length > 0) {
+                    @for (skill of statblock.skills; track skill) {
+                      <div class="list-item">{{skill}}</div>
+                    }
+                  }
+                </div>
+              </div>
+
+              <div class="field text-field">
+                <div class="field-label">Resistances</div>
+                <div class="field-value">
+                  @if (statblock.resistances && statblock.resistances.length > 0) {
+                    @for (resistance of statblock.resistances; track resistance) {
+                      <div class="list-item">{{resistance}}</div>
+                    }
+                  }
+                </div>
+              </div>
+
+              <div class="field tags-field">
+                <div class="field-label">Tags</div>
+                <div class="field-value">
+                  @if (statblock.tags && statblock.tags.length > 0) {
+                    @for (tag of statblock.tags; track tag) {
+                      <span class="tag-chip">{{tag}}</span>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </mat-card>
+</div>

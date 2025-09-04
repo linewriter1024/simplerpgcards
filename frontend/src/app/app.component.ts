@@ -8,37 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 @Component({
     selector: 'app-root',
     imports: [RouterOutlet, MatToolbarModule, MatButtonModule, MatIconModule, MatTooltipModule],
-    template: `
-    <div class="app-container">
-      <mat-toolbar color="primary" class="main-toolbar">
-        <h1>RPG Manager</h1>
-        <span class="spacer"></span>
-        
-        <button mat-raised-button 
-                [color]="isCardsActive() ? 'accent' : 'primary'"
-                (click)="navigateToCards()"
-                class="nav-button">
-          <mat-icon>style</mat-icon>
-          Printable Cards
-        </button>
-        
-        <button mat-raised-button 
-                [color]="isStatblocksActive() ? 'accent' : 'primary'"
-                (click)="navigateToStatblocks()"
-                class="nav-button">
-          <mat-icon>table_chart</mat-icon>
-          Statblocks
-        </button>
-        
-        <a mat-icon-button href="https://github.com/linewriter1024/simplerpgcards" target="_blank"
-          matTooltip="View on GitHub" aria-label="GitHub repository">
-          <mat-icon>code</mat-icon>
-        </a>
-      </mat-toolbar>
-      
-      <router-outlet></router-outlet>
-    </div>
-  `,
+    templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']
 })
 export class AppComponent {

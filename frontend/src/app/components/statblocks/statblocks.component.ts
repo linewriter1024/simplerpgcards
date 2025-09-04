@@ -18,66 +18,8 @@ import { StatblockViewComponent } from './statblock-view/statblock-view.componen
     StatblockEditComponent,
     StatblockViewComponent
   ],
-  template: `
-    <div class="statblocks-container">
-      <mat-toolbar class="mode-toolbar">
-        <span>Statblocks</span>
-        <span class="spacer"></span>
-        
-        <button mat-raised-button 
-                [color]="currentMode === 'edit' ? 'accent' : 'primary'"
-                (click)="switchMode('edit')"
-                class="mode-button">
-          <mat-icon>edit</mat-icon>
-          Edit Mode
-        </button>
-        
-        <button mat-raised-button 
-                [color]="currentMode === 'view' ? 'accent' : 'primary'"
-                (click)="switchMode('view')"
-                class="mode-button">
-          <mat-icon>view_list</mat-icon>
-          View Mode
-        </button>
-      </mat-toolbar>
-
-      <div class="content">
-        @if (currentMode === 'edit') {
-          <app-statblock-edit></app-statblock-edit>
-        } @else {
-          <app-statblock-view></app-statblock-view>
-        }
-      </div>
-    </div>
-  `,
-  styles: [`
-    .statblocks-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .mode-toolbar {
-      background-color: #424242;
-    }
-
-    .spacer {
-      flex: 1 1 auto;
-    }
-
-    .mode-button {
-      margin-left: 16px;
-      
-      mat-icon {
-        margin-right: 8px;
-      }
-    }
-
-    .content {
-      flex: 1;
-      padding: 16px;
-    }
-  `]
+  templateUrl: './statblocks.component.html',
+  styleUrl: './statblocks.component.scss'
 })
 export class StatblocksComponent implements OnInit {
   currentMode: 'edit' | 'view' = 'edit';

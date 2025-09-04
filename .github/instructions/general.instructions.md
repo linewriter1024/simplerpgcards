@@ -11,3 +11,4 @@ applyTo: "**"
 * Focus on code changes, file modifications, and documentation updates only
 * Do not ever add changes for debugging. I debug manually.
 * Use modern Angular 20 constructs
+* Use separate files for templates and styles in Angular
