@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -73,11 +74,6 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
             </div>
 
             <div class="bulk-actions">
-              <button mat-raised-button color="warn" (click)="deleteSelected()" [disabled]="selection.selected.length === 0">
-                <mat-icon>delete</mat-icon>
-                Delete Selected ({{selection.selected.length}})
-              </button>
-
               @if (selection.selected.length > 0) {
                 <div class="tag-actions">
                   <mat-form-field appearance="outline" class="tag-input">
@@ -116,9 +112,6 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
                 </mat-checkbox>
                 <button mat-icon-button color="primary" (click)="editStatblock(statblock); $event.stopPropagation()">
                   <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteStatblock(statblock); $event.stopPropagation()">
-                  <mat-icon>delete</mat-icon>
                 </button>
               </div>
 
@@ -555,7 +548,10 @@ export class StatblockViewComponent implements OnInit {
   selection = new SelectionModel<StatBlock>(true, []);
   bulkTagInput: string = '';
 
-  constructor(private statblockService: StatblockService) {}
+  constructor(
+    private statblockService: StatblockService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadStatblocks();
@@ -723,44 +719,9 @@ export class StatblockViewComponent implements OnInit {
   }
 
   editStatblock(statblock: StatBlock): void {
-    // TODO: Implement edit functionality
-    console.log('Edit statblock:', statblock);
-  }
-
-  deleteStatblock(statblock: StatBlock): void {
-    if (confirm(`Delete statblock "${statblock.name}"?`)) {
-      this.statblockService.deleteStatblock(statblock.id!).subscribe({
-        next: () => {
-          this.loadStatblocks();
-        },
-        error: (error) => {
-          console.error('Error deleting statblock:', error);
-        }
-      });
-    }
-  }
-
-  deleteSelected(): void {
-    const selectedStatblocks = this.selection.selected;
-    if (selectedStatblocks.length === 0) return;
-
-    const count = selectedStatblocks.length;
-    const message = count === 1 
-      ? `Delete the selected statblock "${selectedStatblocks[0].name}"?`
-      : `Delete all ${count} selected statblocks?`;
-
-    if (confirm(message)) {
-      const selectedIds = selectedStatblocks.map(s => s.id!);
-      this.statblockService.deleteStatblocks(selectedIds).subscribe({
-        next: () => {
-          this.selection.clear();
-          this.loadStatblocks();
-        },
-        error: (error) => {
-          console.error('Error deleting statblocks:', error);
-        }
-      });
-    }
+    this.router.navigate(['/statblocks'], { 
+      queryParams: { jumpTo: statblock.id }
+    });
   }
 
   addTagToSelected(): void {

@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SelectionModel } from '@angular/cdk/collections';
 import { StatblockService } from '../../../services/statblock.service';
 import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-statblock-edit',
@@ -33,6 +35,18 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
   ],
   template: `
     <div class="edit-container">
+      <!-- Search Bar -->
+      <div class="search-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search names and tags... Use quotes for exact matches">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        <div class="search-results">
+          <span class="statblock-count">{{ editableRows.length }} statblocks</span>
+        </div>
+      </div>
+      
       <div class="toolbar">
         <button mat-raised-button color="primary" (click)="addNewRow()">
           <mat-icon>add</mat-icon>
@@ -165,6 +179,19 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
                               placeholder="space separated" [rows]="getTextareaRows(row.tagsText)"></textarea>
                   </mat-form-field>
                   
+                  <!-- Tags Preview as Clickable Chips -->
+                  @if (row.tags && row.tags.length > 0) {
+                    <div class="tags-preview">
+                      @for (tag of row.tags; track tag) {
+                        <mat-chip class="tag-chip" 
+                                  [class.highlighted]="isTagHighlighted(tag)"
+                                  (click)="toggleTagFilter(tag)">
+                          {{ tag }}
+                        </mat-chip>
+                      }
+                    </div>
+                  }
+                  
                   <mat-form-field appearance="outline" class="text-field">
                     <mat-label>Notes</mat-label>
                     <textarea matInput [(ngModel)]="row.notes" (input)="onFieldChange(row)" 
@@ -190,6 +217,25 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
       height: 100%;
       display: flex;
       flex-direction: column;
+    }
+
+    .search-container {
+      padding: 16px 16px 0 16px;
+    }
+
+    .search-field {
+      width: 100%;
+    }
+
+    .search-results {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .statblock-count {
+      color: #999;
+      font-size: 14px;
     }
 
     .toolbar {
@@ -243,6 +289,13 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
     .statblock-row.unsaved-row {
       background-color: rgba(255, 193, 7, 0.15);
       border-color: rgba(255, 193, 7, 0.5);
+    }
+
+    .statblock-row.highlight-jump {
+      background-color: rgba(33, 150, 243, 0.25) !important;
+      border-color: rgba(33, 150, 243, 0.8) !important;
+      box-shadow: 0 0 10px rgba(33, 150, 243, 0.4);
+      transition: all 0.3s ease;
     }
 
     .row-header {
@@ -300,6 +353,38 @@ import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
       min-width: 120px;
       flex: 1;
       max-width: 200px;
+    }
+
+    .tags-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin: 8px 0;
+      min-height: 20px;
+    }
+
+    .tag-chip {
+      font-size: 11px;
+      height: 20px;
+      line-height: 20px;
+      padding: 0 6px;
+      border-radius: 10px;
+      background-color: #2d2d2d;
+      color: #e0e0e0;
+      border: 1px solid #555;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tag-chip:hover {
+      background-color: #404040;
+      border-color: #777;
+    }
+
+    .tag-chip.highlighted {
+      background-color: #1976d2;
+      border-color: #1976d2;
+      color: white;
     }
 
     /* Compact form field styling */
@@ -385,33 +470,156 @@ export class StatblockEditComponent implements OnInit {
   dataSource = new MatTableDataSource<EditableStatBlock>([]);
   selection = new SelectionModel<EditableStatBlock>(true, []);
   
+  // Search and filtering
+  searchControl = new FormControl('');
+  allStatblocks: EditableStatBlock[] = [];
+  
   displayedColumns: string[] = [
     'actions', 'select', 'name', 'cr', 'ac', 'abilities', 'attacks', 'spells', 'skills', 'resistances', 'tags', 'notes'
   ];
 
   constructor(
     private statblockService: StatblockService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    this.loadStatblocks();
+    // Set up search functionality
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.applySearch();
+    });
+
+    this.loadStatblocks().then(() => {
+      // Check for jumpTo query parameter
+      this.route.queryParams.subscribe(params => {
+        if (params['jumpTo']) {
+          this.scrollToStatblock(params['jumpTo']);
+        }
+      });
+    });
   }
 
-  loadStatblocks(): void {
-    this.statblockService.getStatblocks().subscribe({
-      next: (statblocks) => {
-        // Sort by name initially in edit mode, but preserve order for new rows later
-        const sortedStatblocks = statblocks.sort((a, b) => a.name.localeCompare(b.name));
-        this.editableRows = sortedStatblocks.map(sb => this.convertToEditableRow(sb));
-        this.dataSource.data = this.editableRows;
-        // Trigger change detection to ensure textareas resize properly
-        setTimeout(() => this.cdr.detectChanges(), 0);
-      },
-      error: (error) => {
-        console.error('Error loading statblocks:', error);
-      }
+  loadStatblocks(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.statblockService.getStatblocks().subscribe({
+        next: (statblocks) => {
+          // Sort by name initially in edit mode, but preserve order for new rows later
+          const sortedStatblocks = statblocks.sort((a, b) => a.name.localeCompare(b.name));
+          this.allStatblocks = sortedStatblocks.map(sb => this.convertToEditableRow(sb));
+          this.editableRows = [...this.allStatblocks];
+          this.dataSource.data = this.editableRows;
+          // Apply search filter if search text exists
+          this.applySearch();
+          // Trigger change detection to ensure textareas resize properly
+          setTimeout(() => {
+            this.cdr.detectChanges();
+            resolve();
+          }, 0);
+        },
+        error: (error) => {
+          console.error('Error loading statblocks:', error);
+          reject(error);
+        }
+      });
     });
+  }
+
+  scrollToStatblock(statblockId: string): void {
+    // Find the statblock row with the matching ID
+    const targetRowIndex = this.editableRows.findIndex(row => row.id === statblockId);
+    if (targetRowIndex !== -1) {
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        const elements = document.querySelectorAll('.statblock-row');
+        if (elements[targetRowIndex]) {
+          elements[targetRowIndex].scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+          // Optionally add a highlight effect
+          elements[targetRowIndex].classList.add('highlight-jump');
+          setTimeout(() => {
+            elements[targetRowIndex].classList.remove('highlight-jump');
+          }, 2000);
+        }
+      }, 100);
+    }
+  }
+
+  applySearch(): void {
+    const searchTerm = this.searchControl.value?.toLowerCase().trim();
+    let filtered = this.allStatblocks;
+
+    if (searchTerm) {
+      const searchTerms = this.parseSearchTerms(searchTerm);
+      filtered = this.allStatblocks.filter(statblock => {
+        return searchTerms.every(term => {
+          const searchableText = `${statblock.name} ${statblock.tags?.join(' ') || ''}`.toLowerCase();
+          return searchableText.includes(term.toLowerCase());
+        });
+      });
+    }
+
+    this.editableRows = filtered;
+    this.dataSource.data = this.editableRows;
+  }
+
+  private parseSearchTerms(searchText: string): string[] {
+    const terms: string[] = [];
+    let currentTerm = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < searchText.length; i++) {
+      const char = searchText[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ' ' && !inQuotes) {
+        if (currentTerm.trim()) {
+          terms.push(currentTerm.trim());
+          currentTerm = '';
+        }
+      } else {
+        currentTerm += char;
+      }
+    }
+    
+    if (currentTerm.trim()) {
+      terms.push(currentTerm.trim());
+    }
+    
+    return terms.filter(term => term.length > 0);
+  }
+
+  isTagHighlighted(tag: string): boolean {
+    const searchTerm = this.searchControl.value?.toLowerCase().trim();
+    if (!searchTerm) return false;
+    
+    const searchTerms = this.parseSearchTerms(searchTerm);
+    return searchTerms.some(term => tag.toLowerCase().includes(term.toLowerCase()));
+  }
+
+  toggleTagFilter(tag: string): void {
+    const currentSearch = this.searchControl.value || '';
+    const searchTerms = this.parseSearchTerms(currentSearch);
+    
+    // Check if tag is already in search
+    const tagIndex = searchTerms.findIndex(term => term.toLowerCase() === tag.toLowerCase());
+    
+    if (tagIndex >= 0) {
+      // Remove tag from search
+      searchTerms.splice(tagIndex, 1);
+    } else {
+      // Add tag to search
+      searchTerms.push(tag);
+    }
+    
+    // Update search control with new terms
+    this.searchControl.setValue(searchTerms.join(' '));
   }
 
   convertToEditableRow(statblock: StatBlock): EditableStatBlock {
@@ -458,6 +666,8 @@ export class StatblockEditComponent implements OnInit {
       hasUnsavedChanges: true
     };
     
+    // Add to both allStatblocks and editableRows to make it visible regardless of search
+    this.allStatblocks.unshift(newRow);
     this.editableRows.unshift(newRow);
     this.dataSource.data = [...this.editableRows];
   }
@@ -559,6 +769,8 @@ export class StatblockEditComponent implements OnInit {
   }
 
   addNewRow(): void {
+    // Clear search when adding a new row so user can see it
+    this.searchControl.setValue('');
     this.addNewRowInternal();
   }
 
@@ -618,16 +830,16 @@ export class StatblockEditComponent implements OnInit {
 
   deleteRow(row: EditableStatBlock): void {
     if (row.isNew) {
-      // Just remove from the array
-      const index = this.editableRows.indexOf(row);
-      this.editableRows = this.editableRows.filter((_, i) => i !== index);
+      // Just remove from both arrays
+      this.allStatblocks = this.allStatblocks.filter(r => r !== row);
+      this.editableRows = this.editableRows.filter(r => r !== row);
       this.dataSource.data = [...this.editableRows];
     } else if (row.id) {
       if (confirm(`Delete statblock "${row.name}"?`)) {
         this.statblockService.deleteStatblock(row.id).subscribe({
           next: () => {
-            const index = this.editableRows.indexOf(row);
-            this.editableRows = this.editableRows.filter((_, i) => i !== index);
+            this.allStatblocks = this.allStatblocks.filter(r => r !== row);
+            this.editableRows = this.editableRows.filter(r => r !== row);
             this.dataSource.data = [...this.editableRows];
           },
           error: (error) => {
@@ -646,10 +858,10 @@ export class StatblockEditComponent implements OnInit {
       const toDelete = selectedRows.filter(row => !row.isNew && row.id);
       const newRows = selectedRows.filter(row => row.isNew);
 
-      // Delete new rows immediately
+      // Delete new rows immediately from both arrays
       newRows.forEach(row => {
-        const index = this.editableRows.indexOf(row);
-        this.editableRows.splice(index, 1);
+        this.allStatblocks = this.allStatblocks.filter(r => r !== row);
+        this.editableRows = this.editableRows.filter(r => r !== row);
       });
 
       // Update dataSource after removing new rows
@@ -661,8 +873,8 @@ export class StatblockEditComponent implements OnInit {
         this.statblockService.deleteStatblocks(ids).subscribe({
           next: () => {
             toDelete.forEach(row => {
-              const index = this.editableRows.indexOf(row);
-              this.editableRows.splice(index, 1);
+              this.allStatblocks = this.allStatblocks.filter(r => r !== row);
+              this.editableRows = this.editableRows.filter(r => r !== row);
             });
             this.dataSource.data = [...this.editableRows];
             this.selection.clear();
