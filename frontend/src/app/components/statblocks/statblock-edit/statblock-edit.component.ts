@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -36,7 +36,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   templateUrl: './statblock-edit.component.html',
   styleUrl: './statblock-edit.component.scss'
 })
-export class StatblockEditComponent implements OnInit {
+export class StatblockEditComponent implements OnInit, OnDestroy {
   editableRows: EditableStatBlock[] = [];
   dataSource = new MatTableDataSource<EditableStatBlock>([]);
   selection = new SelectionModel<EditableStatBlock>(true, []);
@@ -73,6 +73,18 @@ export class StatblockEditComponent implements OnInit {
         }
       });
     });
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup handled automatically by Angular for HostListener
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(): void {
+    // Trigger change detection to recalculate textarea sizes when window is resized
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    }, 100); // Small delay to ensure layout has settled
   }
 
   loadStatblocks(): Promise<void> {
