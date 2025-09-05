@@ -194,11 +194,7 @@
                        placeholder="humanoid paladin spellcaster">
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="text-field">
-                <mat-label>Resistances</mat-label>
-                <textarea matInput [(ngModel)]="row.resistancesText" (input)="onResistancesChange(row)" 
-                          placeholder="one per line" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="30"></textarea>
-              </mat-form-field>
+              <!-- Removed Resistances from basic-info-row -->
 
               <!-- Abilities with Material labels -->
               <mat-form-field appearance="outline" class="ability-field">
@@ -244,6 +240,13 @@
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Skills</mat-label>
                 <textarea matInput [(ngModel)]="row.skillsText" (input)="onSkillsChange(row)" 
+                          placeholder="one per line" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="30"></textarea>
+              </mat-form-field>
+
+              <!-- Added Resistances to text-fields-row -->
+              <mat-form-field appearance="outline" class="text-field">
+                <mat-label>Resistances</mat-label>
+                <textarea matInput [(ngModel)]="row.resistancesText" (input)="onResistancesChange(row)" 
                           placeholder="one per line" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="30"></textarea>
               </mat-form-field>
               

@@ -231,13 +231,6 @@
                 </div>
               }
 
-              @if (statblock.resistances && statblock.resistances.length > 0) {
-                <div class="field text-field">
-                  <div class="field-label">Resistances</div>
-                  <div class="field-value text-content">{{statblock.resistances.join(', ')}}</div>
-                </div>
-              }
-
               @if (statblock.tags && statblock.tags.length > 0) {
                 <div class="field text-field">
                   <div class="field-label">Tags</div>
@@ -316,6 +309,17 @@
                   }
                 </div>
               </div>
+
+              @if (statblock.resistances && statblock.resistances.length > 0) {
+                <div class="field text-field">
+                  <div class="field-label">Resistances</div>
+                  <div class="field-value text-content">
+                    @for (res of statblock.resistances; track res) {
+                      <span class="list-item">{{res}}</span>
+                    }
+                  </div>
+                </div>
+              }
 
               @if (statblock.notes && statblock.notes.trim()) {
                 <div class="field text-field">

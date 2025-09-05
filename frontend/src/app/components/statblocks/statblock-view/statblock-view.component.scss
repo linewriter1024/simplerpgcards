@@ -567,6 +567,6 @@
 
 /* Spell inline formatting */
 .spell-level { font-weight: 700; margin-right: 2px; }
-/* Optional stronger first line — can be applied via :first-child if needed */
+/* Do not bold the first line of spells; only the level prefix is bold */
 .text-content .list-item:first-child { font-weight: inherit; }
-.spells-field-container .text-content .list-item:first-child { font-weight: 700; }
+.spells-field-container .text-content .list-item:first-child { font-weight: inherit; }

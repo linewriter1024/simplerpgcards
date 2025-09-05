@@ -123,50 +123,7 @@ This separation provides:
 ### Simplifications (NEW)
 - All statblock filtering is now performed client-side for speed and simplicity. The backend only supports an optional simple name search parameter.
 - Removed unused backend and frontend fields: `spellSaveDC` and `spellAttackModifier`. These are expected to be included in the generic spells text when relevant.
-- Added database migration to add `notes` and remove deprecated columns.
-
-### Navigation
-- ✅ Top navigation bar with mode switching buttons
-- ✅ "Printable Cards" button for traditional card management
-- ✅ "Statblocks" button for D&D creature/NPC management
-- ✅ GitHub repository link in navigation
-
-## Card Specifications
-
-- **Size**: Standard 5×3 inch index cards (landscape orientation)
-- **Layout**: 4 cards per page in 2×2 grid layout
-- **Font**: Courier (monospace) with consistent regular text styling
-- **Font Sizes**: 
-  - Title: ~12pt (same as body, bold for distinction)
-  - Body: ~12pt (calculated as card height ÷ 18)
-- **Typography**: Monospace fonts (Courier) with regular text for consistent appearance
-- **Preview**: Full-width card form dialog with live PDF preview showing front and back cards in a dynamically-sized, compact layout (2.5×1.5 inches)
-- **PDF Output**: Print-ready with inline browser viewing and proper multi-line text layout with inline title/body layout on card backs
-
-### User Interface
-- ✅ Dark theme throughout the application
-- ✅ Modern Material Design interface with dark styling
-- ✅ Monospace fonts for card text (JetBrains Mono/Roboto Mono)
-- ✅ Responsive layout optimized for dark theme
-- ✅ Live card preview with 5×3 landscape aspect ratio (200×120px)
-- ✅ Full-width card form dialog with real-time PDF preview showing front and back cards
-- ✅ Proper multi-line text layout on card backs with inline title and body text
-- ✅ Clickable table rows for easy card selection
-- ✅ Intuitive tag-based filtering system with search highlighting
-- ✅ Real-time search with debouncing and quote support for exact matches
-- ✅ Sortable table headers for title and creation date
-- ✅ Index card preview with dynamic font scaling (24px title, 16px body)
-- ✅ Compact tag input with proper styling and improved vertical spacing
-- ✅ Bulk-add mode with checkbox for creating multiple similar cards efficiently
-- ✅ "Update, then add" feature for continuing with similar cards after editing
-- ✅ In-dialog bulk-add workflow that resets form without closing dialog
-- ✅ Real-time card list refresh during bulk-add sessions
-- ✅ Improved form navigation with optimized tab order, X close button, Ctrl+Enter shortcut, and auto-focus on title field
-- ✅ Card list displays front and back text separated by backslash with ellipsis overflow handling
-- ✅ Fixed table column width constraints (title column limited to 40% width) to prevent row overflow
-- ✅ Improved PDF card border thickness (reduced from 2px to 1px) and fixed text wrapping on card backs
-- ✅ Enhanced "Select All" checkbox to operate only on filtered results while preserving existing selections
-- ✅ Added "Delete All Selected" button in the filter section for bulk deletion of selected cards with confirmation dialog
+- Added database migrations to add `notes` and remove deprecated columns.
 
 ## Getting Started
 
