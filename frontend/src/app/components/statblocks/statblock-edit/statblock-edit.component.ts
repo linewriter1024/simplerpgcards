@@ -473,6 +473,82 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
       this.selection.select(...this.editableRows);
     }
   }
+
+  copyRow(source: EditableStatBlock): void {
+    // Build a deep copy while resetting identifiers
+    const copy: EditableStatBlock = {
+      uid: this.generateUid(),
+      id: undefined,
+      name: source.name + ' (copy)',
+      type: source.type,
+      cr: source.cr,
+      hp: source.hp,
+      ac: source.ac,
+      str: source.str,
+      dex: source.dex,
+      con: source.con,
+      int: source.int,
+      wis: source.wis,
+      cha: source.cha,
+      attacks: (source.attacks || []).map(a => ({ ...a })),
+      spells: (source.spells || []).map(s => ({ ...s })),
+      spellSlots: [...(source.spellSlots || [])],
+      skills: [...(source.skills || [])],
+      resistances: [...(source.resistances || [])],
+      tags: [...(source.tags || [])],
+      notes: source.notes || '',
+      attacksText: source.attacksText || (source.attacks?.map(a => a.name).join('\n') || ''),
+      spellsText: source.spellsText || (source.spells?.map(s => s.name).join('\n') || ''),
+      spellSlotsText: source.spellSlotsText || (source.spellSlots?.join(' ') || ''),
+      skillsText: source.skillsText || (source.skills?.join('\n') || ''),
+      resistancesText: source.resistancesText || (source.resistances?.join('\n') || ''),
+      tagsText: source.tagsText || (source.tags?.join(' ') || ''),
+      isNew: true,
+      hasUnsavedChanges: true
+    } as EditableStatBlock;
+
+    // Insert the copy immediately after the source in the master list
+    const masterIndex = this.allStatblocks.indexOf(source);
+    const insertIndex = masterIndex >= 0 ? masterIndex + 1 : this.allStatblocks.length;
+    this.allStatblocks.splice(insertIndex, 0, copy);
+
+    // Re-apply search filter to reflect current view
+    const prevSearch = this.searchControl.value;
+    this.applySearch();
+    this.dataSource.data = [...this.editableRows];
+
+    // Try to find the copy in the currently visible list; fallback to just scrolling to approximate index
+    setTimeout(() => {
+      // Find index by uid in the visible list
+      const visibleIndex = this.editableRows.findIndex(r => r.uid === copy.uid);
+      const elements = document.querySelectorAll('.statblock-row');
+
+      if (visibleIndex !== -1 && elements[visibleIndex]) {
+        elements[visibleIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        elements[visibleIndex].classList.add('highlight-jump');
+        setTimeout(() => elements[visibleIndex].classList.remove('highlight-jump'), 2000);
+      } else if (elements.length > 0) {
+        // If filtered out, clear filter temporarily to show and focus the copy
+        const restore = typeof prevSearch === 'string' ? prevSearch : '';
+        this.searchControl.setValue('');
+        this.applySearch();
+        this.dataSource.data = [...this.editableRows];
+        setTimeout(() => {
+          const idx = this.editableRows.findIndex(r => r.uid === copy.uid);
+          const els = document.querySelectorAll('.statblock-row');
+          if (idx !== -1 && els[idx]) {
+            els[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            els[idx].classList.add('highlight-jump');
+            setTimeout(() => els[idx].classList.remove('highlight-jump'), 2000);
+          }
+          // Restore prior search text
+          this.searchControl.setValue(restore);
+          this.applySearch();
+          this.dataSource.data = [...this.editableRows];
+        }, 50);
+      }
+    }, 50);
+  }
 }
 
 interface EditableStatBlock extends StatBlock {

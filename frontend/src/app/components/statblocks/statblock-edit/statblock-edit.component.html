@@ -148,6 +148,10 @@
                     [matTooltip]="row.hasUnsavedChanges ? 'Save changes' : 'No changes to save'">
               <mat-icon>{{ row.hasUnsavedChanges ? 'save' : 'check' }}</mat-icon>
             </button>
+            <!-- Copy button -->
+            <button mat-icon-button (click)="copyRow(row)" [matTooltip]="'Copy statblock'">
+              <mat-icon>content_copy</mat-icon>
+            </button>
             <button mat-icon-button color="warn" (click)="deleteRow(row)">
               <mat-icon>delete</mat-icon>
             </button>

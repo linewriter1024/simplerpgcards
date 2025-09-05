@@ -83,6 +83,7 @@ This separation provides:
     - Eliminates vertical scrolling by maximizing horizontal space usage
     - No table headers or unnecessary vertical padding
   - **Notes Field Persistence (NEW)**: Notes are now stored end-to-end. The backend entity includes a nullable `notes` field so edits are fully persisted.
+  - **Copy Statblock (NEW)**: Each row has a copy button next to Save/Delete. Copies the entire statblock (including tags, spells, attacks, notes), inserts it under the original, marks it as New/Unsaved, and auto-scrolls/highlights the copy for quick edits.
 - ✅ **View Mode**: Responsive left sidebar interface matching edit mode design
   - **Default Mode**: View mode is now the default when accessing /statblocks
   - **Responsive Design**: Fixed sidebar on desktop, converts to compact horizontal toolbar on tablets/mobile
