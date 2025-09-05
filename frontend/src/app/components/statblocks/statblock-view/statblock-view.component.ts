@@ -87,17 +87,12 @@ export class StatblockViewComponent implements OnInit {
   applyFilters(): void {
     let filtered = [...this.statblocks];
     
-    // Apply search filter
-    const searchTerm = this.searchControl.value?.toLowerCase().trim();
-    if (searchTerm) {
-      const searchTerms = this.parseSearchTerms(searchTerm);
-      filtered = filtered.filter(statblock => {
-        return searchTerms.every(term => {
-          const searchText = term.toLowerCase();
-          return statblock.name.toLowerCase().includes(searchText) ||
-                 (statblock.tags && statblock.tags.some(tag => tag.toLowerCase().includes(searchText)));
-        });
-      });
+    // Apply search filter with exact quoted terms support
+    const rawSearch = this.searchControl.value?.trim() || '';
+    const tokens = this.parseSearchTerms(rawSearch);
+
+    if (tokens.length > 0) {
+      filtered = filtered.filter(statblock => this.matchesAllTokens(statblock, tokens));
     }
     
     // Always sort by name in view mode
@@ -106,60 +101,88 @@ export class StatblockViewComponent implements OnInit {
     this.filteredStatblocks = filtered;
   }
 
-  private parseSearchTerms(searchText: string): string[] {
-    const terms: string[] = [];
-    let currentTerm = '';
+  // Parse into tokens, preserving whether the term was quoted (exact)
+  private parseSearchTerms(searchText: string): Array<{ value: string; exact: boolean }> {
+    const tokens: Array<{ value: string; exact: boolean }> = [];
+    if (!searchText) return tokens;
+
+    let current = '';
     let inQuotes = false;
-    
+    let tokenWasQuoted = false;
+
     for (let i = 0; i < searchText.length; i++) {
-      const char = searchText[i];
-      
-      if (char === '"') {
+      const ch = searchText[i];
+      if (ch === '"') {
+        // toggle quotes; mark token as quoted
         inQuotes = !inQuotes;
-      } else if (char === ' ' && !inQuotes) {
-        if (currentTerm.trim()) {
-          terms.push(currentTerm.trim());
-          currentTerm = '';
-        }
+        tokenWasQuoted = true;
+        continue;
+      }
+      if (ch === ' ' && !inQuotes) {
+        const v = current.trim();
+        if (v) tokens.push({ value: v, exact: tokenWasQuoted });
+        current = '';
+        tokenWasQuoted = false;
       } else {
-        currentTerm += char;
+        current += ch;
       }
     }
-    
-    if (currentTerm.trim()) {
-      terms.push(currentTerm.trim());
-    }
-    
-    return terms;
+    const v = current.trim();
+    if (v) tokens.push({ value: v, exact: tokenWasQuoted });
+
+    return tokens;
+  }
+
+  private tokensToSearchText(tokens: Array<{ value: string; exact: boolean }>): string {
+    return tokens.map(t => t.exact ? `"${t.value}"` : t.value).join(' ');
+  }
+
+  private escapeRegExp(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private matchesAllTokens(statblock: StatBlock, tokens: Array<{ value: string; exact: boolean }>): boolean {
+    const name = (statblock.name || '').toLowerCase();
+    const tags = (statblock.tags || []).map(t => t.toLowerCase());
+
+    return tokens.every(tok => {
+      const q = tok.value.toLowerCase();
+      if (tok.exact) {
+        // exact: whole word in name, or exact tag match
+        const wordRe = new RegExp(`\\b${this.escapeRegExp(q)}\\b`, 'i');
+        const inName = wordRe.test(name);
+        const inTags = tags.some(t => t === q);
+        return inName || inTags;
+      } else {
+        // fuzzy includes in name or tags
+        const inName = name.includes(q);
+        const inTags = tags.some(t => t.includes(q));
+        return inName || inTags;
+      }
+    });
   }
 
   isTagHighlighted(tag: string): boolean {
-    const searchTerm = this.searchControl.value?.toLowerCase().trim();
-    if (!searchTerm) return false;
-    
-    const searchTerms = this.parseSearchTerms(searchTerm);
-    return searchTerms.some(term => tag.toLowerCase().includes(term.toLowerCase()));
+    const raw = this.searchControl.value?.trim() || '';
+    const tokens = this.parseSearchTerms(raw);
+    return tokens.some(t => t.value.toLowerCase() === tag.toLowerCase());
   }
 
   toggleTagFilter(tag: string): void {
     const currentSearch = this.searchControl.value || '';
-    const searchTerms = this.parseSearchTerms(currentSearch);
-    
-    // Check if tag is already in search
-    const tagIndex = searchTerms.findIndex(term => term.toLowerCase() === tag.toLowerCase());
-    
-    if (tagIndex >= 0) {
-      // Remove tag from search
-      searchTerms.splice(tagIndex, 1);
+    const tokens = this.parseSearchTerms(currentSearch);
+    const tagLower = tag.toLowerCase();
+
+    const idx = tokens.findIndex(t => t.value.toLowerCase() === tagLower);
+    if (idx >= 0) {
+      tokens.splice(idx, 1);
     } else {
-      // Add tag to search
-      searchTerms.push(tag);
+      // Add as exact term in quotes
+      tokens.push({ value: tag, exact: true });
     }
-    
-    // Update search control
-    const newSearchText = searchTerms.join(' ');
-    this.searchControl.setValue(newSearchText);
-    
+
+    const newText = this.tokensToSearchText(tokens);
+    this.searchControl.setValue(newText);
     this.applyFilters();
   }
 
