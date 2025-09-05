@@ -82,6 +82,7 @@ This separation provides:
     - Mobile: Vertical stack layout with proper field organization and single-column toolbar elements
     - Eliminates vertical scrolling by maximizing horizontal space usage
     - No table headers or unnecessary vertical padding
+  - **Notes Field Persistence (NEW)**: Notes are now stored end-to-end. The backend entity includes a nullable `notes` field so edits are fully persisted.
 - ✅ **View Mode**: Responsive left sidebar interface matching edit mode design
   - **Default Mode**: View mode is now the default when accessing /statblocks
   - **Responsive Design**: Fixed sidebar on desktop, converts to compact horizontal toolbar on tablets/mobile
@@ -117,6 +118,12 @@ This separation provides:
   - Filterable by tags and search terms
   - Calculated D&D modifiers display (e.g., STR 16 → +3, DEX 14 → +2)
   - **Spell Slots**: Space-delimited input in edit mode, formatted as ordinals (1st, 2nd, 3rd, etc.) in view mode
+  - **Notes Visibility**: Notes are shown when present and omitted when empty in View mode to keep the layout dense without hiding actual content.
+
+### Simplifications (NEW)
+- All statblock filtering is now performed client-side for speed and simplicity. The backend only supports an optional simple name search parameter.
+- Removed unused backend and frontend fields: `spellSaveDC` and `spellAttackModifier`. These are expected to be included in the generic spells text when relevant.
+- Added database migration to add `notes` and remove deprecated columns.
 
 ### Navigation
 - ✅ Top navigation bar with mode switching buttons
@@ -189,7 +196,12 @@ ng serve
 The frontend will start on `http://localhost:4200`
 
 ### Database
-The SQLite database will be created automatically on first run with an empty database. You can add your own cards through the web interface.
+The SQLite database will be created automatically on first run. The schema is managed by TypeORM.
+
+- For simple development workflows, the configuration uses `synchronize: true`, which will automatically add the `notes` column and ignore removed fields in the entity.
+- For explicit schema control, run migrations:
+  - Add Notes column: `AddNotesToStatblocks`
+  - Remove deprecated columns: `RemoveSpellSaveAndAttackMod`
 
 ## Project Structure
 
@@ -202,6 +214,7 @@ src/
 ├── routes/           # Express routes (cards, statblocks)
 ├── config/           # Database and app config
 ├── types/            # TypeScript type definitions
+├── migrations/       # TypeORM migrations (schema changes)
 └── utils/            # Utility functions
 ```
 
@@ -230,7 +243,7 @@ src/app/
 - `GET /api/cards/tags` - Get all tags
 
 ### Statblocks (NEW)
-- `GET /api/statblocks` - Get all statblocks (with optional filters)
+- `GET /api/statblocks` - Get all statblocks (optional `search` for simple name search)
 - `GET /api/statblocks/:id` - Get single statblock
 - `POST /api/statblocks` - Create new statblock
 - `PUT /api/statblocks/:id` - Update statblock
@@ -241,20 +254,12 @@ src/app/
 - `POST /api/cards/pdf` - Generate PDF from selected cards
 - `POST /api/cards/pdf/preview` - Generate single-card preview PDF
 
-## Card Format
-
-Cards are created and managed through the web interface with the following structure:
-- **Title**: Card name/header
-- **Front Text**: Main card content 
-- **Back Text**: Additional details or mechanics
-- **Tags**: Categorization labels (e.g., "paladin", "spell-1", "cleric-3")
-
 ## Development
 
 ### Adding New Features
 1. Backend: Add/modify entities, services, controllers
 2. Frontend: Create/update components and services
-3. Database: Use TypeORM migrations for schema changes
+3. Database: Use TypeORM migrations for schema changes (or rely on synchronize during development)
 
 ### Testing
 ```bash

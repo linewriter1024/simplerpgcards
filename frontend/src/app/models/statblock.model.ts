@@ -5,8 +5,6 @@ export interface StatBlock {
   cr: string;
   hp?: string;
   ac: string;
-  spellSaveDC?: number;
-  spellAttackModifier?: number;
   str: number;
   dex: number;
   con: number;
@@ -44,8 +42,6 @@ export interface CreateStatBlockDto {
   cr: string;
   hp?: string;
   ac: string;
-  spellSaveDC?: number;
-  spellAttackModifier?: number;
   str: number;
   dex: number;
   con: number;

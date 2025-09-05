@@ -34,12 +34,6 @@ export class StatBlock {
   @Column({ type: 'varchar', length: 50 })
   ac!: string;
 
-  @Column({ type: 'integer', nullable: true })
-  spellSaveDC?: number;
-
-  @Column({ type: 'integer', nullable: true })
-  spellAttackModifier?: number;
-
   @Column({ type: 'integer' })
   str!: number;
 
@@ -75,6 +69,9 @@ export class StatBlock {
 
   @Column({ type: 'json' })
   tags!: string[];
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
 
   @CreateDateColumn()
   createdAt!: Date;

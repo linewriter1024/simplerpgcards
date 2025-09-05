@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { StatBlockService } from '../services/StatBlockService';
-import { CreateStatBlockDto, StatBlockFilter } from '../types/statblock.types';
+import { CreateStatBlockDto } from '../types/statblock.types';
 
 export class StatBlockController {
   private statblockService: StatBlockService;
@@ -11,16 +11,8 @@ export class StatBlockController {
 
   async getAllStatBlocks(req: Request, res: Response): Promise<void> {
     try {
-      const filter: StatBlockFilter = {
-        search: req.query.search as string,
-        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
-        crRange: {
-          min: req.query.crMin ? parseInt(req.query.crMin as string) : undefined,
-          max: req.query.crMax ? parseInt(req.query.crMax as string) : undefined,
-        }
-      };
-
-      const statblocks = await this.statblockService.getAllStatBlocks(filter);
+      const search = (req.query.search as string) || undefined;
+      const statblocks = await this.statblockService.getAllStatBlocks(search ? { search } : undefined);
       res.json(statblocks);
     } catch (error) {
       console.error('Error fetching statblocks:', error);
