@@ -126,6 +126,11 @@ This separation provides:
 - Removed unused backend and frontend fields: `spellSaveDC` and `spellAttackModifier`. These are expected to be included in the generic spells text when relevant.
 - Added database migrations to add `notes` and remove deprecated columns.
 
+### PDF Layout
+- Back-of-card layout renders the title inline with the first line using precise font measurements. The first line wraps exactly at the remaining width after the title and separator.
+- Subsequent lines start at the left margin (no unintended indentation), ensuring consistent left alignment across all wrapped lines.
+- Uses PDFKit width measurements to prevent "early" wrapping and produce predictable line breaks.
+
 ## Getting Started
 
 ### Prerequisites

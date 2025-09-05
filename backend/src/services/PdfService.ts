@@ -131,67 +131,66 @@ export class PdfService {
       if (title && body) {
         const titleText = this.formatText(title);
         const bodyText = this.formatText(body);
+        const lineGap = Math.max(1, bodySize * 0.1);
         
         // Use smaller font size for title (0.75x)
         const titleFontSize = Math.round(bodySize * 0.75);
+        const separator = ' | ';
         
-        // Calculate how much width the title + separator takes up
-        const titleAndSeparator = `${titleText} | `;
-        const titleWidth = titleAndSeparator.length * (titleFontSize * 0.6); // Estimate width
-        const remainingWidth = innerWidth - titleWidth;
+        // Measure title+separator width precisely with current font
+        doc.fontSize(titleFontSize).font(fontName + '-Bold');
+        const titleWidth = doc.widthOfString(titleText + separator);
+        const remainingWidth = Math.max(0, innerWidth - titleWidth);
         
-        // Wrap body text accounting for the title space on first line
-        const avgCharWidth = bodySize * 0.6;
-        const firstLineMaxChars = Math.floor(remainingWidth / avgCharWidth);
-        const otherLinesMaxChars = Math.floor(innerWidth / avgCharWidth);
-        
-        // Split body text considering first line width constraint
-        const bodyWords = bodyText.split(' ');
-        const lines: string[] = [];
-        let currentLine = '';
-        let isFirstLine = true;
-        
-        for (const word of bodyWords) {
-          const maxChars = isFirstLine ? firstLineMaxChars : otherLinesMaxChars;
-          if (currentLine.length + word.length + 1 <= maxChars) {
-            currentLine += (currentLine ? ' ' : '') + word;
-          } else {
-            if (currentLine) {
-              lines.push(currentLine);
-              isFirstLine = false;
+        // Compute the exact first body line that fits remainingWidth
+        doc.fontSize(bodySize).font(fontName);
+        const paragraphs = bodyText.split(/\r?\n/);
+        const firstParagraph = paragraphs[0] ?? '';
+        const firstParaWords = firstParagraph.trim().length ? firstParagraph.split(/\s+/) : [];
+        let firstBodyLine = '';
+        let consumedWords = 0;
+
+        if (remainingWidth > 0 && firstParaWords.length > 0) {
+          for (let i = 0; i < firstParaWords.length; i++) {
+            const candidate = firstBodyLine ? firstBodyLine + ' ' + firstParaWords[i] : firstParaWords[i];
+            const candidateWidth = doc.widthOfString(candidate);
+            if (candidateWidth <= remainingWidth) {
+              firstBodyLine = candidate;
+              consumedWords = i + 1;
+            } else {
+              break;
             }
-            currentLine = word;
           }
         }
-        if (currentLine) lines.push(currentLine);
-        
-        // Draw the first line with title formatting for title part
+
+        // Render first line at absolute positions (no continuation state)
         doc.fontSize(titleFontSize)
            .font(fontName + '-Bold')
-           .text(titleText + ' | ', innerX, innerY, {
-             continued: true,
+           .text(titleText + separator, innerX, innerY, {
              lineBreak: false
            });
-           
-        // Continue with first body line in normal font
-        const firstBodyLine = lines[0] || '';
+
+        // Draw the first body segment on the same baseline to the right of the title
         doc.fontSize(bodySize)
            .font(fontName)
-           .text(firstBodyLine, {
-             continued: false,
-             lineBreak: true
+           .text(firstBodyLine, innerX + titleWidth, innerY, {
+             width: remainingWidth,
+             lineBreak: false
            });
+
+        // Move to the next line (use body line height)
+        doc.fontSize(bodySize).font(fontName);
+        const nextY = innerY + doc.currentLineHeight(true);
         
-        // Draw remaining body lines if any
-        const remainingLines = lines.slice(1);
-        if (remainingLines.length > 0) {
-          const remainingText = remainingLines.join('\n');
-          doc.fontSize(bodySize)
-             .font(fontName)
-             .text(remainingText, innerX, doc.y + Math.max(1, bodySize * 0.1), {
+        // Remaining body text starts at left margin on the next line, preserving explicit newlines
+        const remainderOfFirst = firstParaWords.slice(consumedWords).join(' ');
+        const restParagraphs = paragraphs.slice(1).join('\n');
+        const remainingText = [remainderOfFirst, restParagraphs].filter(Boolean).join('\n');
+        if (remainingText) {
+          doc.text(remainingText, innerX, nextY, {
                width: innerWidth,
                align: 'left',
-               lineGap: Math.max(1, bodySize * 0.1)
+               lineGap
              });
         }
       } else if (title) {
