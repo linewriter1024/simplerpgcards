@@ -406,4 +406,63 @@ export class StatblockViewComponent implements OnInit {
 
     return expTable[cr] || 0;
   }
+
+  getSpellLevel(spellLine: string): string | null {
+    if (!spellLine) return null;
+    const m = spellLine.match(/^\s*(\d+)\./);
+    return m ? `${m[1]}.` : null;
+  }
+
+  getSpellText(spellLine: string): string {
+    if (!spellLine) return '';
+    return spellLine.replace(/^\s*\d+\.?\s*/, '');
+  }
+
+  isFirstSpell(index: number): boolean {
+    return index === 0;
+  }
+
+  formatHp(hp: string | number | undefined): string {
+    if (hp === undefined || hp === null) return '';
+    const hpStr = String(hp).trim();
+
+    // If already formatted like "avg (dice)" or contains parentheses, keep as is
+    if (/\(.*\)/.test(hpStr)) return hpStr;
+
+    // If pure number, return as-is
+    if (/^\d+(\.\d+)?$/.test(hpStr)) return hpStr;
+
+    // Try to parse dice notation like "3d10 + 6" or "6d6+8"
+    const diceMatch = hpStr.match(/(\d*)\s*[dD]\s*(\d+)/);
+    if (!diceMatch) return hpStr;
+
+    const n = diceMatch[1] ? parseInt(diceMatch[1], 10) : 1;
+    const m = parseInt(diceMatch[2], 10);
+
+    // Sum all +X and -X modifiers in the string
+    let modifier = 0;
+    const modRegex = /([+-])\s*(\d+)/g;
+    let modMatch: RegExpExecArray | null;
+    while ((modMatch = modRegex.exec(hpStr)) !== null) {
+      const sign = modMatch[1] === '-' ? -1 : 1;
+      modifier += sign * parseInt(modMatch[2], 10);
+    }
+
+    if (!isFinite(n) || !isFinite(m) || m <= 0) return hpStr;
+
+    const avgPerDie = (m + 1) / 2; // expected value of 1..m
+    const avg = Math.floor(n * avgPerDie + modifier); // D&D averages round down
+
+    const normalized = this.normalizeDiceNotation(hpStr);
+    return `${avg} (${normalized})`;
+  }
+
+  private normalizeDiceNotation(input: string): string {
+    // Collapse whitespace around +/-, and standardize 'd'
+    let s = input.trim();
+    s = s.replace(/\s*[dD]\s*/g, 'd');
+    s = s.replace(/\s*([+\-])\s*/g, ' $1 ');
+    s = s.replace(/\s+/g, ' ');
+    return s;
+  }
 }

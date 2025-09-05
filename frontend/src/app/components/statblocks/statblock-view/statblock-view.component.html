@@ -215,7 +215,7 @@
               @if (statblock.hp) {
                 <div class="field compact-field">
                   <div class="field-label">HP</div>
-                  <div class="field-value">{{statblock.hp}}</div>
+                  <div class="field-value">{{formatHp(statblock.hp)}}</div>
                 </div>
               }
 
@@ -284,7 +284,7 @@
                 <div class="field-value text-content">
                   @if (statblock.attacks && statblock.attacks.length > 0) {
                     @for (attack of statblock.attacks; track attack.name) {
-                      <div class="list-item">{{attack.name}}</div>
+                      <span class="list-item">{{attack.name}}</span>
                     }
                   }
                 </div>
@@ -294,18 +294,14 @@
                 <div class="field spells-field-container">
                   <div class="field-label">Spells</div>
                   <div class="field-value text-content">
-                    <div class="spells-two-column">
-                      <div class="spells-column">
-                        @for (spell of getFirstHalfSpells(statblock.spells); track spell.name) {
-                          <div class="list-item">{{spell.name}}</div>
-                        }
-                      </div>
-                      <div class="spells-column">
-                        @for (spell of getSecondHalfSpells(statblock.spells); track spell.name) {
-                          <div class="list-item">{{spell.name}}</div>
-                        }
-                      </div>
-                    </div>
+                    @for (spell of statblock.spells; track spell.name) {
+                      <span class="list-item">
+                        <ng-container *ngIf="getSpellLevel(spell.name) as lvl; else noLvl">
+                          <span class="spell-level">{{lvl}}</span><span class="spell-name">{{getSpellText(spell.name)}}</span>
+                        </ng-container>
+                        <ng-template #noLvl>{{spell.name}}</ng-template>
+                      </span>
+                    }
                   </div>
                 </div>
               }
@@ -315,7 +311,7 @@
                 <div class="field-value text-content">
                   @if (statblock.skills && statblock.skills.length > 0) {
                     @for (skill of statblock.skills; track skill) {
-                      <div class="list-item">{{skill}}</div>
+                      <span class="list-item">{{skill}}</span>
                     }
                   }
                 </div>
@@ -325,7 +321,7 @@
                 <div class="field-label">Notes</div>
                 <div class="field-value text-content">
                   @if (statblock.notes && statblock.notes.trim()) {
-                    <div class="list-item">{{statblock.notes}}</div>
+                    <span class="list-item">{{statblock.notes}}</span>
                   }
                 </div>
               </div>

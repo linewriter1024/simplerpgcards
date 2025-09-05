@@ -46,7 +46,7 @@ This separation provides:
 - ✅ Create, read, update, delete cards
 - ✅ Rich card details (title, front/back text, tags)
 - ✅ Real-time search and filtering by content and tags
-- ✅ Tag-based categorization system (e.g., "paladin", "druid", "spell-1", "cleric-3")
+- ✅ Tag-based categorization system (e.g., "paladin", "spell-1", "cleric-3")
 - ✅ Multiple tag selection and filtering
 - ✅ Bulk selection for PDF generation
 - ✅ Sortable card list by title or creation date
@@ -84,14 +84,14 @@ This separation provides:
     - No table headers or unnecessary vertical padding
 - ✅ **View Mode**: Responsive left sidebar interface matching edit mode design
   - **Default Mode**: View mode is now the default when accessing /statblocks
-  - **Responsive Design**: Fixed 300px sidebar on desktop, converts to compact horizontal toolbar on tablets/mobile
+  - **Responsive Design**: Fixed sidebar on desktop, converts to compact horizontal toolbar on tablets/mobile
   - **Dark Theme**: Consistent dark theme across all interface elements
   - **Sidebar Layout**: Contains search, tag management, selection, and bulk actions in organized sections
   - **Compact Toolbar**: On smaller screens (≤1024px), sidebar converts to space-efficient 2-row horizontal toolbar
     - **Row 1**: Title, mode buttons, search field, and clear button
     - **Row 2**: Tag chips, selection controls, and statblock count
   - **Main Content**: Flexible view area optimized for readability and space efficiency
-  - **Compact Name Field**: Name field only takes the space it needs (120-200px) instead of excessive space
+  - **Compact Name Field**: Name field only takes the space it needs (120–220px) instead of excessive space
   - **EXP Calculation**: Added Experience Points field next to CR using official D&D 5e formula
   - **Two-Row Layout**: Basic info (name, type, CR, EXP, AC, spell slots, abilities) in top row, text fields (attacks, spells, skills, etc.) in bottom row
   - **Spell Slots Repositioned**: Moved spell slots to basic info section for better organization instead of text fields area
@@ -101,8 +101,8 @@ This separation provides:
     - Maintains proper text wrapping and spacing for spell names
   - **Type Field Display**: Type field now properly displays next to name when present
   - **Flexible Sizing**: All fields use flex-grow properties instead of fixed widths for better space utilization
-  - **Improved Readability**: Larger text sizes (14px field values, 13px list items, 11px labels) for better visibility
-  - **Generous Text Fields**: Attacks and spells fields given higher flex priority for more space
+  - **High‑Density Layout (keeps all content visible)**: Inline label–value presentation for basic info and abilities, inline flowing list items for attacks/spells/skills, reduced paddings/margins, and compact typography (≈13px values, 12px list items, 10px labels). Sidebar narrowed to ~260px. This significantly increases rows per screen without hiding or truncating information.
+  - **Generous Text Fields Where Needed**: Attacks and spells fields still receive higher flex priority so long entries remain fully visible on large screens
   - **No Horizontal Scrolling**: Responsive flex layout that wraps appropriately instead of forcing horizontal scroll
   - **Integrated Tag Search**: Click on any tag to add/remove it from the search field, with visual highlighting of active search terms
   - **Advanced Search**: Support for quoted exact matches and multiple search terms (space-separated)
@@ -117,13 +117,6 @@ This separation provides:
   - Filterable by tags and search terms
   - Calculated D&D modifiers display (e.g., STR 16 → +3, DEX 14 → +2)
   - **Spell Slots**: Space-delimited input in edit mode, formatted as ordinals (1st, 2nd, 3rd, etc.) in view mode
-- ✅ **Integrated Mode Switching**: Mode switcher buttons integrated into component sidebars for seamless navigation
-- ✅ **Consistent UI**: Both edit and view modes use identical collapsible sidebar layouts for unified user experience
-- ✅ **Space Optimization**: Collapsible sidebars maximize content area while keeping controls accessible
-- ✅ Complete CRUD operations for statblocks
-- ✅ Tag-based categorization system for statblocks
-- ✅ Challenge Rating (CR) and Armor Class (AC) tracking
-- ✅ **Experience Points**: Automatic EXP calculation from CR using official D&D 5e values
 
 ### Navigation
 - ✅ Top navigation bar with mode switching buttons
