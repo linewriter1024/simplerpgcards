@@ -64,12 +64,11 @@ This separation provides:
   - Create and edit statblocks in space-efficient horizontal layouts
   - Support for D&D 5e statblock format with ability scores (STR, DEX, CON, INT, WIS, CHA)
   - **Complete Type Field Support**: Type field now properly saves and persists across edit/view modes
-  - **Smart Textarea Sizing**: Enhanced textarea height calculation using **actual DOM font measurements** (Canvas API) instead of estimates
-    - Measures actual character width using selected font (JetBrains Mono, 14px)
-    - Calculates field content width accounting for padding (24px total) and scrollbar (17px)
-    - Determines precise characters per line for accurate wrapping calculation
-    - **Adaptive Height**: Dynamic sizing based on content - minimal height for short content, scales appropriately for longer text
-    - Fallback to conservative estimates if Canvas API unavailable
+  - **Stable List Rendering**: Statblock edit list now tracks rows by a stable uid to prevent duplicate key errors during add/remove operations
+  - **Smart Textarea Autosize**: Textareas automatically resize using Angular CDK's cdkTextareaAutosize
+    - Min 2 rows, max 30 rows per field
+    - No manual DOM measurement or change detection hacks
+    - Stable and change-detection safe (prevents NG0100 errors)
   - **Optimized Input Types**: Single-line inputs for tags and spell slots (basic info row), expanding textareas for resistances, attacks, spells, skills, notes
   - **Efficient Layout**: Resistances moved to basic info section as compact expanding textarea for better organization while maintaining dynamic sizing
   - Individual save buttons per row with visual indicators for unsaved changes

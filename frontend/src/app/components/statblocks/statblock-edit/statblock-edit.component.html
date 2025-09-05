@@ -133,7 +133,7 @@
   <!-- Main Content Area -->
   <div class="main-content">
     <div class="statblocks-list">
-      @for (row of editableRows; track row) {
+      @for (row of editableRows; track row.uid) {
         <div class="statblock-row" 
              [class.new-row]="row.isNew"
              [class.unsaved-row]="row.hasUnsavedChanges">
@@ -173,6 +173,11 @@
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="compact-field">
+                <mat-label>HP</mat-label>
+                <input matInput [(ngModel)]="row.hp" (input)="onFieldChange(row)" placeholder="e.g., 30 (4d8 + 12)">
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="compact-field">
                 <mat-label>AC</mat-label>
                 <input matInput [(ngModel)]="row.ac" (input)="onFieldChange(row)" placeholder="e.g., 15 (natural armor)">
               </mat-form-field>
@@ -192,7 +197,7 @@
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Resistances</mat-label>
                 <textarea matInput [(ngModel)]="row.resistancesText" (input)="onResistancesChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.resistancesText, resistancesTextarea)" #resistancesTextarea></textarea>
+                          placeholder="one per line" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="30"></textarea>
               </mat-form-field>
 
               <!-- Abilities with Material labels -->
@@ -227,25 +232,25 @@
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Attacks</mat-label>
                 <textarea matInput [(ngModel)]="row.attacksText" (input)="onAttacksChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.attacksText, attacksTextarea)" #attacksTextarea></textarea>
+                          placeholder="one per line" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="30"></textarea>
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Spells</mat-label>
                 <textarea matInput [(ngModel)]="row.spellsText" (input)="onSpellsChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.spellsText, spellsTextarea)" #spellsTextarea></textarea>
+                          placeholder="one per line" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="30"></textarea>
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Skills</mat-label>
                 <textarea matInput [(ngModel)]="row.skillsText" (input)="onSkillsChange(row)" 
-                          placeholder="one per line" [rows]="getTextareaRows(row.skillsText, skillsTextarea)" #skillsTextarea></textarea>
+                          placeholder="one per line" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="30"></textarea>
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="text-field">
                 <mat-label>Notes</mat-label>
                 <textarea matInput [(ngModel)]="row.notes" (input)="onFieldChange(row)" 
-                          placeholder="general notes" [rows]="getTextareaRows(row.notes, notesTextarea)" #notesTextarea></textarea>
+                          placeholder="general notes" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="30"></textarea>
               </mat-form-field>
             </div>
           </div>

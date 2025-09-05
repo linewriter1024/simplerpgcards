@@ -28,6 +28,9 @@ export class StatBlock {
   @Column({ type: 'varchar', length: 50 })
   cr!: string;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  hp?: string;
+
   @Column({ type: 'varchar', length: 50 })
   ac!: string;
 

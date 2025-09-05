@@ -212,6 +212,13 @@
                 <div class="field-value">{{calculateExperience(statblock.cr)}}</div>
               </div>
 
+              @if (statblock.hp) {
+                <div class="field compact-field">
+                  <div class="field-label">HP</div>
+                  <div class="field-value">{{statblock.hp}}</div>
+                </div>
+              }
+
               <div class="field compact-field">
                 <div class="field-label">AC</div>
                 <div class="field-value">{{statblock.ac}}</div>

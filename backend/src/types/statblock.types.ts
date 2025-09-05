@@ -14,6 +14,7 @@ export interface CreateStatBlockDto {
   name: string;
   type?: string;
   cr: string;
+  hp?: string;
   ac: string;
   spellSaveDC?: number;
   spellAttackModifier?: number;

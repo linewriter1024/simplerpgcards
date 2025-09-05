@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,6 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SelectionModel } from '@angular/cdk/collections';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { StatblockService } from '../../../services/statblock.service';
 import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -31,7 +32,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     MatChipsModule,
     MatSelectModule,
     MatCheckboxModule,
-    MatTooltipModule
+    MatTooltipModule,
+    TextFieldModule
   ],
   templateUrl: './statblock-edit.component.html',
   styleUrl: './statblock-edit.component.scss'
@@ -40,6 +42,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   editableRows: EditableStatBlock[] = [];
   dataSource = new MatTableDataSource<EditableStatBlock>([]);
   selection = new SelectionModel<EditableStatBlock>(true, []);
+  private isAddingNewRow = false;
   
   // Search and filtering
   searchControl = new FormControl('');
@@ -51,7 +54,6 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
 
   constructor(
     private statblockService: StatblockService,
-    private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -76,15 +78,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Cleanup handled automatically by Angular for HostListener
-  }
-
-  @HostListener('window:resize', ['$event'])
-  onWindowResize(): void {
-    // Trigger change detection to recalculate textarea sizes when window is resized
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, 100); // Small delay to ensure layout has settled
+    // Cleanup handled automatically by Angular
   }
 
   loadStatblocks(): Promise<void> {
@@ -98,11 +92,8 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
           this.dataSource.data = this.editableRows;
           // Apply search filter if search text exists
           this.applySearch();
-          // Trigger change detection to ensure textareas resize properly
-          setTimeout(() => {
-            this.cdr.detectChanges();
-            resolve();
-          }, 0);
+          // Allow DOM to render
+          setTimeout(() => resolve(), 0);
         },
         error: (error) => {
           console.error('Error loading statblocks:', error);
@@ -215,8 +206,20 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     this.router.navigate(['/statblocks/view']);
   }
 
+  private generateUid(): string {
+    // Prefer crypto.randomUUID when available, fallback otherwise
+    try {
+      if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+        // @ts-ignore - TS may not know about randomUUID in some lib targets
+        return crypto.randomUUID();
+      }
+    } catch {}
+    return 'uid-' + Math.random().toString(36).slice(2) + '-' + Date.now().toString(36);
+  }
+
   convertToEditableRow(statblock: StatBlock): EditableStatBlock {
     return {
+      uid: (statblock as any).id || this.generateUid(),
       ...statblock,
       notes: statblock.notes || '',
       attacksText: statblock.attacks?.map(a => a.name).join('\n') || '',
@@ -232,9 +235,11 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
 
   addNewRowInternal(): void {
     const newRow: EditableStatBlock = {
+      uid: this.generateUid(),
       name: '',
       type: '',
       cr: '',
+      hp: '10',
       ac: '10',
       str: 10,
       dex: 10,
@@ -259,10 +264,20 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
       hasUnsavedChanges: true
     };
     
-    // Add to both allStatblocks and editableRows to make it visible regardless of search
+    // Add to source list and reapply search to derive editable list
     this.allStatblocks.unshift(newRow);
-    this.editableRows.unshift(newRow);
+    this.applySearch();
     this.dataSource.data = [...this.editableRows];
+  }
+
+  addNewRow(): void {
+    if (this.isAddingNewRow) return;
+    this.isAddingNewRow = true;
+    // Clear search when adding a new row so user can see it
+    this.searchControl.setValue('');
+    this.addNewRowInternal();
+    // Release guard on next tick
+    setTimeout(() => (this.isAddingNewRow = false));
   }
 
   onFieldChange(row: EditableStatBlock): void {
@@ -279,8 +294,6 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
       additionalEffect: undefined
     }));
     this.onFieldChange(row);
-    // Trigger change detection for textarea resizing
-    this.cdr.detectChanges();
   }
 
   onSpellsChange(row: EditableStatBlock): void {
@@ -291,8 +304,6 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
       description: ''
     }));
     this.onFieldChange(row);
-    // Trigger change detection for textarea resizing
-    this.cdr.detectChanges();
   }
 
   onSpellSlotsChange(row: EditableStatBlock): void {
@@ -310,8 +321,6 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     const lines = row.skillsText.split('\n').filter(line => line.trim());
     row.skills = lines.map(line => line.trim());
     this.onFieldChange(row);
-    // Trigger change detection for textarea resizing
-    this.cdr.detectChanges();
   }
 
   onResistancesChange(row: EditableStatBlock): void {
@@ -319,8 +328,6 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     const lines = row.resistancesText.split('\n').filter(line => line.trim());
     row.resistances = lines.map(line => line.trim());
     this.onFieldChange(row);
-    // Trigger change detection for textarea resizing
-    this.cdr.detectChanges();
   }
 
   onTagsChange(row: EditableStatBlock): void {
@@ -333,89 +340,6 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     this.onFieldChange(row);
   }
 
-  getTextareaRows(text: string, textareaElement?: HTMLTextAreaElement): number {
-    if (!text) return 2; // Minimum 2 rows for empty content - enough for typing
-    
-    const lines = text.split('\n');
-    
-    // Get real measurements from the specific textarea or find one in the DOM
-    const measurements = this.getRealDOMMeasurements(textareaElement);
-    if (!measurements) {
-      // Fallback to simple line count if we can't measure
-      return Math.max(lines.length, 2);
-    }
-    
-    // Calculate exact visual rows by measuring actual text width
-    let totalVisualRows = 0;
-    
-    lines.forEach(line => {
-      if (line.length === 0) {
-        totalVisualRows += 1; // Empty line still takes one row
-      } else {
-        // Measure the actual rendered width of this line
-        const lineWidth = this.measureTextWidthDOM(line, measurements.canvas);
-        const availableWidth = measurements.availableWidth;
-        
-        // Calculate how many visual rows this line will actually take
-        const visualRowsForLine = Math.ceil(lineWidth / availableWidth);
-        totalVisualRows += Math.max(visualRowsForLine, 1);
-      }
-    });
-    
-    return Math.max(totalVisualRows, 2); // Minimum 2 rows total
-  }
-
-  private getRealDOMMeasurements(specificTextarea?: HTMLTextAreaElement): { availableWidth: number; canvas: CanvasRenderingContext2D; } | null {
-    // Use the specific textarea if provided, otherwise find any textarea in the DOM
-    const textarea = specificTextarea || document.querySelector('.text-field textarea') as HTMLTextAreaElement;
-    if (!textarea) {
-      return null;
-    }
-    
-    // Get the computed styles from the actual element
-    const computedStyles = window.getComputedStyle(textarea);
-    
-    // Create canvas with the exact same font settings
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (!context) {
-      return null;
-    }
-    
-    // Use the exact font from the DOM element
-    const fontSize = computedStyles.fontSize || '14px';
-    const fontFamily = computedStyles.fontFamily || 'JetBrains Mono, monospace';
-    const fontWeight = computedStyles.fontWeight || 'normal';
-    context.font = `${fontWeight} ${fontSize} ${fontFamily}`;
-    
-    // Get the actual content width of the textarea
-    const textareaRect = textarea.getBoundingClientRect();
-    const paddingLeft = parseFloat(computedStyles.paddingLeft || '0');
-    const paddingRight = parseFloat(computedStyles.paddingRight || '0');
-    const borderLeft = parseFloat(computedStyles.borderLeftWidth || '0');
-    const borderRight = parseFloat(computedStyles.borderRightWidth || '0');
-    
-    // Calculate actual available width for text
-    const availableWidth = textareaRect.width - paddingLeft - paddingRight - borderLeft - borderRight - 17; // 17px for scrollbar
-    
-    return {
-      availableWidth: Math.max(availableWidth, 50), // Minimum 50px
-      canvas: context
-    };
-  }
-
-  private measureTextWidthDOM(text: string, context: CanvasRenderingContext2D): number {
-    // Measure actual text width using the DOM-derived canvas context
-    const textMetrics = context.measureText(text);
-    return textMetrics.width;
-  }
-
-  addNewRow(): void {
-    // Clear search when adding a new row so user can see it
-    this.searchControl.setValue('');
-    this.addNewRowInternal();
-  }
-
   saveRow(row: EditableStatBlock): void {
     // Don't save if the row doesn't have required fields
     if (!row.name || !row.name.trim()) {
@@ -426,6 +350,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
       name: row.name,
       type: row.type,
       cr: row.cr,
+      hp: row.hp,
       ac: row.ac,
       str: row.str,
       dex: row.dex,
@@ -468,10 +393,6 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     }
   }
 
-  saveAll(): void {
-    // This method is no longer needed but kept for backwards compatibility
-  }
-
   deleteRow(row: EditableStatBlock): void {
     if (row.isNew) {
       // Just remove from both arrays
@@ -499,11 +420,11 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     if (selectedRows.length === 0) return;
 
     if (confirm(`Delete ${selectedRows.length} selected statblocks?`)) {
-      const toDelete = selectedRows.filter(row => !row.isNew && row.id);
-      const newRows = selectedRows.filter(row => row.isNew);
+      const toDelete: EditableStatBlock[] = selectedRows.filter((row: EditableStatBlock) => !row.isNew && !!row.id);
+      const newRows: EditableStatBlock[] = selectedRows.filter((row: EditableStatBlock) => row.isNew);
 
       // Delete new rows immediately from both arrays
-      newRows.forEach(row => {
+      newRows.forEach((row) => {
         this.allStatblocks = this.allStatblocks.filter(r => r !== row);
         this.editableRows = this.editableRows.filter(r => r !== row);
       });
@@ -513,10 +434,10 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
 
       // Delete existing rows via API
       if (toDelete.length > 0) {
-        const ids = toDelete.map(row => row.id!);
+        const ids = toDelete.map((row) => row.id!) as string[];
         this.statblockService.deleteStatblocks(ids).subscribe({
           next: () => {
-            toDelete.forEach(row => {
+            toDelete.forEach((row) => {
               this.allStatblocks = this.allStatblocks.filter(r => r !== row);
               this.editableRows = this.editableRows.filter(r => r !== row);
             });
@@ -555,6 +476,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
 }
 
 interface EditableStatBlock extends StatBlock {
+  uid: string;
   notes: string;
   attacksText: string;
   spellsText: string;
