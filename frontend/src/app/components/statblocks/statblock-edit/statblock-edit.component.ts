@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -55,16 +56,30 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   constructor(
     private statblockService: StatblockService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private titleService: Title
   ) {}
 
   ngOnInit(): void {
-    // Set up search functionality
+    this.updatePageTitle();
+    
+    // Load initial filters from URL query parameters
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.searchControl.setValue(params['search'], { emitEvent: false });
+      }
+      this.applySearch();
+      this.updatePageTitle();
+    });
+    
+    // Set up search functionality with URL updates
     this.searchControl.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged()
     ).subscribe(() => {
       this.applySearch();
+      this.updatePageTitle();
+      this.updateUrl();
     });
 
     this.loadStatblocks().then(() => {
@@ -200,6 +215,8 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.searchControl.setValue('');
     this.applySearch();
+    this.updatePageTitle();
+    this.updateUrl();
   }
 
   switchToViewMode(): void {
@@ -548,6 +565,41 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
         }, 50);
       }
     }, 50);
+  }
+
+  private updateUrl(): void {
+    const queryParams: any = {};
+    
+    const searchValue = this.searchControl.value?.trim();
+    if (searchValue) {
+      queryParams.search = searchValue;
+    }
+    
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      replaceUrl: true
+    });
+  }
+
+  private updatePageTitle(): void {
+    let title = 'Edit Statblocks';
+    const searchValue = this.searchControl.value?.trim();
+    const activeFilters: string[] = [];
+    
+    if (searchValue) {
+      // Don't double-quote if already quoted
+      const quotedValue = searchValue.startsWith('"') && searchValue.endsWith('"') 
+        ? searchValue 
+        : `"${searchValue}"`;
+      activeFilters.push(quotedValue);
+    }
+    
+    if (activeFilters.length > 0) {
+      title += ` - ${activeFilters.join(', ')}`;
+    }
+    
+    this.titleService.setTitle(title);
   }
 }
 

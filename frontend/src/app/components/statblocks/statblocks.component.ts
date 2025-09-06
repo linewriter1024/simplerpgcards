@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -26,7 +27,8 @@ export class StatblocksComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private titleService: Title
   ) {}
 
   ngOnInit(): void {
@@ -37,6 +39,7 @@ export class StatblocksComponent implements OnInit {
     } else {
       this.currentMode = 'view';
     }
+    this.updatePageTitle();
   }
 
   switchMode(mode: 'edit' | 'view'): void {
@@ -44,5 +47,16 @@ export class StatblocksComponent implements OnInit {
     const baseUrl = '/statblocks';
     const targetUrl = mode === 'view' ? baseUrl : `${baseUrl}/${mode}`;
     this.router.navigate([targetUrl]);
+    this.updatePageTitle();
+  }
+
+  private updatePageTitle(): void {
+    let title = 'Statblocks';
+    if (this.currentMode === 'edit') {
+      title = 'Edit Statblocks';
+    } else {
+      title = 'View Statblocks';
+    }
+    this.titleService.setTitle(title);
   }
 }

@@ -34,13 +34,14 @@ This separation provides:
 - ✅ Cleaner component files focused on business logic
 - ✅ Better team collaboration with clear file separation
 
-## Features
+### Application Features
 
-### Build Configuration
-- ✅ **No Bundle Size Limits**: Removed Angular budget constraints to allow unlimited bundle and component style sizes
-- ✅ **Optimized for Development**: Focus on functionality over arbitrary size restrictions
-
-### Application Modes
+#### Core Navigation
+- ✅ **Dynamic Page Titles**: Page titles update automatically based on current page and active filters
+- ✅ **URL-Based Filters**: All search terms and filters are reflected in the URL for easy sharing and bookmarking
+- ✅ **Shareable Links**: Send direct links to specific filtered views (e.g., `/cards?search=paladin` or `/statblocks?search=dragon`)
+- ✅ **Clean URL Management**: Clearing filters properly removes all query parameters from the URL
+- ✅ **Stable Title Updates**: Page titles update consistently without flickering when filters change
 
 #### Printable Cards Mode
 - ✅ Create, read, update, delete cards
@@ -51,6 +52,7 @@ This separation provides:
 - ✅ Bulk selection for PDF generation
 - ✅ Sortable card list by title or creation date
 - ✅ Bulk-add mode for creating multiple similar cards with shared tags and content
+- ✅ **URL Persistence**: Search terms and sort preferences are saved in the URL
 
 #### Statblocks Mode (NEW)
 - ✅ **Edit Mode**: Responsive left sidebar interface with comprehensive controls
@@ -84,6 +86,7 @@ This separation provides:
     - No table headers or unnecessary vertical padding
   - **Notes Field Persistence (NEW)**: Notes are now stored end-to-end. The backend entity includes a nullable `notes` field so edits are fully persisted.
   - **Copy Statblock (NEW)**: Each row has a copy button next to Save/Delete. Copies the entire statblock (including tags, spells, attacks, notes), inserts it under the original, marks it as New/Unsaved, and auto-scrolls/highlights the copy for quick edits.
+  - ✅ **URL Persistence**: Search terms are saved in the URL for easy sharing and bookmarking
 - ✅ **View Mode**: Responsive left sidebar interface matching edit mode design
   - **Default Mode**: View mode is now the default when accessing /statblocks
   - **Responsive Design**: Fixed sidebar on desktop, converts to compact horizontal toolbar on tablets/mobile
@@ -120,6 +123,11 @@ This separation provides:
   - Calculated D&D modifiers display (e.g., STR 16 → +3, DEX 14 → +2)
   - **Spell Slots**: Space-delimited input in edit mode, formatted as ordinals (1st, 2nd, 3rd, etc.) in view mode
   - **Notes Visibility**: Notes are shown when present and omitted when empty in View mode to keep the layout dense without hiding actual content.
+  - ✅ **URL Persistence**: Search terms are saved in the URL for easy sharing and bookmarking
+
+### Build Configuration
+- ✅ **No Bundle Size Limits**: Removed Angular budget constraints to allow unlimited bundle and component style sizes
+- ✅ **Optimized for Development**: Focus on functionality over arbitrary size restrictions
 
 ### Simplifications (NEW)
 - All statblock filtering is now performed client-side for speed and simplicity. The backend only supports an optional simple name search parameter.

@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, ActivatedRoute } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -51,18 +53,41 @@ export class CardListComponent implements OnInit {
   
   displayedColumns: string[] = ['select', 'title', 'tags', 'createdAt', 'actions'];
 
-  constructor(private cardService: CardService, private dialog: MatDialog) {}
+  constructor(
+    private cardService: CardService, 
+    private dialog: MatDialog,
+    private router: Router,
+    private route: ActivatedRoute,
+    private titleService: Title
+  ) {}
 
   ngOnInit(): void {
     this.loadCards();
     this.loadTags();
     
-    // Real-time search
+    // Load initial filters from URL query parameters
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.searchControl.setValue(params['search'], { emitEvent: false });
+      }
+      if (params['sortBy'] && (params['sortBy'] === 'title' || params['sortBy'] === 'createdAt')) {
+        this.sortBy = params['sortBy'];
+      }
+      if (params['sortDirection'] && (params['sortDirection'] === 'asc' || params['sortDirection'] === 'desc')) {
+        this.sortDirection = params['sortDirection'];
+      }
+      this.applyFilters();
+      this.updatePageTitle();
+    });
+    
+    // Real-time search with URL updates
     this.searchControl.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged()
     ).subscribe(searchTerm => {
       this.applyFilters();
+      this.updatePageTitle();
+      this.updateUrl();
     });
   }
 
@@ -183,7 +208,54 @@ export class CardListComponent implements OnInit {
 
   clearFilters(): void {
     this.searchControl.setValue('');
+    this.sortBy = 'createdAt';
+    this.sortDirection = 'desc';
     this.applyFilters();
+    this.updatePageTitle();
+    this.updateUrl();
+  }
+
+  private updateUrl(): void {
+    const queryParams: any = {};
+    
+    const searchValue = this.searchControl.value?.trim();
+    if (searchValue) {
+      queryParams.search = searchValue;
+    }
+    
+    if (this.sortBy !== 'createdAt') {
+      queryParams.sortBy = this.sortBy;
+    }
+    
+    if (this.sortDirection !== 'desc') {
+      queryParams.sortDirection = this.sortDirection;
+    }
+    
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      replaceUrl: true
+    });
+  }
+
+  private updatePageTitle(): void {
+    let title = 'RPG Cards';
+    const searchValue = this.searchControl.value?.trim();
+    const activeFilters: string[] = [];
+    
+    if (searchValue) {
+      // Don't double-quote if already quoted
+      const quotedValue = searchValue.startsWith('"') && searchValue.endsWith('"') 
+        ? searchValue 
+        : `"${searchValue}"`;
+      activeFilters.push(quotedValue);
+    }
+    
+    if (activeFilters.length > 0) {
+      title += ` - ${activeFilters.join(', ')}`;
+    }
+    
+    this.titleService.setTitle(title);
   }
 
   setSortBy(field: 'title' | 'createdAt'): void {
@@ -194,6 +266,8 @@ export class CardListComponent implements OnInit {
       this.sortDirection = field === 'createdAt' ? 'desc' : 'asc';
     }
     this.applyFilters();
+    this.updatePageTitle();
+    this.updateUrl();
   }
 
   isAllSelected(): boolean {

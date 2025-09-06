@@ -4,9 +4,21 @@ import { StatblocksComponent } from './components/statblocks/statblocks.componen
 
 export const routes: Routes = [
   { path: '', redirectTo: '/cards', pathMatch: 'full' },
-  { path: 'cards', component: CardListComponent },
-  { path: 'statblocks', component: StatblocksComponent },
-  { path: 'statblocks/edit', component: StatblocksComponent },
-  { path: 'statblocks/view', component: StatblocksComponent },
+  { 
+    path: 'cards', 
+    component: CardListComponent
+  },
+  { 
+    path: 'statblocks', 
+    component: StatblocksComponent
+  },
+  { 
+    path: 'statblocks/edit', 
+    component: StatblocksComponent
+  },
+  { 
+    path: 'statblocks/view', 
+    component: StatblocksComponent
+  },
   { path: '**', redirectTo: '/cards' }
 ];

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -42,18 +43,31 @@ export class StatblockViewComponent implements OnInit {
 
   constructor(
     private statblockService: StatblockService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private titleService: Title
   ) {}
 
   ngOnInit(): void {
     this.loadStatblocks();
     
-    // Real-time search
+    // Load initial filters from URL query parameters
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.searchControl.setValue(params['search'], { emitEvent: false });
+      }
+      this.applyFilters();
+      this.updatePageTitle();
+    });
+    
+    // Real-time search with URL updates
     this.searchControl.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged()
     ).subscribe(() => {
       this.applyFilters();
+      this.updatePageTitle();
+      this.updateUrl();
     });
   }
 
@@ -189,6 +203,43 @@ export class StatblockViewComponent implements OnInit {
   clearFilters(): void {
     this.searchControl.setValue('');
     this.applyFilters();
+    this.updatePageTitle();
+    this.updateUrl();
+  }
+
+  private updateUrl(): void {
+    const queryParams: any = {};
+    
+    const searchValue = this.searchControl.value?.trim();
+    if (searchValue) {
+      queryParams.search = searchValue;
+    }
+    
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      replaceUrl: true
+    });
+  }
+
+  private updatePageTitle(): void {
+    let title = 'View Statblocks';
+    const searchValue = this.searchControl.value?.trim();
+    const activeFilters: string[] = [];
+    
+    if (searchValue) {
+      // Don't double-quote if already quoted
+      const quotedValue = searchValue.startsWith('"') && searchValue.endsWith('"') 
+        ? searchValue 
+        : `"${searchValue}"`;
+      activeFilters.push(quotedValue);
+    }
+    
+    if (activeFilters.length > 0) {
+      title += ` - ${activeFilters.join(', ')}`;
+    }
+    
+    this.titleService.setTitle(title);
   }
 
   getModifier(abilityScore: number): string {
