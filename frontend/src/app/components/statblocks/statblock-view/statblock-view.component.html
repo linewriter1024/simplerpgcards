@@ -169,7 +169,7 @@
 
   <!-- Main Content -->
   <div class="main-content">
-    <div class="statblocks-table">
+    <div class="statblocks-table" appDiceClick>
       @for (statblock of filteredStatblocks; track statblock.id) {
         <div class="statblock-row" 
              [class.selected]="selection.isSelected(statblock)"
@@ -277,7 +277,7 @@
                 <div class="field-value text-content">
                   @if (statblock.attacks && statblock.attacks.length > 0) {
                     @for (attack of statblock.attacks; track attack.name) {
-                      <span class="list-item">{{attack.name}}</span>
+                      <span class="list-item" [innerHTML]="attack.name | diceLinkify"></span>
                     }
                   }
                 </div>
@@ -286,14 +286,9 @@
               @if (statblock.spells && statblock.spells.length > 0) {
                 <div class="field spells-field-container">
                   <div class="field-label">Spells</div>
-                  <div class="field-value text-content">
+          <div class="field-value text-content">
                     @for (spell of statblock.spells; track spell.name) {
-                      <span class="list-item">
-                        <ng-container *ngIf="getSpellLevel(spell.name) as lvl; else noLvl">
-                          <span class="spell-level">{{lvl}}</span><span class="spell-name">{{getSpellText(spell.name)}}</span>
-                        </ng-container>
-                        <ng-template #noLvl>{{spell.name}}</ng-template>
-                      </span>
+            <span class="list-item" [innerHTML]="(getSpellLevel(spell.name) ? (getSpellLevel(spell.name) + ' ' + getSpellText(spell.name)) : spell.name) | diceLinkify"></span>
                     }
                   </div>
                 </div>
@@ -301,10 +296,10 @@
 
               <div class="field text-field">
                 <div class="field-label">Skills</div>
-                <div class="field-value text-content">
+        <div class="field-value text-content">
                   @if (statblock.skills && statblock.skills.length > 0) {
                     @for (skill of statblock.skills; track skill) {
-                      <span class="list-item">{{skill}}</span>
+          <span class="list-item" [innerHTML]="skill | diceLinkify"></span>
                     }
                   }
                 </div>
@@ -313,9 +308,9 @@
               @if (statblock.resistances && statblock.resistances.length > 0) {
                 <div class="field text-field">
                   <div class="field-label">Resistances</div>
-                  <div class="field-value text-content">
+          <div class="field-value text-content">
                     @for (res of statblock.resistances; track res) {
-                      <span class="list-item">{{res}}</span>
+            <span class="list-item" [innerHTML]="res | diceLinkify"></span>
                     }
                   </div>
                 </div>
@@ -325,7 +320,7 @@
                 <div class="field text-field">
                   <div class="field-label">Notes</div>
                   <div class="field-value text-content">
-                    <span class="list-item">{{statblock.notes}}</span>
+                    <span class="list-item" [innerHTML]="statblock.notes | diceLinkify"></span>
                   </div>
                 </div>
               }

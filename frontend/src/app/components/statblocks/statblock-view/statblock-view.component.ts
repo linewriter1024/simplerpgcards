@@ -14,6 +14,9 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { StatblockService } from '../../../services/statblock.service';
 import { StatBlock, StatBlockFilter } from '../../../models/statblock.model';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { DiceLinkifyPipe } from '../../../shared/dice/dice-linkify.pipe';
+import { DiceClickDirective } from '../../../shared/dice/dice-click.directive';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-statblock-view',
@@ -28,7 +31,10 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     MatFormFieldModule,
     MatCardModule,
     MatChipsModule,
-    MatCheckboxModule
+  MatCheckboxModule,
+  MatDialogModule,
+  DiceLinkifyPipe,
+  DiceClickDirective
   ],
   templateUrl: './statblock-view.component.html',
   styleUrl: './statblock-view.component.scss'

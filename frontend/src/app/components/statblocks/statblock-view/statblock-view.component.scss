@@ -570,3 +570,21 @@
 /* Do not bold the first line of spells; only the level prefix is bold */
 .text-content .list-item:first-child { font-weight: inherit; }
 .spells-field-container .text-content .list-item:first-child { font-weight: inherit; }
+
+/* Dice links styling */
+.dice-link {
+  color: #80d8ff;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(128, 216, 255, 0.6);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.dice-link:hover,
+.dice-link:focus {
+  color: #b3e5fc;
+  border-bottom-color: #b3e5fc;
+  background-color: rgba(128, 216, 255, 0.08);
+}

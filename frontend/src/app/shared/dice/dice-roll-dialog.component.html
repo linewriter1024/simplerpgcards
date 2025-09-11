@@ -1,0 +1,45 @@
+<div class="dialog-container">
+  <h2 mat-dialog-title class="title">
+    <mat-icon class="title-icon">casino</mat-icon>
+    Roll Result
+  </h2>
+
+  <div mat-dialog-content class="content">
+    <div class="expr" aria-label="Dice expression">
+      <span class="expr-label">Expression</span>
+      <code class="expr-code">{{ data.result.expression }}</code>
+    </div>
+
+    <div class="context" *ngIf="data.context">{{ data.context }}</div>
+
+    <div class="terms" *ngIf="data.result.terms.length > 0">
+      <div class="term" *ngFor="let t of data.result.terms">
+        <div class="term-head">
+          <mat-icon class="die-icon">flare</mat-icon>
+          {{ t.term }}
+        </div>
+        <div class="term-body">
+          <span class="roll" *ngFor="let r of t.rolls">{{ r }}</span>
+          <span class="sum">= {{ t.sum }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mods" *ngIf="data.result.modifiers.length > 0">
+      <mat-icon class="mod-icon">add</mat-icon>
+      <span class="mods-label">Modifiers</span>
+      <span class="mod" *ngFor="let m of data.result.modifiers; let i = index">
+        {{ m >= 0 ? '+' : ''}}{{ m }}<span *ngIf="i < data.result.modifiers.length - 1">, </span>
+      </span>
+    </div>
+
+    <div class="total" aria-live="polite">
+      <span class="total-label">Total</span>
+      <span class="total-value">{{ data.result.total }}</span>
+    </div>
+  </div>
+
+  <div mat-dialog-actions class="actions">
+    <button mat-button mat-dialog-close>Close</button>
+  </div>
+</div>

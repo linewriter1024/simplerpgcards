@@ -1,0 +1,30 @@
+.dialog-container { display: flex; flex-direction: column; }
+
+.title { display: flex; align-items: center; gap: 8px; margin: 0; }
+.title-icon { color: #ffd54f; }
+
+.content { display: flex; flex-direction: column; gap: 12px; }
+
+.context { font-size: 12px; opacity: 0.8; }
+
+.expr { display: flex; align-items: center; gap: 8px; }
+.expr-label { font-size: 12px; color: #b0bec5; text-transform: uppercase; }
+.expr-code { background: rgba(255,255,255,0.04); padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+
+.terms { display: flex; flex-direction: column; gap: 8px; }
+.term { display: flex; flex-direction: column; gap: 4px; }
+.term-head { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.die-icon { color: #4fc3f7; font-size: 18px; }
+.term-body { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.roll { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 12px; font-family: monospace; font-size: 13px; }
+.sum { margin-left: 8px; font-weight: 600; }
+
+.mods { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.mod-icon { color: #a5d6a7; }
+.mods-label { font-size: 12px; color: #b0bec5; text-transform: uppercase; }
+
+.total { display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); }
+.total-label { font-size: 12px; color: #b0bec5; text-transform: uppercase; }
+.total-value { font-size: 20px; font-weight: 800; color: #fff; }
+
+.actions { display: flex; justify-content: flex-end; margin-top: 6px; }

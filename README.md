@@ -123,6 +123,7 @@ This separation provides:
   - Calculated D&D modifiers display (e.g., STR 16 → +3, DEX 14 → +2)
   - **Spell Slots**: Space-delimited input in edit mode, formatted as ordinals (1st, 2nd, 3rd, etc.) in view mode
   - **Notes Visibility**: Notes are shown when present and omitted when empty in View mode to keep the layout dense without hiding actual content.
+  - **Clickable Dice Rolls (NEW)**: Any dice notation inside Attacks, Spells, Skills, Resistances, or Notes (e.g., `6d12`, `1d4+2`, `2d6 - 1`) is automatically linkified in View mode. Clicking a dice expression opens a polished dark-themed dialog showing individual die rolls, modifiers, and the total. Implemented via a generic pipe/directive pair so it can be reused elsewhere easily.
   - ✅ **URL Persistence**: Search terms are saved in the URL for easy sharing and bookmarking
 
 ### Build Configuration
