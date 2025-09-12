@@ -112,6 +112,7 @@ This separation provides:
   - **Integrated Tag Search**: Click on any tag to add/remove it from the search field, with visual highlighting of active search terms
   - **Advanced Search**: Support for quoted exact matches and multiple search terms (space-separated)
   - **Always-Available Bulk Operations**: Add or remove tags from multiple selected statblocks with persistent bulk actions interface
+  - **Bulk Tag Quick Pick (NEW)**: Below the bulk tag input, a list of existing tags is shown for quick selection. Click a tag to populate the input instantly for Add/Remove.
   - **Bulk Tag Operations**: Add or remove tags from multiple selected statblocks simultaneously with automatic duplicate prevention
   - **Select All Control**: Convenient select all/deselect all checkbox with indeterminate state for partial selections
   - **Tag Validation**: Bulk operations prevent tags with spaces; individual tags must not contain spaces (use underscores or hyphens instead)

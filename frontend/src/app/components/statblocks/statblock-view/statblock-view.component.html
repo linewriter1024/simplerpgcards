@@ -63,6 +63,11 @@
         <mat-form-field appearance="outline" class="toolbar-search">
           <mat-label>Tag for Bulk Action</mat-label>
           <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag">
+          @if (bulkTagInput.trim()) {
+            <button mat-icon-button matSuffix aria-label="Clear bulk tag" (click)="bulkTagInput = ''">
+              <mat-icon>clear</mat-icon>
+            </button>
+          }
         </mat-form-field>
         
         <button mat-raised-button color="primary" (click)="addTagToSelected()" 
@@ -77,6 +82,18 @@
           Remove Tag
         </button>
       </div>
+
+      <!-- Row 4: Bulk Tag Quick Pick -->
+      @if (allTags.length > 0) {
+        <div class="toolbar-row bulk-tags-row">
+          <div class="bulk-tags-label">Quick pick existing tags:</div>
+          <div class="bulk-tags-list">
+            @for (tag of allTags; track tag) {
+              <button type="button" class="bulk-tag-chip" (click)="bulkTagInput = tag">{{ tag }}</button>
+            }
+          </div>
+        </div>
+      }
     </div>
 
     <!-- Sidebar Layout (visible on large screens) -->
@@ -151,6 +168,11 @@
           <mat-form-field appearance="outline" class="sidebar-field">
             <mat-label>Tag for Bulk Action</mat-label>
             <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag">
+            @if (bulkTagInput.trim()) {
+              <button mat-icon-button matSuffix aria-label="Clear bulk tag" (click)="bulkTagInput = ''">
+                <mat-icon>clear</mat-icon>
+              </button>
+            }
           </mat-form-field>
           <button mat-raised-button color="primary" (click)="addTagToSelected()" 
                   [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="sidebar-button">
@@ -162,6 +184,17 @@
             <mat-icon>remove</mat-icon>
             Remove Tag
           </button>
+
+          @if (allTags.length > 0) {
+            <div class="bulk-tags">
+              <div class="bulk-tags-label">Quick pick existing tags:</div>
+              <div class="bulk-tags-list">
+                @for (tag of allTags; track tag) {
+                  <button type="button" class="bulk-tag-chip" (click)="bulkTagInput = tag">{{ tag }}</button>
+                }
+              </div>
+            </div>
+          }
         </div>
       </div>
     </div>

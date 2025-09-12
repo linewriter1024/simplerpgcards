@@ -207,7 +207,8 @@ export class StatblockViewComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.searchControl.setValue('');
+  this.searchControl.setValue('');
+  this.bulkTagInput = '';
     this.applyFilters();
     this.updatePageTitle();
     this.updateUrl();

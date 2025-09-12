@@ -279,6 +279,27 @@
   white-space: nowrap;
 }
 
+/* Bulk tag quick pick */
+.bulk-tags { margin-top: 8px; }
+.bulk-tags-label { font-size: 11px; color: #b0bec5; margin-bottom: 4px; }
+.bulk-tags-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.bulk-tag-chip {
+  background-color: #404040;
+  color: #e0e0e0;
+  border: 1px solid #555;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.bulk-tag-chip:hover {
+  background-color: #4a4a4a;
+  border-color: #777;
+}
+.bulk-tags-row { align-items: center; }
+
 /* Stronger bullets for inline items */
 .list-item + .list-item::before {
   content: '•';
