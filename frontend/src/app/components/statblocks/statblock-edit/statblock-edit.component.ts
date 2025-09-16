@@ -13,6 +13,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { SelectionModel } from '@angular/cdk/collections';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { StatblockService } from '../../../services/statblock.service';
@@ -37,6 +39,8 @@ import { firstValueFrom } from 'rxjs';
     MatCheckboxModule,
   MatTooltipModule,
   MatDialogModule,
+    MatProgressSpinnerModule,
+    ScrollingModule,
     TextFieldModule
   ],
   templateUrl: './statblock-edit.component.html',
@@ -47,6 +51,8 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   dataSource = new MatTableDataSource<EditableStatBlock>([]);
   selection = new SelectionModel<EditableStatBlock>(true, []);
   private isAddingNewRow = false;
+  isLoading = true;
+  private changeDebounceMap = new Map<string, any>();
   // Image selected in sidebar to apply to the next created statblock
   pendingImage: File | { url: string } | { base64: string } | null = null;
   pendingImagePreview: string | null = null;
@@ -90,12 +96,16 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     });
 
     this.loadStatblocks().then(() => {
+      this.isLoading = false;
       // Check for jumpTo query parameter
       this.route.queryParams.subscribe(params => {
         if (params['jumpTo']) {
           this.scrollToStatblock(params['jumpTo']);
         }
       });
+    }).catch(error => {
+      this.isLoading = false;
+      console.error('Failed to load statblocks:', error);
     });
   }
 
@@ -170,7 +180,9 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Cleanup handled automatically by Angular
+    // Clear all pending debounce timeouts
+    this.changeDebounceMap.forEach(timeoutId => clearTimeout(timeoutId));
+    this.changeDebounceMap.clear();
   }
 
   loadStatblocks(): Promise<void> {
@@ -179,13 +191,13 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
         next: (statblocks) => {
           // Sort by name initially in edit mode, but preserve order for new rows later
           const sortedStatblocks = statblocks.sort((a, b) => a.name.localeCompare(b.name));
-          this.allStatblocks = sortedStatblocks.map(sb => this.convertToEditableRow(sb));
-          this.editableRows = [...this.allStatblocks];
-          this.dataSource.data = this.editableRows;
-          // Apply search filter if search text exists
-          this.applySearch();
-          // Allow DOM to render
-          setTimeout(() => resolve(), 0);
+          
+          // Process statblocks in chunks to avoid blocking the UI
+          this.processStatblocksInChunks(sortedStatblocks).then(() => {
+            // Apply search filter if search text exists
+            this.applySearch();
+            resolve();
+          }).catch(reject);
         },
         error: (error) => {
           console.error('Error loading statblocks:', error);
@@ -195,23 +207,63 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     });
   }
 
+  private async processStatblocksInChunks(statblocks: StatBlock[]): Promise<void> {
+    const chunkSize = 20; // Process 20 statblocks at a time
+    const totalChunks = Math.ceil(statblocks.length / chunkSize);
+    
+    this.allStatblocks = [];
+    
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, statblocks.length);
+      const chunk = statblocks.slice(start, end);
+      
+      // Process this chunk
+      const convertedChunk = chunk.map(sb => this.convertToEditableRow(sb));
+      this.allStatblocks.push(...convertedChunk);
+      
+      // Update the visible data incrementally
+      this.editableRows = [...this.allStatblocks];
+      this.dataSource.data = this.editableRows;
+      
+      // Yield control back to the browser to prevent blocking
+      if (i < totalChunks - 1) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+  }
+
   scrollToStatblock(statblockId: string): void {
     // Find the statblock row with the matching ID
     const targetRowIndex = this.editableRows.findIndex(row => row.id === statblockId);
     if (targetRowIndex !== -1) {
       // Use setTimeout to ensure DOM is ready
       setTimeout(() => {
-        const elements = document.querySelectorAll('.statblock-row');
-        if (elements[targetRowIndex]) {
-          elements[targetRowIndex].scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          });
-          // Optionally add a highlight effect
-          elements[targetRowIndex].classList.add('highlight-jump');
+        // Scroll to the virtual scroll item
+        const viewport = document.querySelector('cdk-virtual-scroll-viewport');
+        if (viewport) {
+          // Calculate the scroll position for virtual scrolling
+          const itemHeight = 300; // Must match the itemSize in template
+          const scrollTop = targetRowIndex * itemHeight;
+          (viewport as any).scrollToOffset(scrollTop);
+          
+          // Add a slight delay to allow virtual scroll to render, then highlight
           setTimeout(() => {
-            elements[targetRowIndex].classList.remove('highlight-jump');
-          }, 2000);
+            const elements = document.querySelectorAll('.statblock-row');
+            // Find the visible element (virtual scroll may have different indices)
+            const visibleElement = Array.from(elements).find(el => {
+              const nameInput = el.querySelector('input[ng-reflect-model*="' + statblockId + '"]') ||
+                              el.querySelector('mat-form-field input');
+              return nameInput && (nameInput as any).value?.includes(statblockId);
+            });
+            
+            if (visibleElement) {
+              visibleElement.classList.add('highlight-jump');
+              setTimeout(() => {
+                visibleElement.classList.remove('highlight-jump');
+              }, 2000);
+            }
+          }, 200);
         }
       }, 100);
     }
@@ -231,8 +283,11 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
       });
     }
 
-    this.editableRows = filtered;
-    this.dataSource.data = this.editableRows;
+    // Use setTimeout to make search non-blocking for large datasets
+    setTimeout(() => {
+      this.editableRows = filtered;
+      this.dataSource.data = this.editableRows;
+    }, 0);
   }
 
   private parseSearchTerms(searchText: string): string[] {
@@ -376,63 +431,92 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   }
 
   onFieldChange(row: EditableStatBlock): void {
-    row.hasUnsavedChanges = true;
+    this.debouncedChange(row, () => {
+      row.hasUnsavedChanges = true;
+    });
+  }
+
+  private debouncedChange(row: EditableStatBlock, callback: () => void): void {
+    // Clear existing timeout for this row
+    if (this.changeDebounceMap.has(row.uid)) {
+      clearTimeout(this.changeDebounceMap.get(row.uid));
+    }
+    
+    // Set new timeout
+    const timeoutId = setTimeout(() => {
+      callback();
+      this.changeDebounceMap.delete(row.uid);
+    }, 100); // Small debounce to batch rapid changes
+    
+    this.changeDebounceMap.set(row.uid, timeoutId);
   }
 
   onAttacksChange(row: EditableStatBlock): void {
-    // Convert text to attacks array
-    const lines = row.attacksText.split('\n').filter(line => line.trim());
-    row.attacks = lines.map(line => ({
-      name: line.trim(),
-      toHitModifier: 0,
-      damage: '',
-      additionalEffect: undefined
-    }));
-    this.onFieldChange(row);
+    this.debouncedChange(row, () => {
+      // Convert text to attacks array
+      const lines = row.attacksText.split('\n').filter(line => line.trim());
+      row.attacks = lines.map(line => ({
+        name: line.trim(),
+        toHitModifier: 0,
+        damage: '',
+        additionalEffect: undefined
+      }));
+      row.hasUnsavedChanges = true;
+    });
   }
 
   onSpellsChange(row: EditableStatBlock): void {
-    // Convert text to spells array
-    const lines = row.spellsText.split('\n').filter(line => line.trim());
-    row.spells = lines.map(line => ({
-      name: line.trim(),
-      description: ''
-    }));
-    this.onFieldChange(row);
+    this.debouncedChange(row, () => {
+      // Convert text to spells array
+      const lines = row.spellsText.split('\n').filter(line => line.trim());
+      row.spells = lines.map(line => ({
+        name: line.trim(),
+        description: ''
+      }));
+      row.hasUnsavedChanges = true;
+    });
   }
 
   onSpellSlotsChange(row: EditableStatBlock): void {
-    // Convert space-separated text to spell slots array
-    const allText = row.spellSlotsText.replace(/\n/g, ' '); // Replace newlines with spaces
-    row.spellSlots = allText.split(' ')
-      .filter(slot => slot.trim())
-      .map(slot => parseInt(slot.trim()))
-      .filter(slot => !isNaN(slot) && slot >= 0);
-    this.onFieldChange(row);
+    this.debouncedChange(row, () => {
+      // Convert space-separated text to spell slots array
+      const allText = row.spellSlotsText.replace(/\n/g, ' '); // Replace newlines with spaces
+      row.spellSlots = allText.split(' ')
+        .filter(slot => slot.trim())
+        .map(slot => parseInt(slot.trim()))
+        .filter(slot => !isNaN(slot) && slot >= 0);
+      row.hasUnsavedChanges = true;
+    });
   }
 
   onSkillsChange(row: EditableStatBlock): void {
-    // Convert text to skills array
-    const lines = row.skillsText.split('\n').filter(line => line.trim());
-    row.skills = lines.map(line => line.trim());
-    this.onFieldChange(row);
+    this.debouncedChange(row, () => {
+      // Convert text to skills array
+      const lines = row.skillsText.split('\n').filter(line => line.trim());
+      row.skills = lines.map(line => line.trim());
+      row.hasUnsavedChanges = true;
+    });
   }
 
   onResistancesChange(row: EditableStatBlock): void {
-    // Convert text to resistances array (line-separated for textarea)
-    const lines = row.resistancesText.split('\n').filter(line => line.trim());
-    row.resistances = lines.map(line => line.trim());
-    this.onFieldChange(row);
+    this.debouncedChange(row, () => {
+      // Convert text to resistances array (line-separated for textarea)
+      const lines = row.resistancesText.split('\n').filter(line => line.trim());
+      row.resistances = lines.map(line => line.trim());
+      row.hasUnsavedChanges = true;
+    });
   }
 
   onTagsChange(row: EditableStatBlock): void {
-    // Convert space-separated text to tags array (across multiple lines)
-    const allText = row.tagsText.replace(/\n/g, ' '); // Replace newlines with spaces
-    const tags = allText.split(' ').filter(tag => tag.trim()).map(tag => tag.trim());
-    
-    // Remove duplicates by converting to Set and back to array
-    row.tags = Array.from(new Set(tags));
-    this.onFieldChange(row);
+    this.debouncedChange(row, () => {
+      // Convert space-separated text to tags array (across multiple lines)
+      const allText = row.tagsText.replace(/\n/g, ' '); // Replace newlines with spaces
+      const tags = allText.split(' ').filter(tag => tag.trim()).map(tag => tag.trim());
+      
+      // Remove duplicates by converting to Set and back to array
+      row.tags = Array.from(new Set(tags));
+      row.hasUnsavedChanges = true;
+    });
   }
 
   saveRow(row: EditableStatBlock): void {
@@ -785,6 +869,11 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     }
     
     this.titleService.setTitle(title);
+  }
+
+  // Performance optimization: trackBy function for the virtual scroll list
+  trackByStatblockUid(index: number, item: EditableStatBlock): string {
+    return item.uid;
   }
 }
 

@@ -160,40 +160,53 @@
 
   <!-- Main Content Area -->
   <div class="main-content">
-    <div class="statblocks-list">
-      @for (row of editableRows; track row.uid) {
-        <div class="statblock-row" 
-             [class.new-row]="row.isNew"
-             [class.unsaved-row]="row.hasUnsavedChanges">
-          
-          <!-- Row Header with Actions and Selection -->
-          <div class="row-header">
-            <mat-checkbox (change)="$event ? selection.toggle(row) : null"
-                         [checked]="selection.isSelected(row)">
-            </mat-checkbox>
-            <button mat-icon-button color="primary" (click)="saveRow(row)" 
-                    [disabled]="!row.hasUnsavedChanges" 
-                    [matTooltip]="row.hasUnsavedChanges ? 'Save changes' : 'No changes to save'">
-              <mat-icon>{{ row.hasUnsavedChanges ? 'save' : 'check' }}</mat-icon>
-            </button>
-            <!-- Copy button -->
-            <button mat-icon-button (click)="copyRow(row)" [matTooltip]="'Copy statblock'">
-              <mat-icon>content_copy</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="deleteRow(row)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-
-          <!-- Main Content Area -->
-          <div class="row-content">
-            <!-- Row image preview (for existing rows) -->
-            <div class="row-image" *ngIf="row.id && row.hasImage">
-              <img class="thumb" [src]="getImageUrl(row) + '?v=' + row.uid" alt="{{row.name || 'statblock'}} image" />
-              <button mat-icon-button color="warn" class="image-delete-btn" (click)="onRemoveImage(row)" title="Remove image">
+    <!-- Loading indicator -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading statblocks...</p>
+    </div>
+    
+    <!-- Statblocks list with virtual scrolling -->
+    <div class="statblocks-list" *ngIf="!isLoading">
+      <cdk-virtual-scroll-viewport 
+        itemSize="300" 
+        minBufferPx="600" 
+        maxBufferPx="900" 
+        class="virtual-scroll-viewport">
+        
+        @for (row of editableRows; track trackByStatblockUid($index, row); let i = $index) {
+          <div class="statblock-row" 
+               [class.new-row]="row.isNew"
+               [class.unsaved-row]="row.hasUnsavedChanges">
+            
+            <!-- Row Header with Actions and Selection -->
+            <div class="row-header">
+              <mat-checkbox (change)="$event ? selection.toggle(row) : null"
+                           [checked]="selection.isSelected(row)">
+              </mat-checkbox>
+              <button mat-icon-button color="primary" (click)="saveRow(row)" 
+                      [disabled]="!row.hasUnsavedChanges" 
+                      [matTooltip]="row.hasUnsavedChanges ? 'Save changes' : 'No changes to save'">
+                <mat-icon>{{ row.hasUnsavedChanges ? 'save' : 'check' }}</mat-icon>
+              </button>
+              <!-- Copy button -->
+              <button mat-icon-button (click)="copyRow(row)" [matTooltip]="'Copy statblock'">
+                <mat-icon>content_copy</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteRow(row)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
+
+            <!-- Main Content Area -->
+            <div class="row-content">
+              <!-- Row image preview (for existing rows) -->
+              <div class="row-image" *ngIf="row.id && row.hasImage">
+                <img class="thumb" [src]="getImageUrl(row) + '?v=' + row.uid" alt="{{row.name || 'statblock'}} image" />
+                <button mat-icon-button color="warn" class="image-delete-btn" (click)="onRemoveImage(row)" title="Remove image">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             <!-- Top Row: Basic Info -->
             <div class="basic-info-row">
               <mat-form-field appearance="outline" class="name-field">
@@ -297,7 +310,8 @@
             </div>
           </div>
         </div>
-      }
+        }
+      </cdk-virtual-scroll-viewport>
     </div>
   </div>
 </div>
