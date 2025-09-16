@@ -946,16 +946,15 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
     });
   }
 
-  // Consider a statblock "empty" if all text arrays are empty and core text fields (except name) are blank
-  // This allows image-only statblocks to have names while still being treated as image-only
+  // Consider a statblock "empty" if all text arrays are empty and core text fields (except name and tags) are blank
+  // This allows image-only statblocks to have names and tags while still being treated as image-only
   isStatblockEmpty(sb: StatBlock): boolean {
     const textEmpty = !((sb.type && sb.type.trim()) || (sb.cr && sb.cr.trim()) || (sb.hp && String(sb.hp).trim()) || (sb.ac && String(sb.ac).trim()) || (sb.notes && sb.notes.trim()));
     const arraysEmpty = (!sb.attacks || sb.attacks.length === 0)
       && (!sb.spells || sb.spells.length === 0)
       && (!sb.spellSlots || sb.spellSlots.length === 0)
       && (!sb.skills || sb.skills.length === 0)
-      && (!sb.resistances || sb.resistances.length === 0)
-      && (!sb.tags || sb.tags.length === 0);
+      && (!sb.resistances || sb.resistances.length === 0);
     return textEmpty && arraysEmpty;
   }
 
