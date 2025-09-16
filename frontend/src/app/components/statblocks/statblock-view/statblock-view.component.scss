@@ -68,14 +68,14 @@
   
   .sidebar-icon {
     color: #63a4ff;
-    font-size: 14px;
+    font-size: 15px;
   }
   
   .sidebar-title {
     font-weight: 500;
     color: #e0e0e0;
     flex: 1;
-    font-size: 12px;
+    font-size: 13px;
   }
   
   .statblock-count {
@@ -83,7 +83,7 @@
     color: #b0b0b0;
     padding: 1px 3px;
     border-radius: 6px;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 500;
   }
 }
@@ -94,11 +94,11 @@
   
   .mode-btn {
     flex: 1;
-    font-size: 10px;
+    font-size: 11px;
     height: 26px;
     
     mat-icon {
-      font-size: 12px;
+      font-size: 13px;
       margin-right: 2px;
     }
     
@@ -113,7 +113,7 @@
     width: 100%;
     
     .mat-mdc-form-field {
-      font-size: 12px;
+      font-size: 13px;
     }
   }
 }
@@ -131,12 +131,12 @@
     margin-bottom: 2px;
     
     .section-icon {
-      font-size: 12px;
+      font-size: 13px;
       color: #81c784;
     }
     
     span {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 500;
       color: #e0e0e0;
       flex: 1;
@@ -144,12 +144,12 @@
   }
   
   .compact-toggle {
-    font-size: 10px;
+    font-size: 11px;
     margin: 1px 0;
   }
   
   .compact-checkbox {
-    font-size: 10px;
+    font-size: 11px;
     margin: 1px 0;
   }
   
@@ -160,11 +160,11 @@
     
     .action-btn {
       flex: 1;
-      font-size: 9px;
+      font-size: 10px;
       height: 24px;
       
       mat-icon {
-        font-size: 12px;
+        font-size: 13px;
         margin-right: 1px;
       }
       
@@ -176,7 +176,7 @@
   
   .bulk-field {
     width: 100%;
-    font-size: 10px;
+    font-size: 11px;
     margin-bottom: 2px;
   }
   
@@ -194,7 +194,7 @@
       color: #e0e0e0;
       padding: 1px 3px;
       border-radius: 2px;
-      font-size: 8px;
+      font-size: 9px;
       cursor: pointer;
       transition: all 0.2s;
       
@@ -251,7 +251,7 @@
 
 .statblock-count {
   color: #999;
-  font-size: 13px;
+  font-size: 14px;
   margin-top: 6px;
   display: block;
 }
@@ -328,7 +328,7 @@
 }
 
 .field-label {
-  font-size: 10px;
+  font-size: 11px;
   color: #ccc;
   font-weight: 500;
   text-transform: uppercase;
@@ -337,7 +337,7 @@
 
 .field-value {
   color: #e0e0e0;
-  font-size: 12px;
+  font-size: 13px;
   min-height: 14px;
 }
 
@@ -424,7 +424,7 @@
   color: white;
   padding: 1px 3px;
   border-radius: 6px;
-  font-size: 8px;
+  font-size: 9px;
   margin-right: 1px;
   margin-bottom: 1px;
   display: inline-block;
@@ -433,7 +433,7 @@
 
 /* Bulk tag quick pick */
 .bulk-tags { margin-top: 8px; }
-.bulk-tags-label { font-size: 11px; color: #b0bec5; margin-bottom: 4px; }
+.bulk-tags-label { font-size: 12px; color: #b0bec5; margin-bottom: 4px; }
 .bulk-tags-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .bulk-tag-chip {
   background-color: #404040;
@@ -441,7 +441,7 @@
   border: 1px solid #555;
   border-radius: 12px;
   padding: 2px 8px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.2;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
@@ -457,7 +457,7 @@
   content: '•';
   color: #cfcfcf;
   font-weight: 700;
-  font-size: 14px; /* larger bullet */
+  font-size: 15px; /* larger bullet */
   line-height: 1;
   vertical-align: baseline;
   margin: 0 6px 0 2px; /* balanced spacing around bullet */
@@ -511,7 +511,7 @@
   .toolbar-title {
     font-weight: 500;
     color: #e0e0e0;
-    font-size: 13px;
+    font-size: 14px;
     flex-shrink: 0;
   }
 
@@ -521,11 +521,11 @@
     flex-shrink: 0;
     
     .mode-button {
-      font-size: 11px;
+      font-size: 12px;
       height: 28px;
       
       mat-icon {
-        font-size: 14px;
+        font-size: 15px;
         margin-right: 3px;
       }
       
@@ -538,7 +538,7 @@
   .toolbar-search {
     flex: 1;
     min-width: 120px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .active-section {
@@ -548,28 +548,28 @@
     flex-wrap: wrap;
     
     .section-icon {
-      font-size: 14px;
+      font-size: 15px;
       color: #81c784;
     }
     
     .section-label {
-      font-size: 11px;
+      font-size: 12px;
       color: #e0e0e0;
       font-weight: 500;
     }
   }
 
   .toolbar-toggle {
-    font-size: 11px;
+    font-size: 12px;
     margin: 0;
   }
 
   .toolbar-btn {
-    font-size: 10px;
+    font-size: 11px;
     height: 26px;
     
     mat-icon {
-      font-size: 14px;
+      font-size: 15px;
       margin-right: 2px;
     }
     
@@ -579,7 +579,7 @@
   }
 
   .toolbar-checkbox {
-    font-size: 11px;
+    font-size: 12px;
     flex-shrink: 0;
   }
 
@@ -588,7 +588,7 @@
     min-width: 200px;
     
     .tag-chip {
-      font-size: 10px;
+      font-size: 11px;
       height: 22px;
       margin: 1px;
     }
@@ -606,7 +606,7 @@
       color: #e0e0e0;
       padding: 1px 4px;
       border-radius: 2px;
-      font-size: 9px;
+      font-size: 10px;
       cursor: pointer;
       transition: all 0.2s;
       
@@ -626,7 +626,7 @@
   }
   
   .toolbar-title {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 500;
     color: #e0e0e0;
     flex-shrink: 0;
@@ -654,7 +654,7 @@
   
   .statblock-count {
     color: #b0b0b0;
-    font-size: 14px;
+    font-size: 15px;
     flex-shrink: 0;
   }
   
@@ -840,7 +840,7 @@
 .tags-field {
   flex: 0 1 auto;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
   min-width: 0;
 }
 
@@ -848,7 +848,7 @@
 .ability-field { 
   flex: 0 0 auto; 
   white-space: nowrap; 
-  font-size: 11px;
+  font-size: 12px;
   min-width: 0;
 }
 
@@ -876,17 +876,17 @@
   content: '•';
   color: #cfcfcf;
   font-weight: 700;
-  font-size: 12px; /* smaller bullet for compact view */
+  font-size: 13px; /* smaller bullet for compact view */
   line-height: 1;
   vertical-align: baseline;
   margin: 0 4px 0 3px; /* tighter spacing around bullet */
 }
 
 /* Slight font-size bump for readability */
-.field-value { font-size: 12px; }
-.list-item { font-size: 11px; }
-.spell-slots { font-size: 11px; }
-.field-label { font-size: 10px; }
+.field-value { font-size: 13px; }
+.list-item { font-size: 12px; }
+.spell-slots { font-size: 12px; }
+.field-label { font-size: 11px; }
 
 /* Spell inline formatting */
 .spell-level { font-weight: 700; margin-right: 2px; }
