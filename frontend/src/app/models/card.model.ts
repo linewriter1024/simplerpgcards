@@ -3,7 +3,7 @@ export interface Card {
   title: string;
   frontText?: string;
   backText?: string;
-  tags?: string[]; // Array of tag strings
+  tags?: string[]; // Array of tag strings, always sorted alphabetically
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -12,7 +12,7 @@ export interface CreateCardDto {
   title: string;
   frontText?: string;
   backText?: string;
-  tags?: string[];
+  tags?: string[]; // Always sorted alphabetically
 }
 
 export interface CardFilter {

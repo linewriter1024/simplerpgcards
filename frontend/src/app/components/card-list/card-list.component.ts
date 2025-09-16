@@ -46,6 +46,9 @@ import { Observable } from 'rxjs';
     styleUrl: './card-list.component.scss'
 })
 export class CardListComponent implements OnInit {
+  getSortedTags(card: Card): string[] {
+    return card.tags ? [...card.tags].sort((a, b) => a.localeCompare(b)) : [];
+  }
   cards: Card[] = [];
   filteredCards: Card[] = [];
   allTags: string[] = [];
@@ -510,7 +513,9 @@ export class CardListComponent implements OnInit {
         // Store selected IDs before the operation
         const selectedIds = selectedCards.map(card => card.id!);
         
-        this.cardService.bulkAddTags(selectedCardIds, tagsToAdd).subscribe({
+        // Always sort tags before sending to backend
+        const sortedTagsToAdd = [...tagsToAdd].sort((a, b) => a.localeCompare(b));
+        this.cardService.bulkAddTags(selectedCardIds, sortedTagsToAdd).subscribe({
           next: () => {
             this.loadCards().then(() => {
               this.loadTags();
@@ -561,7 +566,9 @@ export class CardListComponent implements OnInit {
         // Store selected IDs before the operation
         const selectedIds = selectedCards.map(card => card.id!);
         
-        this.cardService.bulkRemoveTags(selectedCardIds, tagsToRemove).subscribe({
+        // Always sort tags before sending to backend
+        const sortedTagsToRemove = [...tagsToRemove].sort((a, b) => a.localeCompare(b));
+        this.cardService.bulkRemoveTags(selectedCardIds, sortedTagsToRemove).subscribe({
           next: () => {
             this.loadCards().then(() => {
               this.loadTags();
