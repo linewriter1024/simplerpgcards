@@ -125,6 +125,16 @@
                       class="toolbar-checkbox">
           Select All ({{ selection.selected.length }})
         </mat-checkbox>
+        
+        <button mat-stroked-button 
+                size="small"
+                color="accent" 
+                (click)="clearSelection()" 
+                [disabled]="selection.selected.length === 0" 
+                class="toolbar-btn">
+          <mat-icon>clear</mat-icon>
+          Clear Selection
+        </button>
       </div>
       
       <!-- Row 5: Bulk Tag Actions -->
@@ -319,12 +329,24 @@
             <span>Selection ({{ selection.selected.length }})</span>
           </div>
           
-          <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                       [checked]="isAllSelected()"
-                       [indeterminate]="isIndeterminate()"
-                       class="compact-checkbox">
-            Select All
-          </mat-checkbox>
+          <div class="selection-controls">
+            <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                         [checked]="isAllSelected()"
+                         [indeterminate]="isIndeterminate()"
+                         class="compact-checkbox">
+              Select All
+            </mat-checkbox>
+            
+            <button mat-stroked-button 
+                    size="small"
+                    color="accent" 
+                    (click)="clearSelection()" 
+                    [disabled]="selection.selected.length === 0" 
+                    class="action-btn">
+              <mat-icon>clear</mat-icon>
+              Clear Selection
+            </button>
+          </div>
         </div>
         
         <!-- Bulk Actions -->

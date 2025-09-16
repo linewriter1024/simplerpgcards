@@ -152,9 +152,22 @@
     margin: 1px 0;
   }
 
+  .selection-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
   .compact-checkbox {
     font-size: 11px;
     margin: 1px 0;
+  }
+
+  .action-btn {
+    &:disabled {
+      opacity: 0.3;
+    }
   }
 
   .button-row {
@@ -604,6 +617,7 @@
   .toolbar-checkbox {
     font-size: 12px;
     flex-shrink: 0;
+    margin-right: 8px;
   }
 
   .tag-chips {
@@ -830,7 +844,9 @@
   }
 
   .selection-controls {
-    justify-content: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .tag-actions {

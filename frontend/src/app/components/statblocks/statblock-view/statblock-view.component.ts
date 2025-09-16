@@ -681,6 +681,10 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
     }
   }
 
+  clearSelection(): void {
+    this.selection.clear();
+  }
+
   toggleRowSelection(row: StatBlock): void {
     this.selection.toggle(row);
   }
