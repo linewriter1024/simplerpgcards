@@ -99,71 +99,96 @@
     <!-- Sidebar Layout (visible on large screens) -->
     <div class="sidebar-layout">
       <div class="sidebar-content">
-        <h3>Statblocks</h3>
+        <!-- Compact Header -->
+        <div class="sidebar-header">
+          <mat-icon class="sidebar-icon">view_list</mat-icon>
+          <span class="sidebar-title">Statblocks</span>
+          <span class="statblock-count">{{ filteredStatblocks.length }}</span>
+        </div>
         
-        <!-- Mode Switcher -->
-        <div class="sidebar-section">
-          <button mat-raised-button 
+        <!-- Mode Switcher - Compact -->
+        <div class="mode-switcher">
+          <button mat-stroked-button 
                   color="primary"
                   (click)="switchToEditMode()"
-                  class="sidebar-button">
+                  class="mode-btn">
             <mat-icon>edit</mat-icon>
-            Edit Mode
+            Edit
           </button>
           
-          <button mat-raised-button 
+          <button mat-stroked-button 
                   color="accent"
-                  class="sidebar-button">
-            <mat-icon>view_list</mat-icon>
-            View Mode (Current)
+                  class="mode-btn active">
+            <mat-icon>visibility</mat-icon>
+            View
           </button>
         </div>
         
-        <h4>Search & Filters</h4>
-        
-        <!-- Search -->
-        <mat-form-field appearance="outline" class="sidebar-field">
-          <mat-label>Search</mat-label>
-          <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-        
-        <button mat-button (click)="clearFilters()" class="sidebar-button">Clear Filters</button>
+        <!-- Search with clear button -->
+        <div class="search-section">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [formControl]="searchControl" placeholder="Search...">
+            @if (searchControl.value?.trim()) {
+              <button mat-icon-button matSuffix (click)="clearFilters()">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+        </div>
         
         <!-- Active Controls Section -->
-        <div class="sidebar-section">
-          <h4>Active Statblocks</h4>
+        <div class="control-section">
+          <div class="section-header">
+            <mat-icon class="section-icon">star</mat-icon>
+            <span>Active ({{ getActiveStatblocksCount() }})</span>
+          </div>
+          
           <mat-slide-toggle 
             [(ngModel)]="showActiveOnly" 
             (change)="applyFilters()"
-            class="sidebar-toggle">
-            Show Active Only ({{ getActiveStatblocksCount() }})
+            class="compact-toggle">
+            Show only active
           </mat-slide-toggle>
           
-          <button mat-raised-button color="primary" (click)="addActiveToSelected()" 
-                  [disabled]="selection.selected.length === 0" class="sidebar-button">
-            <mat-icon>star</mat-icon>
-            Mark Selected as Active
-          </button>
-          
-          <button mat-raised-button color="accent" (click)="removeActiveFromSelected()" 
-                  [disabled]="selection.selected.length === 0" class="sidebar-button">
-            <mat-icon>star_border</mat-icon>
-            Remove Active from Selected
-          </button>
+          <div class="button-row">
+            <button mat-stroked-button 
+                    size="small"
+                    color="primary" 
+                    (click)="addActiveToSelected()" 
+                    [disabled]="selection.selected.length === 0" 
+                    class="action-btn">
+              <mat-icon>star</mat-icon>
+              Mark Active
+            </button>
+            
+            <button mat-stroked-button 
+                    size="small"
+                    color="accent" 
+                    (click)="removeActiveFromSelected()" 
+                    [disabled]="selection.selected.length === 0" 
+                    class="action-btn">
+              <mat-icon>star_border</mat-icon>
+              Remove
+            </button>
+          </div>
         </div>
         
         <!-- Tags Section -->
         @if (allTags.length > 0) {
-          <div class="sidebar-section">
-            <h4>Tags</h4>
-            <div class="tags-grid">
-              <mat-chip-listbox>
+          <div class="control-section">
+            <div class="section-header">
+              <mat-icon class="section-icon">label</mat-icon>
+              <span>Tags</span>
+            </div>
+            <div class="tags-container">
+              <mat-chip-listbox class="compact-chips">
                 @for (tag of allTags; track tag) {
                   <mat-chip-option
                     [selected]="isTagHighlighted(tag)"
                     (click)="toggleTagFilter(tag)"
-                    [class.highlighted-tag]="isTagHighlighted(tag)">
+                    [class.highlighted-tag]="isTagHighlighted(tag)"
+                    class="compact-chip">
                     {{ tag }}
                   </mat-chip-option>
                 }
@@ -173,49 +198,67 @@
         }
         
         <!-- Selection Controls -->
-        <div class="sidebar-section">
-          <h4>Selection</h4>
+        <div class="control-section">
+          <div class="section-header">
+            <mat-icon class="section-icon">checklist</mat-icon>
+            <span>Selection ({{ selection.selected.length }})</span>
+          </div>
+          
           <mat-checkbox (change)="$event ? toggleAllRows() : null"
                        [checked]="isAllSelected()"
                        [indeterminate]="isIndeterminate()"
-                       class="sidebar-checkbox">
+                       class="compact-checkbox">
             Select All
           </mat-checkbox>
-          
-          <span class="statblock-count">{{ filteredStatblocks.length }} statblocks</span>
         </div>
         
         <!-- Bulk Actions -->
-        <div class="sidebar-section">
-          <h4>Bulk Actions</h4>
-          <mat-form-field appearance="outline" class="sidebar-field">
-            <mat-label>Tag for Bulk Action</mat-label>
-            <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag">
+        <div class="control-section">
+          <div class="section-header">
+            <mat-icon class="section-icon">edit</mat-icon>
+            <span>Bulk Tags</span>
+          </div>
+          
+          <mat-form-field appearance="outline" class="bulk-field">
+            <input matInput [(ngModel)]="bulkTagInput" placeholder="Tag name">
             @if (bulkTagInput.trim()) {
-              <button mat-icon-button matSuffix aria-label="Clear bulk tag" (click)="bulkTagInput = ''">
-                <mat-icon>clear</mat-icon>
+              <button mat-icon-button matSuffix (click)="bulkTagInput = ''">
+                <mat-icon>close</mat-icon>
               </button>
             }
           </mat-form-field>
-          <button mat-raised-button color="primary" (click)="addTagToSelected()" 
-                  [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="sidebar-button">
-            <mat-icon>add</mat-icon>
-            Add Tag
-          </button>
-          <button mat-raised-button color="accent" (click)="removeTagFromSelected()" 
-                  [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="sidebar-button">
-            <mat-icon>remove</mat-icon>
-            Remove Tag
-          </button>
+          
+          <div class="button-row">
+            <button mat-stroked-button 
+                    size="small"
+                    color="primary" 
+                    (click)="addTagToSelected()" 
+                    [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" 
+                    class="action-btn">
+              <mat-icon>add</mat-icon>
+              Add Tag
+            </button>
+            
+            <button mat-stroked-button 
+                    size="small"
+                    color="accent" 
+                    (click)="removeTagFromSelected()" 
+                    [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" 
+                    class="action-btn">
+              <mat-icon>remove</mat-icon>
+              Remove Tag
+            </button>
+          </div>
 
           @if (allTags.length > 0) {
-            <div class="bulk-tags">
-              <div class="bulk-tags-label">Quick pick existing tags:</div>
-              <div class="bulk-tags-list">
-                @for (tag of allTags; track tag) {
-                  <button type="button" class="bulk-tag-chip" (click)="bulkTagInput = tag">{{ tag }}</button>
-                }
-              </div>
+            <div class="quick-tags">
+              @for (tag of allTags; track tag) {
+                <button type="button" 
+                        class="quick-tag-btn" 
+                        (click)="bulkTagInput = tag">
+                  {{ tag }}
+                </button>
+              }
             </div>
           }
         </div>

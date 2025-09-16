@@ -13,6 +13,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { SelectionModel } from '@angular/cdk/collections';
 import { StatblockService } from '../../../services/statblock.service';
 import { StatBlock, StatBlockFilter } from '../../../models/statblock.model';
@@ -39,6 +40,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
   MatMenuModule,
   MatDividerModule,
   MatSlideToggleModule,
+  MatTooltipModule,
   DiceLinkifyPipe,
   DiceClickDirective
   ],

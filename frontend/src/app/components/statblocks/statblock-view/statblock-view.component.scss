@@ -45,41 +45,177 @@
 }
 
 .sidebar-content {
-  padding: 12px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.sidebar h3 {
-  margin: 0 0 12px 0;
-  color: #e0e0e0;
-  font-size: 15px;
-}
-
-.sidebar h4 {
-  margin: 12px 0 6px 0;
-  color: #e0e0e0;
-  font-size: 13px;
-}
-
-.sidebar-field {
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-.sidebar-button {
-  width: 100%;
-  margin-bottom: 6px;
-  justify-content: flex-start;
-}
-
-.sidebar-checkbox {
-  margin-bottom: 6px;
-}
-
-.sidebar-section {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
+// Compact Sidebar Design
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
   border-bottom: 1px solid #444;
+  
+  .sidebar-icon {
+    color: #63a4ff;
+    font-size: 16px;
+  }
+  
+  .sidebar-title {
+    font-weight: 500;
+    color: #e0e0e0;
+    flex: 1;
+    font-size: 13px;
+  }
+  
+  .statblock-count {
+    background: #2d2d2d;
+    color: #b0b0b0;
+    padding: 1px 4px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 500;
+  }
 }
+
+.mode-switcher {
+  display: flex;
+  gap: 3px;
+  
+  .mode-btn {
+    flex: 1;
+    font-size: 11px;
+    height: 28px;
+    
+    mat-icon {
+      font-size: 14px;
+      margin-right: 3px;
+    }
+    
+    &.active {
+      background: rgba(63, 81, 181, 0.2);
+    }
+  }
+}
+
+.search-section {
+  .search-field {
+    width: 100%;
+    
+    .mat-mdc-form-field {
+      font-size: 12px;
+    }
+  }
+}
+
+.control-section {
+  border: 1px solid #404040;
+  border-radius: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+    
+    .section-icon {
+      font-size: 14px;
+      color: #81c784;
+    }
+    
+    span {
+      font-size: 11px;
+      font-weight: 500;
+      color: #e0e0e0;
+      flex: 1;
+    }
+  }
+  
+  .compact-toggle {
+    font-size: 11px;
+    margin: 2px 0;
+  }
+  
+  .compact-checkbox {
+    font-size: 11px;
+    margin: 2px 0;
+  }
+  
+  .button-row {
+    display: flex;
+    gap: 3px;
+    margin-top: 4px;
+    
+    .action-btn {
+      flex: 1;
+      font-size: 10px;
+      height: 26px;
+      
+      mat-icon {
+        font-size: 14px;
+        margin-right: 2px;
+      }
+      
+      &:disabled {
+        opacity: 0.3;
+      }
+    }
+  }
+  
+  .bulk-field {
+    width: 100%;
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  
+  .quick-tags {
+    margin-top: 4px;
+    padding-top: 3px;
+    border-top: 1px solid #404040;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    
+    .quick-tag-btn {
+      background: #2d2d2d;
+      border: 1px solid #555;
+      color: #e0e0e0;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-size: 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+      
+      &:hover {
+        background: #3d3d3d;
+        border-color: #666;
+      }
+    }
+  }
+}
+
+.action-btn {
+  &:disabled {
+    opacity: 0.3;
+  }
+}
+
+.tags-container {
+  .compact-chips {
+    .compact-chip {
+      font-size: 11px;
+      height: 24px;
+      margin: 1px;
+    }
+  }
+}
+
+// Legacy sidebar styles removed - using compact design above
 
 .sidebar-section:last-child {
   border-bottom: none;
