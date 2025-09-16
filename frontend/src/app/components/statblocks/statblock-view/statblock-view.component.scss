@@ -155,7 +155,7 @@
   display: flex;
   gap: 6px;
   align-items: flex-start;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 /* Inline label-value layout for high density in basic info and abilities */
@@ -180,7 +180,6 @@
 .field {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
 }
 
 .field-label {
@@ -212,37 +211,35 @@
 }
 
 .name-field {
-  min-width: 160px;
   /* Allow the name to grow while respecting layout */
-  flex: 1 1 260px;
-  max-width: 360px;
+  flex: 1;
 }
 
 .type-field {
-  min-width: 90px;
   /* Keep type compact so name can take more space */
-  flex: 0 0 auto;
+  flex: 1;
 }
 
 .compact-field {
-  min-width: 56px;
-  flex: 0 0 auto;
+  flex: 1;
 }
 
 .ability-field {
-  min-width: 56px;
-  flex: 0 0 auto;
+  flex: 1;
 }
 
 .attacks-field,
 .spells-field {
-  min-width: 160px;
-  flex: 2;
+  flex: 1;
 }
 
 .spells-field-container {
-  min-width: 160px;
-  flex: 2;
+  flex: 1;
+}
+
+/* Ensure all text content fields get equal space in text-fields-section */
+.text-fields-section .field {
+  flex: 1;
 }
 
 .spells-two-column {
@@ -255,17 +252,14 @@
 }
 
 .spell-slots-field {
-  min-width: 110px;
   flex: 1;
 }
 
 .text-field {
-  min-width: 100px;
   flex: 1;
 }
 
 .tags-field {
-  min-width: 110px;
   flex: 1;
 }
 
@@ -413,7 +407,6 @@
   
   .tag-chips {
     flex: 1;
-    min-width: 200px;
   }
   
   .tag-chip {
@@ -453,7 +446,6 @@
   
   .toolbar-search {
     order: 3;
-    min-width: 150px;
     flex: 1;
   }
   
@@ -479,7 +471,6 @@
   
   .mode-button {
     width: auto;
-    min-width: 70px;
   }
   
   .sidebar-content {
@@ -575,7 +566,22 @@
 .text-content { padding: 3px 5px; }
 .spells-two-column { gap: 6px; }
 .row-actions { min-width: 0; }
-.name-field { max-width: 360px; }
+.name-field { /* allow name to dominate available space */ flex: 2 1 auto; }
+
+/* Meta fields should size to content and not force wrapping of name */
+.type-field,
+.compact-field,
+.spell-slots-field,
+.tags-field {
+  flex: 0 1 auto;
+  white-space: nowrap;
+}
+
+/* Keep ability scores tight */
+.ability-field { flex: 0 0 auto; white-space: nowrap; }
+
+/* Prevent name from wrapping while still allowing shrink; ellipsis if extreme */
+.name-field .field-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Inline items with separators to mark original line breaks */
 .list-item {

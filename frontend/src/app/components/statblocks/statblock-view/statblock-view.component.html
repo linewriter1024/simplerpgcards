@@ -401,16 +401,16 @@
                   </div>
                 }
 
-                <div class="field text-field">
-                  <div class="field-label">Skills</div>
-                  <div class="field-value text-content">
-                    @if (statblock.skills && statblock.skills.length > 0) {
+                @if (statblock.skills && statblock.skills.length > 0) {
+                  <div class="field text-field">
+                    <div class="field-label">Skills</div>
+                    <div class="field-value text-content">
                       @for (skill of statblock.skills; track skill) {
                         <span class="list-item" [innerHTML]="skill | diceLinkify"></span>
                       }
-                    }
+                    </div>
                   </div>
-                </div>
+                }
 
                 @if (statblock.resistances && statblock.resistances.length > 0) {
                   <div class="field text-field">
