@@ -55,6 +55,8 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   selection = new SelectionModel<StatBlock>(true, []);
   bulkTagInput: string = '';
   showActiveOnly: boolean = false; // Toggle for showing only active statblocks
+  showContextOnly: boolean = false; // Toggle for showing only context statblocks
+  contextTag: string = 'campaign'; // The tag used for context operations, persisted in localStorage
   // Image slicing state
   private imgDims: Record<string, { width: number; height: number }> = {};
   private imgLoadRequested = new Set<string>();
@@ -99,6 +101,12 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   ) {}
 
   ngOnInit(): void {
+    // Load context tag from localStorage
+    const savedContextTag = localStorage.getItem('statblockContextTag');
+    if (savedContextTag) {
+      this.contextTag = savedContextTag;
+    }
+    
     this.loadStatblocks();
     
     // Load initial filters from URL query parameters
@@ -191,6 +199,9 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
     
     this.filteredStatblocks = filtered;
     this.scheduleMeasureCompute();
+    
+    // Update toggle states based on current search
+    this.updateToggleStatesFromSearch();
   }
 
   // Parse into tokens, preserving whether the term was quoted (exact)
@@ -282,6 +293,7 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   this.searchControl.setValue('');
   this.bulkTagInput = '';
     this.showActiveOnly = false; // Reset active toggle when clearing all filters
+    this.showContextOnly = false; // Reset context toggle when clearing all filters
     this.applyFilters();
     this.updatePageTitle();
     this.updateUrl();
@@ -307,6 +319,29 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
       // Remove "active" search term if present
       if (activeTokenIndex >= 0) {
         tokens.splice(activeTokenIndex, 1);
+      }
+    }
+    
+    const newText = this.tokensToSearchText(tokens);
+    this.searchControl.setValue(newText);
+    this.applyFilters();
+  }
+
+  toggleContextOnly(): void {
+    const currentSearch = this.searchControl.value || '';
+    const tokens = this.parseSearchTerms(currentSearch);
+    
+    const contextTokenIndex = tokens.findIndex(t => t.value.toLowerCase() === this.contextTag.toLowerCase() && t.exact);
+    
+    if (this.showContextOnly) {
+      // Add context tag as exact search term if not already present
+      if (contextTokenIndex === -1) {
+        tokens.push({ value: this.contextTag, exact: true });
+      }
+    } else {
+      // Remove context tag search term if present
+      if (contextTokenIndex >= 0) {
+        tokens.splice(contextTokenIndex, 1);
       }
     }
     
@@ -407,8 +442,158 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
     }
   }
 
+  // Update toggle states based on current search filter
+  private updateToggleStatesFromSearch(): void {
+    const currentSearch = this.searchControl.value || '';
+    const tokens = this.parseSearchTerms(currentSearch);
+    
+    // Check if "active" tag is present in search (exact match)
+    const hasActiveTag = tokens.some(t => t.value.toLowerCase() === 'active' && t.exact);
+    this.showActiveOnly = hasActiveTag;
+    
+    // Check if current context tag is present in search (exact match)
+    const hasContextTag = tokens.some(t => t.value.toLowerCase() === this.contextTag.toLowerCase() && t.exact);
+    this.showContextOnly = hasContextTag;
+  }
+
+  // Context tag helpers
+  isStatblockContext(statblock: StatBlock): boolean {
+    return statblock.tags?.includes(this.contextTag) ?? false;
+  }
+
+  addContextToSelected(): void {
+    if (this.selection.selected.length === 0 || !this.contextTag.trim()) return;
+
+    const selectedStatblocks = this.selection.selected;
+    const updates: Promise<any>[] = [];
+
+    selectedStatblocks.forEach(statblock => {
+      if (!this.isStatblockContext(statblock)) {
+        const updatedTags = [...(statblock.tags || []), this.contextTag];
+        const updateData = {
+          name: statblock.name,
+          type: statblock.type,
+          cr: statblock.cr,
+          ac: statblock.ac,
+          str: statblock.str,
+          dex: statblock.dex,
+          con: statblock.con,
+          int: statblock.int,
+          wis: statblock.wis,
+          cha: statblock.cha,
+          attacks: statblock.attacks || [],
+          spells: statblock.spells || [],
+          spellSlots: statblock.spellSlots || [],
+          skills: statblock.skills || [],
+          resistances: statblock.resistances || [],
+          tags: updatedTags,
+          notes: statblock.notes
+        };
+
+        updates.push(this.statblockService.updateStatblock(statblock.id!, updateData).toPromise());
+      }
+    });
+
+    if (updates.length > 0) {
+      const selectedIds = this.selection.selected.map(s => s.id);
+      
+      Promise.all(updates).then(() => {
+        this.loadStatblocks().then(() => {
+          this.restoreSelection(selectedIds);
+        });
+      }).catch(error => {
+        console.error('Error adding context tag:', error);
+      });
+    }
+  }
+
+  removeContextFromSelected(): void {
+    if (this.selection.selected.length === 0 || !this.contextTag.trim()) return;
+
+    const selectedStatblocks = this.selection.selected;
+    const updates: Promise<any>[] = [];
+
+    selectedStatblocks.forEach(statblock => {
+      if (this.isStatblockContext(statblock)) {
+        const updatedTags = (statblock.tags || []).filter(tag => tag !== this.contextTag);
+        const updateData = {
+          name: statblock.name,
+          type: statblock.type,
+          cr: statblock.cr,
+          ac: statblock.ac,
+          str: statblock.str,
+          dex: statblock.dex,
+          con: statblock.con,
+          int: statblock.int,
+          wis: statblock.wis,
+          cha: statblock.cha,
+          attacks: statblock.attacks || [],
+          spells: statblock.spells || [],
+          spellSlots: statblock.spellSlots || [],
+          skills: statblock.skills || [],
+          resistances: statblock.resistances || [],
+          tags: updatedTags,
+          notes: statblock.notes
+        };
+
+        updates.push(this.statblockService.updateStatblock(statblock.id!, updateData).toPromise());
+      }
+    });
+
+    if (updates.length > 0) {
+      const selectedIds = this.selection.selected.map(s => s.id);
+      
+      Promise.all(updates).then(() => {
+        this.loadStatblocks().then(() => {
+          this.restoreSelection(selectedIds);
+        });
+      }).catch(error => {
+        console.error('Error removing context tag:', error);
+      });
+    }
+  }
+
   getActiveStatblocksCount(): number {
     return this.statblocks.filter(sb => this.isStatblockActive(sb)).length;
+  }
+
+  getContextStatblocksCount(): number {
+    return this.statblocks.filter(sb => this.isStatblockContext(sb)).length;
+  }
+
+  // Change the context tag and persist to localStorage
+  setContextTag(newTag: string): void {
+    if (!newTag || newTag.trim() === '') return;
+    
+    const trimmedTag = newTag.trim();
+    // Prevent tags with spaces
+    if (trimmedTag.includes(' ')) {
+      alert('Context tag cannot contain spaces. Please use underscores or hyphens instead.');
+      return;
+    }
+    
+    // Update showContextOnly based on whether the current search includes the old context tag
+    const currentSearch = this.searchControl.value || '';
+    const tokens = this.parseSearchTerms(currentSearch);
+    const hasOldContextTag = tokens.some(t => t.value.toLowerCase() === this.contextTag.toLowerCase() && t.exact);
+    
+    this.contextTag = trimmedTag;
+    localStorage.setItem('statblockContextTag', trimmedTag);
+    
+    // Update the search to use the new context tag if it was previously included
+    if (hasOldContextTag && this.showContextOnly) {
+      const newTokens = tokens.map(t => 
+        t.value.toLowerCase() === this.contextTag.toLowerCase() && t.exact 
+          ? { value: trimmedTag, exact: true } 
+          : t
+      );
+      const newText = this.tokensToSearchText(newTokens);
+      this.searchControl.setValue(newText);
+      this.applyFilters();
+    } else {
+      // Update toggle states even if search didn't change
+      this.updateToggleStatesFromSearch();
+    }
   }
 
   private updateUrl(): void {

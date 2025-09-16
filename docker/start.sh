@@ -49,7 +49,7 @@ export SRC_DATABASE_PATH="$DATABASE_PATH"
 export NODE_ENV="production"
 
 # Update frontend environment to point to the current host/port
-FRONTEND_DIST_DIR="/app/frontend/dist"
+FRONTEND_DIST_DIR="/app/frontend/dist/browser"
 if [ -f "$FRONTEND_DIST_DIR/main."*.js ]; then
     # Update the API URL in the built frontend files to use relative paths
     # This ensures the frontend always connects to the same host it's served from

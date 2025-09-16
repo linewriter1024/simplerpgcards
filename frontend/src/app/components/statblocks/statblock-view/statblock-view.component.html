@@ -61,7 +61,47 @@
         </div>
       </div>
       
-      <!-- Row 3: Tags, Selection and Bulk Actions -->
+      <!-- Row 3: Context Tag Controls -->
+      <div class="toolbar-row">
+        <div class="context-section">
+          <mat-icon class="section-icon">label</mat-icon>
+          <span class="section-label">{{ contextTag }} ({{ getContextStatblocksCount() }})</span>
+          
+          <!-- Context Tag Selector -->
+          <mat-form-field appearance="outline" class="toolbar-context-field">
+            <mat-label>Context Tag</mat-label>
+            <input matInput [(ngModel)]="contextTag" (blur)="setContextTag(contextTag)" placeholder="campaign">
+          </mat-form-field>
+          
+          <mat-slide-toggle 
+            [(ngModel)]="showContextOnly" 
+            (change)="toggleContextOnly()"
+            class="toolbar-toggle">
+            Show only
+          </mat-slide-toggle>
+          
+          <button mat-stroked-button 
+                  size="small"
+                  color="primary" 
+                  (click)="addContextToSelected()" 
+                  [disabled]="selection.selected.length === 0 || !contextTag.trim()" 
+                  class="toolbar-btn">
+            <mat-icon>add</mat-icon>
+            Add {{ contextTag }}
+          </button>
+          <button mat-stroked-button 
+                  size="small"
+                  color="accent" 
+                  (click)="removeContextFromSelected()" 
+                  [disabled]="selection.selected.length === 0 || !contextTag.trim()" 
+                  class="toolbar-btn">
+            <mat-icon>remove</mat-icon>
+            Remove {{ contextTag }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- Row 4: Tags, Selection and Bulk Actions -->
       <div class="toolbar-row">
         @if (allTags.length > 0) {
           <div class="tag-chips">
@@ -87,7 +127,7 @@
         </mat-checkbox>
       </div>
       
-      <!-- Row 4: Bulk Tag Actions -->
+      <!-- Row 5: Bulk Tag Actions -->
       <div class="toolbar-row">
         <mat-form-field appearance="outline" class="toolbar-search">
           <input matInput [(ngModel)]="bulkTagInput" placeholder="Tag name">
@@ -202,6 +242,49 @@
                     class="action-btn">
               <mat-icon>star_border</mat-icon>
               Remove
+            </button>
+          </div>
+        </div>
+        
+        <!-- Context Tag Controls Section -->
+        <div class="control-section">
+          <div class="section-header">
+            <mat-icon class="section-icon">label</mat-icon>
+            <span>{{ contextTag }} ({{ getContextStatblocksCount() }})</span>
+          </div>
+          
+          <!-- Context Tag Selector -->
+          <mat-form-field appearance="outline" class="context-field">
+            <mat-label>Context Tag</mat-label>
+            <input matInput [(ngModel)]="contextTag" (blur)="setContextTag(contextTag)" placeholder="campaign">
+          </mat-form-field>
+          
+          <mat-slide-toggle 
+            [(ngModel)]="showContextOnly" 
+            (change)="toggleContextOnly()"
+            class="compact-toggle">
+            Show only {{ contextTag }}
+          </mat-slide-toggle>
+          
+          <div class="button-row">
+            <button mat-stroked-button 
+                    size="small"
+                    color="primary" 
+                    (click)="addContextToSelected()" 
+                    [disabled]="selection.selected.length === 0 || !contextTag.trim()" 
+                    class="action-btn">
+              <mat-icon>add</mat-icon>
+              Add {{ contextTag }}
+            </button>
+            
+            <button mat-stroked-button 
+                    size="small"
+                    color="accent" 
+                    (click)="removeContextFromSelected()" 
+                    [disabled]="selection.selected.length === 0 || !contextTag.trim()" 
+                    class="action-btn">
+              <mat-icon>remove</mat-icon>
+              Remove {{ contextTag }}
             </button>
           </div>
         </div>

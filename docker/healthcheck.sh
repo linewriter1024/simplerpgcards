@@ -22,7 +22,7 @@ if ! wget --quiet --tries=1 --spider "http://127.0.0.1:3000/health" 2>/dev/null;
 fi
 
 # Check if frontend is serving
-if ! wget --quiet --tries=1 --spider "http://127.0.0.1:8080/" 2>/dev/null; then
+if ! wget --quiet --tries=1 --spider "http://127.0.0.1:8080/health" 2>/dev/null; then
     echo "ERROR: Frontend health check failed"
     exit 1
 fi
