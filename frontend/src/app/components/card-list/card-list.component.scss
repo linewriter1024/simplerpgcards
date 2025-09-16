@@ -161,6 +161,7 @@ table {
 .clickable-row {
   cursor: pointer;
   transition: background-color 0.2s ease;
+  user-select: none; // Prevent text selection during shift+click
   
   &:hover {
     background-color: #333333 !important;

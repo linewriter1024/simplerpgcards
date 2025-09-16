@@ -53,6 +53,7 @@ export class CardListComponent implements OnInit {
   selection = new SelectionModel<Card>(true, []);
   sortBy: 'title' | 'createdAt' = 'createdAt';
   sortDirection: 'asc' | 'desc' = 'desc';
+  lastSelectedIndex: number = -1; // Track last selected index for range selection
   
   displayedColumns: string[] = ['select', 'title', 'tags', 'createdAt', 'actions'];
 
@@ -94,10 +95,13 @@ export class CardListComponent implements OnInit {
     });
   }
 
-  loadCards(): void {
-    this.cardService.getAllCards().subscribe(cards => {
-      this.cards = cards;
-      this.applyFilters();
+  loadCards(): Promise<void> {
+    return new Promise((resolve) => {
+      this.cardService.getAllCards().subscribe(cards => {
+        this.cards = cards;
+        this.applyFilters();
+        resolve();
+      });
     });
   }
 
@@ -297,10 +301,60 @@ export class CardListComponent implements OnInit {
       // Select all currently filtered cards (preserving existing selections outside filter)
       this.selection.select(...this.filteredCards);
     }
+    // Reset last selected index when using select all
+    this.lastSelectedIndex = -1;
   }
 
   toggleRowSelection(row: Card): void {
     this.selection.toggle(row);
+  }
+
+  onRowClick(row: Card, event: MouseEvent): void {
+    const currentIndex = this.filteredCards.indexOf(row);
+    
+    if (event.shiftKey && this.lastSelectedIndex !== -1) {
+      // Shift+click: select range
+      event.preventDefault();
+      this.selectRange(this.lastSelectedIndex, currentIndex);
+    } else if (event.ctrlKey || event.metaKey) {
+      // Ctrl/Cmd+click: toggle selection without affecting others
+      event.preventDefault();
+      this.selection.toggle(row);
+      this.lastSelectedIndex = currentIndex;
+    } else {
+      // Regular click: toggle single selection
+      this.selection.toggle(row);
+      this.lastSelectedIndex = currentIndex;
+    }
+  }
+
+  onCheckboxClick(row: Card, event: MouseEvent): void {
+    event.stopPropagation();
+    const currentIndex = this.filteredCards.indexOf(row);
+    
+    if (event.shiftKey && this.lastSelectedIndex !== -1) {
+      // Shift+click on checkbox: select range
+      event.preventDefault();
+      this.selectRange(this.lastSelectedIndex, currentIndex);
+    } else {
+      // Regular checkbox click: will be handled by the change event
+      this.lastSelectedIndex = currentIndex;
+    }
+  }
+
+  private selectRange(startIndex: number, endIndex: number): void {
+    const start = Math.min(startIndex, endIndex);
+    const end = Math.max(startIndex, endIndex);
+    
+    // Select all cards in the range
+    for (let i = start; i <= end; i++) {
+      if (i >= 0 && i < this.filteredCards.length) {
+        const card = this.filteredCards[i];
+        if (!this.selection.isSelected(card)) {
+          this.selection.select(card);
+        }
+      }
+    }
   }
 
   editCard(card: Card): void {
@@ -453,10 +507,15 @@ export class CardListComponent implements OnInit {
     dialogRef.afterClosed().subscribe(tagsToAdd => {
       if (tagsToAdd && tagsToAdd.length > 0) {
         const selectedCardIds = selectedCards.map(card => card.id!);
+        // Store selected IDs before the operation
+        const selectedIds = selectedCards.map(card => card.id!);
+        
         this.cardService.bulkAddTags(selectedCardIds, tagsToAdd).subscribe({
           next: () => {
-            this.loadCards();
-            this.loadTags();
+            this.loadCards().then(() => {
+              this.loadTags();
+              this.restoreSelection(selectedIds);
+            });
           },
           error: (error) => {
             console.error('Error adding tags:', error);
@@ -499,10 +558,15 @@ export class CardListComponent implements OnInit {
     dialogRef.afterClosed().subscribe(tagsToRemove => {
       if (tagsToRemove && tagsToRemove.length > 0) {
         const selectedCardIds = selectedCards.map(card => card.id!);
+        // Store selected IDs before the operation
+        const selectedIds = selectedCards.map(card => card.id!);
+        
         this.cardService.bulkRemoveTags(selectedCardIds, tagsToRemove).subscribe({
           next: () => {
-            this.loadCards();
-            this.loadTags();
+            this.loadCards().then(() => {
+              this.loadTags();
+              this.restoreSelection(selectedIds);
+            });
           },
           error: (error) => {
             console.error('Error removing tags:', error);
@@ -511,6 +575,19 @@ export class CardListComponent implements OnInit {
         });
       }
     });
+  }
+
+  private restoreSelection(selectedIds: string[]): void {
+    // Clear current selection first
+    this.selection.clear();
+    
+    // Find and select cards that match the stored IDs
+    const cardsToSelect = this.filteredCards.filter(card => 
+      selectedIds.includes(card.id!)
+    );
+    
+    // Select the matching cards
+    this.selection.select(...cardsToSelect);
   }
 }
 

@@ -72,7 +72,7 @@
         </mat-checkbox>
       </th>
       <td mat-cell *matCellDef="let row">
-        <mat-checkbox (click)="$event.stopPropagation()"
+        <mat-checkbox (click)="onCheckboxClick(row, $event)"
           (change)="$event ? selection.toggle(row) : null"
           [checked]="selection.isSelected(row)">
         </mat-checkbox>
@@ -139,7 +139,7 @@
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-      (click)="toggleRowSelection(row)"
+      (click)="onRowClick(row, $event)"
       [class.row-selected]="selection.isSelected(row)"
     class="clickable-row"></tr>
   </table>
