@@ -44,4 +44,26 @@ export class StatblockService {
   deleteStatblocks(ids: string[]): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/bulk`, { body: { ids } });
   }
+
+  getImageUrl(id: string): string {
+    return `${this.apiUrl}/${id}/image`;
+  }
+
+  uploadImage(id: string, file: File): Observable<void> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<void>(`${this.apiUrl}/${id}/image`, form);
+  }
+
+  setImageFromUrl(id: string, url: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/image/url`, { url });
+  }
+
+  setImageFromBase64(id: string, data: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/image/base64`, { data });
+  }
+
+  deleteImage(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/image`);
+  }
 }

@@ -1,13 +1,16 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { StatBlock } from '../entities/StatBlock';
 import { CreateStatBlockDto, StatBlockFilter } from '../types/statblock.types';
+import { StatBlockImage } from '../entities/StatBlockImage';
 
 export class StatBlockService {
   private statblockRepository: Repository<StatBlock>;
+  private imageRepository: Repository<StatBlockImage>;
 
   constructor() {
     this.statblockRepository = AppDataSource.getRepository(StatBlock);
+    this.imageRepository = AppDataSource.getRepository(StatBlockImage);
   }
 
   async getAllStatBlocks(filter?: StatBlockFilter): Promise<StatBlock[]> {
@@ -48,12 +51,17 @@ export class StatBlockService {
   }
 
   async deleteStatBlock(id: string): Promise<boolean> {
-    const result = await this.statblockRepository.delete(id);
+  // Remove dependent image first to satisfy FK constraint
+  await this.imageRepository.delete({ statblockId: id });
+  const result = await this.statblockRepository.delete(id);
     return (result.affected ?? 0) > 0;
   }
 
   async deleteMultipleStatBlocks(ids: string[]): Promise<void> {
-    await this.statblockRepository.delete(ids);
+  if (!ids || ids.length === 0) return;
+  // Remove dependent images first
+  await this.imageRepository.delete({ statblockId: In(ids) });
+  await this.statblockRepository.delete(ids);
   }
 
   async getTags(): Promise<string[]> {
@@ -61,5 +69,35 @@ export class StatBlockService {
     const tagSet = new Set<string>();
     statblocks.forEach(sb => sb.tags?.forEach(t => tagSet.add(t)));
     return Array.from(tagSet).sort();
+  }
+
+  async setImage(id: string, data: Buffer, mime: string, filename?: string): Promise<void> {
+    const statblock = await this.statblockRepository.findOne({ where: { id } });
+    if (!statblock) throw new Error('StatBlock not found');
+    let image = await this.imageRepository.findOne({ where: { statblockId: id } });
+    if (!image) {
+      image = this.imageRepository.create({ statblockId: id, data, mime, filename: filename || null });
+    } else {
+      image.data = data;
+      image.mime = mime;
+      image.filename = filename || null;
+    }
+    await this.imageRepository.save(image);
+    statblock.hasImage = true;
+    await this.statblockRepository.save(statblock);
+  }
+
+  async getImage(id: string): Promise<{ data: Buffer; mime?: string | null; filename?: string | null } | null> {
+    const image = await this.imageRepository.findOne({ where: { statblockId: id } });
+    if (!image) return null;
+    return { data: image.data, mime: image.mime, filename: image.filename };
+  }
+
+  async clearImage(id: string): Promise<void> {
+    const statblock = await this.statblockRepository.findOne({ where: { id } });
+    if (!statblock) throw new Error('StatBlock not found');
+    await this.imageRepository.delete({ statblockId: id });
+    statblock.hasImage = false;
+    await this.statblockRepository.save(statblock);
   }
 }

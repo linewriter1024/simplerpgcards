@@ -16,7 +16,7 @@ import { StatBlock, StatBlockFilter } from '../../../models/statblock.model';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { DiceLinkifyPipe } from '../../../shared/dice/dice-linkify.pipe';
 import { DiceClickDirective } from '../../../shared/dice/dice-click.directive';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-statblock-view',
@@ -48,10 +48,11 @@ export class StatblockViewComponent implements OnInit {
   bulkTagInput: string = '';
 
   constructor(
-    private statblockService: StatblockService,
+  public statblockService: StatblockService,
     private router: Router,
     private route: ActivatedRoute,
-    private titleService: Title
+  private titleService: Title,
+  private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -546,4 +547,47 @@ export class StatblockViewComponent implements OnInit {
     s = s.replace(/\s+/g, ' ');
     return s;
   }
+
+  openImage(statblock: StatBlock): void {
+    if (!statblock.id) return;
+    const url = this.statblockService.getImageUrl(statblock.id);
+    this.dialog.open(ImageDialogComponent, {
+      data: { url, name: statblock.name },
+      panelClass: 'image-dialog-panel'
+    });
+  }
+
+  // Consider a statblock "empty" if all text arrays are empty and core text fields are blank
+  isStatblockEmpty(sb: StatBlock): boolean {
+    const textEmpty = !((sb.name && sb.name.trim()) || (sb.type && sb.type.trim()) || (sb.cr && sb.cr.trim()) || (sb.hp && String(sb.hp).trim()) || (sb.ac && String(sb.ac).trim()) || (sb.notes && sb.notes.trim()));
+    const arraysEmpty = (!sb.attacks || sb.attacks.length === 0)
+      && (!sb.spells || sb.spells.length === 0)
+      && (!sb.spellSlots || sb.spellSlots.length === 0)
+      && (!sb.skills || sb.skills.length === 0)
+      && (!sb.resistances || sb.resistances.length === 0)
+      && (!sb.tags || sb.tags.length === 0);
+    return textEmpty && arraysEmpty;
+  }
+}
+
+import { Inject } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+@Component({
+  selector: 'app-image-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule],
+  template: `
+    <div class="image-dialog">
+      <h3>{{data.name}}</h3>
+      <img [src]="data.url" alt="{{data.name}}" />
+    </div>
+  `,
+  styles: [
+    `.image-dialog{ max-width: 90vw; max-height: 90vh; display:flex; flex-direction:column; align-items:center; }
+     .image-dialog img{ max-width: 85vw; max-height: 80vh; object-fit: contain; }`
+  ]
+})
+export class ImageDialogComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { url: string; name: string }) {}
 }

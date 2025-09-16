@@ -11,3 +11,4 @@ applyTo: "**"
 * Do not ever add changes for debugging. I debug manually.
 * Use modern Angular 20 constructs
 * Use separate files for templates and styles in Angular
+* Always store data in the database, never in e.g. uploaded files.

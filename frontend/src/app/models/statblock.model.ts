@@ -18,6 +18,7 @@ export interface StatBlock {
   resistances: string[];
   tags: string[];
   notes?: string;
+  hasImage?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -55,6 +56,7 @@ export interface CreateStatBlockDto {
   resistances: string[];
   tags: string[];
   notes?: string;
+  hasImage?: boolean;
 }
 
 export interface StatBlockFilter {

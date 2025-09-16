@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,11 +12,13 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { StatblockService } from '../../../services/statblock.service';
 import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-statblock-edit',
@@ -33,7 +35,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     MatChipsModule,
     MatSelectModule,
     MatCheckboxModule,
-    MatTooltipModule,
+  MatTooltipModule,
+  MatDialogModule,
     TextFieldModule
   ],
   templateUrl: './statblock-edit.component.html',
@@ -44,20 +47,24 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   dataSource = new MatTableDataSource<EditableStatBlock>([]);
   selection = new SelectionModel<EditableStatBlock>(true, []);
   private isAddingNewRow = false;
+  // Image selected in sidebar to apply to the next created statblock
+  pendingImage: File | { url: string } | { base64: string } | null = null;
+  pendingImagePreview: string | null = null;
   
   // Search and filtering
   searchControl = new FormControl('');
   allStatblocks: EditableStatBlock[] = [];
   
   displayedColumns: string[] = [
-    'actions', 'select', 'name', 'cr', 'ac', 'abilities', 'attacks', 'spells', 'skills', 'resistances', 'tags', 'notes'
+  'actions', 'select', 'image', 'name', 'cr', 'ac', 'abilities', 'attacks', 'spells', 'skills', 'resistances', 'tags', 'notes'
   ];
 
   constructor(
     private statblockService: StatblockService,
     private route: ActivatedRoute,
     private router: Router,
-    private titleService: Title
+    private titleService: Title,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -90,6 +97,76 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
         }
       });
     });
+  }
+
+  // Sidebar image handlers (apply to next created statblock)
+  onSidebarFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+  const file = input.files[0];
+  this.pendingImage = file;
+  this.makePreviewFromFile(file);
+  this.handleSidebarImage(file);
+    }
+  }
+
+  onSidebarPaste(event: ClipboardEvent): void {
+    const items = event.clipboardData?.items;
+    if (items && items.length > 0) {
+      for (const item of Array.from(items)) {
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            this.pendingImage = file;
+            this.makePreviewFromFile(file);
+      this.handleSidebarImage(file);
+      return;
+          }
+        }
+      }
+    }
+    const text = event.clipboardData?.getData('text');
+    if (text) {
+      if (text.startsWith('data:image/')) {
+        this.pendingImage = { base64: text };
+        this.pendingImagePreview = text;
+    this.handleSidebarImage({ base64: text });
+      } else if (/^https?:\/\//i.test(text)) {
+        this.pendingImage = { url: text };
+        this.pendingImagePreview = text;
+    this.handleSidebarImage({ url: text });
+      }
+    }
+  }
+
+  onSidebarDrop(event: DragEvent): void {
+    event.preventDefault();
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.pendingImage = files[0];
+      this.makePreviewFromFile(files[0]);
+  this.handleSidebarImage(files[0]);
+  return;
+    }
+    const url = event.dataTransfer?.getData('text/uri-list') || event.dataTransfer?.getData('text/plain');
+    if (url) {
+      this.pendingImage = { url };
+      this.pendingImagePreview = url;
+  this.handleSidebarImage({ url });
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  setSidebarImageFromUrl(): void {
+  this.openUrlDialog();
+  }
+
+  clearPendingImage(): void {
+    this.pendingImage = null;
+    this.pendingImagePreview = null;
   }
 
   ngOnDestroy(): void {
@@ -238,6 +315,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     return {
       uid: (statblock as any).id || this.generateUid(),
       ...statblock,
+  hasImage: statblock.hasImage || false,
       notes: statblock.notes || '',
       attacksText: statblock.attacks?.map(a => a.name).join('\n') || '',
       spellsText: statblock.spells?.map(s => s.name).join('\n') || '',
@@ -410,6 +488,97 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     }
   }
 
+  private makePreviewFromFile(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => this.pendingImagePreview = reader.result as string;
+    reader.readAsDataURL(file);
+  }
+
+  private async handleSidebarImage(source: File | { url: string } | { base64: string }): Promise<void> {
+    try {
+      // 1) Create a new statblock immediately with sensible defaults
+      const defaults: CreateStatBlockDto = {
+        name: '',
+        type: '',
+        cr: '',
+        hp: '',
+        ac: '',
+        str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10,
+        attacks: [], spells: [], spellSlots: [], skills: [], resistances: [], tags: [],
+        notes: ''
+      };
+  const created = await firstValueFrom(this.statblockService.createStatblock(defaults));
+      // 2) Insert into lists
+      const row = this.convertToEditableRow(created);
+      this.allStatblocks.unshift(row);
+      this.applySearch();
+      this.dataSource.data = [...this.editableRows];
+      // 3) Upload image to new statblock
+      if (row.id) {
+        if (source instanceof File) {
+          await firstValueFrom(this.statblockService.uploadImage(row.id, source));
+        } else if ('url' in source) {
+          await firstValueFrom(this.statblockService.setImageFromUrl(row.id, source.url));
+        } else if ('base64' in source) {
+          await firstValueFrom(this.statblockService.setImageFromBase64(row.id, source.base64));
+        }
+        row.hasImage = true;
+        // Refresh the row thumb by changing uid
+        row.uid = this.generateUid();
+      }
+      // Clear staged preview after applying
+      this.clearPendingImage();
+    } catch (e) {
+      console.error('Failed to create statblock from image:', e);
+    }
+  }
+
+  // Helper for row preview
+  getImageUrl(row: EditableStatBlock): string | null {
+    return row.id ? this.statblockService.getImageUrl(row.id) : null;
+  }
+
+  // Icon-only controls: open paste dialog
+  openPasteDialog(): void {
+    const ref = this.dialog.open(PasteImageDialogComponent, {
+      width: '420px',
+      autoFocus: true,
+      restoreFocus: true
+    });
+    ref.afterClosed().subscribe((result: File | { url: string } | { base64: string } | undefined) => {
+      if (!result) return;
+      // Set preview for immediate feedback
+      if (result instanceof File) {
+        this.pendingImage = result;
+        this.makePreviewFromFile(result);
+        this.handleSidebarImage(result);
+      } else if ('url' in result) {
+        this.pendingImage = { url: result.url };
+        this.pendingImagePreview = result.url;
+        this.handleSidebarImage({ url: result.url });
+      } else if ('base64' in result) {
+        this.pendingImage = { base64: result.base64 };
+        this.pendingImagePreview = result.base64;
+        this.handleSidebarImage({ base64: result.base64 });
+      }
+    });
+  }
+
+  openUrlDialog(): void {
+    const ref = this.dialog.open(UrlInputDialogComponent, {
+      width: '420px',
+      autoFocus: true,
+      restoreFocus: true,
+      data: {}
+    });
+    ref.afterClosed().subscribe((url?: string) => {
+      if (url && /^https?:\/\//i.test(url)) {
+        this.pendingImage = { url };
+        this.pendingImagePreview = url;
+        this.handleSidebarImage({ url });
+      }
+    });
+  }
   deleteRow(row: EditableStatBlock): void {
     if (row.isNew) {
       // Just remove from both arrays
@@ -430,6 +599,22 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
         });
       }
     }
+  }
+
+  onRemoveImage(row: EditableStatBlock): void {
+    if (!row.id || !row.hasImage) return;
+    if (!confirm('Remove image from this statblock?')) return;
+    this.statblockService.deleteImage(row.id).subscribe({
+      next: () => {
+        row.hasImage = false;
+        // Bump uid to invalidate cached src if needed
+        row.uid = this.generateUid();
+      },
+      error: (err) => {
+        console.error('Failed to delete image', err);
+        alert('Failed to delete image. See console for details.');
+      }
+    });
   }
 
   deleteSelected(): void {
@@ -614,4 +799,70 @@ interface EditableStatBlock extends StatBlock {
   tagsText: string;
   isNew: boolean;
   hasUnsavedChanges: boolean;
+}
+
+@Component({
+  selector: 'app-url-input-dialog',
+  standalone: true,
+  imports: [CommonModule, FormsModule, MatDialogModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule],
+  template: `
+    <div class="url-dialog">
+      <h3>Image URL</h3>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>URL</mat-label>
+        <input matInput [(ngModel)]="url" placeholder="https://..." autofocus />
+      </mat-form-field>
+      <div class="actions" style="display:flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
+        <button mat-button (click)="close()">Cancel</button>
+        <button mat-raised-button color="primary" (click)="ok()" [disabled]="!url">OK</button>
+      </div>
+    </div>
+  `
+})
+export class UrlInputDialogComponent {
+  url: string = '';
+  constructor(private ref: MatDialogRef<UrlInputDialogComponent>) {}
+  close() { this.ref.close(); }
+  ok() { this.ref.close(this.url); }
+}
+
+@Component({
+  selector: 'app-paste-image-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule],
+  template: `
+    <div class="paste-dialog">
+      <h3>Paste image or link</h3>
+      <textarea rows="8" placeholder="Paste here..." (paste)="onPaste($event)" autofocus style="width: 100%;"></textarea>
+      <div class="actions" style="display:flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
+        <button mat-button (click)="close()">Cancel</button>
+      </div>
+    </div>
+  `
+})
+export class PasteImageDialogComponent {
+  constructor(private ref: MatDialogRef<PasteImageDialogComponent>) {}
+  close() { this.ref.close(); }
+  onPaste(event: ClipboardEvent) {
+    const items = event.clipboardData?.items;
+    if (items && items.length > 0) {
+      for (const item of Array.from(items)) {
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            this.ref.close(file);
+            return;
+          }
+        }
+      }
+    }
+    const text = event.clipboardData?.getData('text');
+    if (text) {
+      if (text.startsWith('data:image/')) {
+        this.ref.close({ base64: text });
+      } else if (/^https?:\/\//i.test(text)) {
+        this.ref.close({ url: text });
+      }
+    }
+  }
 }

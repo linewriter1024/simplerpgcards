@@ -221,6 +221,18 @@
 
           <!-- All Fields in Flex Layout -->
           <div class="row-content">
+            <!-- Image-only presentation when other fields are empty -->
+            @if (statblock.hasImage && statblock.id && isStatblockEmpty(statblock)) {
+              <div class="image-only" (click)="openImage(statblock)">
+                <img [src]="statblockService.getImageUrl(statblock.id)" [alt]="statblock.name || 'Image'" />
+              </div>
+            } @else {
+            <!-- Thumbnail if present -->
+            @if (statblock.hasImage && statblock.id) {
+              <div class="thumb-field" (click)="openImage(statblock)" title="Click to view image">
+                <img class="thumb" [src]="statblockService.getImageUrl(statblock.id)" alt="{{statblock.name}} thumbnail" />
+              </div>
+            }
             <!-- Basic Info Row -->
             <div class="basic-info-section">
               <div class="field name-field">
@@ -358,6 +370,7 @@
                 </div>
               }
             </div>
+          }
           </div>
         </div>
       }

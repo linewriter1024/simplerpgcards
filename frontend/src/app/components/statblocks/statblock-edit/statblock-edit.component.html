@@ -103,6 +103,34 @@
         </button>
       </div>
 
+      <!-- New Statblock Image (sidebar) -->
+      <div class="sidebar-section image-sidebar"
+           (drop)="onSidebarDrop($event)"
+           (dragover)="onDragOver($event)">
+        <h4>Image for New Statblock</h4>
+        <div class="thumb-wrapper" *ngIf="pendingImagePreview">
+          <img class="thumb" [src]="pendingImagePreview" alt="Preview">
+        </div>
+        <div class="image-actions">
+          <button mat-icon-button color="primary" (click)="sidebarFileInput.click()" matTooltip="Upload image">
+            <mat-icon>file_upload</mat-icon>
+          </button>
+          <input type="file" #sidebarFileInput hidden (change)="onSidebarFileSelected($event)" accept="image/*">
+
+          <button mat-icon-button (click)="setSidebarImageFromUrl()" matTooltip="Image from URL">
+            <mat-icon>link</mat-icon>
+          </button>
+
+          <button mat-icon-button (click)="openPasteDialog()" matTooltip="Paste image or link">
+            <mat-icon>content_paste</mat-icon>
+          </button>
+
+          <button mat-icon-button color="warn" (click)="clearPendingImage()" [disabled]="!pendingImage" matTooltip="Clear preview">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
       <!-- Selection Section -->
       <div class="sidebar-section">
         <h4>Selection</h4>
@@ -159,6 +187,13 @@
 
           <!-- Main Content Area -->
           <div class="row-content">
+            <!-- Row image preview (for existing rows) -->
+            <div class="row-image" *ngIf="row.id && row.hasImage">
+              <img class="thumb" [src]="getImageUrl(row) + '?v=' + row.uid" alt="{{row.name || 'statblock'}} image" />
+              <button mat-icon-button color="warn" class="image-delete-btn" (click)="onRemoveImage(row)" title="Remove image">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
             <!-- Top Row: Basic Info -->
             <div class="basic-info-row">
               <mat-form-field appearance="outline" class="name-field">

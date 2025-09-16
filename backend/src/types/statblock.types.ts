@@ -29,6 +29,7 @@ export interface CreateStatBlockDto {
   resistances: string[];
   tags: string[];
   notes?: string; // new optional field
+  hasImage?: boolean; // derived flag
 }
 
 export interface StatBlockFilter {

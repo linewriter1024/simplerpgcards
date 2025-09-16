@@ -73,6 +73,10 @@ export class StatBlock {
   @Column({ type: 'text', nullable: true })
   notes?: string;
 
+  // hasImage flag can be derived from join but kept for quick filters
+  @Column({ type: 'boolean', default: false })
+  hasImage!: boolean;
+
   @CreateDateColumn()
   createdAt!: Date;
 
