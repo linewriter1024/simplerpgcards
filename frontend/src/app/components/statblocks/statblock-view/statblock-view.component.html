@@ -435,6 +435,13 @@
             @if (statblock.hasImage && statblock.id && isStatblockEmpty(statblock)) {
               <!-- Show sliced view when we have an image-only statblock -->
               <div class="image-sliced-row image-only-mode" (click)="openImage(statblock); $event.stopPropagation()">
+                <!-- Name overlay for image-only statblocks -->
+                @if (statblock.name && statblock.name.trim()) {
+                  <div class="image-name-overlay">
+                    <span class="image-name-text">{{ statblock.name }}</span>
+                  </div>
+                }
+                
                 <div #slicesContainer class="slices-scroll vertical-flow" [ngStyle]="getSlicesContainerStyle(statblock)" [attr.data-id]="statblock.id">
                   @if (getSlicesArray(statblock).length === 0) {
                     <img class="slice-fallback" [src]="statblockService.getImageUrl(statblock.id)" [alt]="statblock.name || 'Image'" />

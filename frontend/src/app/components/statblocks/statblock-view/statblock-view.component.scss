@@ -983,6 +983,30 @@
   align-items: flex-start;
   width: 100%;
   justify-content: center; /* center the content to reduce perceived empty space */
+  position: relative; /* for name overlay positioning */
+}
+
+.image-name-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10;
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.image-name-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 .slice-controls {
   display: flex;
