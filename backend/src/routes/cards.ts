@@ -33,6 +33,13 @@ const uuidValidation = [
   param('id').isUUID().withMessage('Invalid card ID'),
 ];
 
+const bulkTagValidation = [
+  body('cardIds').isArray({ min: 1 }).withMessage('At least one card ID is required'),
+  body('cardIds.*').isUUID().withMessage('Invalid card ID'),
+  body('tags').isArray({ min: 1 }).withMessage('At least one tag is required'),
+  body('tags.*').isString().withMessage('Tags must be strings'),
+];
+
 router.get('/cards', cardController.getAllCards.bind(cardController));
 router.get('/cards/tags', cardController.getTags.bind(cardController));
 router.get('/cards/:id', uuidValidation, cardController.getCardById.bind(cardController));
@@ -41,5 +48,7 @@ router.put('/cards/:id', [...uuidValidation, ...cardValidation], cardController.
 router.delete('/cards/:id', uuidValidation, cardController.deleteCard.bind(cardController));
 router.post('/cards/pdf', pdfValidation, cardController.generatePdf.bind(cardController));
 router.post('/cards/pdf/preview', previewValidation, cardController.generatePreviewPdf.bind(cardController));
+router.post('/cards/bulk/add-tags', bulkTagValidation, cardController.bulkAddTags.bind(cardController));
+router.post('/cards/bulk/remove-tags', bulkTagValidation, cardController.bulkRemoveTags.bind(cardController));
 
 export default router;

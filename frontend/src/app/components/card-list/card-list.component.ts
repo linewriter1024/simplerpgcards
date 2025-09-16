@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
@@ -13,13 +13,15 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CardService } from '../../services/card.service';
 import { Card, CardFilter } from '../../models/card.model';
 import { SelectionModel } from '@angular/cdk/collections';
 import { CardFormComponent } from '../card-form/card-form.component';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, startWith } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Component({
     selector: 'app-card-list',
@@ -36,6 +38,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
         MatChipsModule,
         MatSortModule,
         MatFormFieldModule,
+        MatAutocompleteModule,
         FormsModule,
         ReactiveFormsModule
     ],
@@ -429,5 +432,217 @@ export class CardListComponent implements OnInit {
       link.click();
       window.URL.revokeObjectURL(url);
     });
+  }
+
+  bulkAddTags(): void {
+    const selectedCards = this.selection.selected;
+    if (selectedCards.length === 0) {
+      alert('Please select at least one card');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(BulkTagDialogComponent, {
+      width: '400px',
+      data: {
+        operation: 'add',
+        cardCount: selectedCards.length,
+        existingTags: this.allTags
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(tagsToAdd => {
+      if (tagsToAdd && tagsToAdd.length > 0) {
+        const selectedCardIds = selectedCards.map(card => card.id!);
+        this.cardService.bulkAddTags(selectedCardIds, tagsToAdd).subscribe({
+          next: () => {
+            this.loadCards();
+            this.loadTags();
+          },
+          error: (error) => {
+            console.error('Error adding tags:', error);
+            alert('Error adding tags. Please try again.');
+          }
+        });
+      }
+    });
+  }
+
+  bulkRemoveTags(): void {
+    const selectedCards = this.selection.selected;
+    if (selectedCards.length === 0) {
+      alert('Please select at least one card');
+      return;
+    }
+
+    // Get all unique tags from selected cards
+    const allTagsFromSelected = new Set<string>();
+    selectedCards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => allTagsFromSelected.add(tag));
+      }
+    });
+
+    if (allTagsFromSelected.size === 0) {
+      alert('Selected cards have no tags to remove');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(BulkTagDialogComponent, {
+      width: '400px',
+      data: {
+        operation: 'remove',
+        cardCount: selectedCards.length,
+        existingTags: Array.from(allTagsFromSelected).sort()
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(tagsToRemove => {
+      if (tagsToRemove && tagsToRemove.length > 0) {
+        const selectedCardIds = selectedCards.map(card => card.id!);
+        this.cardService.bulkRemoveTags(selectedCardIds, tagsToRemove).subscribe({
+          next: () => {
+            this.loadCards();
+            this.loadTags();
+          },
+          error: (error) => {
+            console.error('Error removing tags:', error);
+            alert('Error removing tags. Please try again.');
+          }
+        });
+      }
+    });
+  }
+}
+
+// Bulk Tag Dialog Component
+@Component({
+  selector: 'app-bulk-tag-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatChipsModule,
+    MatIconModule,
+    MatAutocompleteModule,
+    FormsModule,
+    ReactiveFormsModule
+  ],
+  template: `
+    <h2 mat-dialog-title>
+      {{ data.operation === 'add' ? 'Add Tags' : 'Remove Tags' }} 
+      ({{ data.cardCount }} card{{ data.cardCount !== 1 ? 's' : '' }})
+    </h2>
+    
+    <div mat-dialog-content>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>{{ data.operation === 'add' ? 'Type to add tags' : 'Select tags to remove' }}</mat-label>
+        <input matInput
+               [formControl]="tagControl"
+               [matAutocomplete]="auto"
+               placeholder="Type tag name and press Enter"
+               (keydown.enter)="addTag($event)">
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onTagSelected($event)">
+          @for (option of filteredTags | async; track option) {
+            <mat-option [value]="option">{{ option }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+      
+      <div class="selected-tags" *ngIf="selectedTags.length > 0">
+        <h4>{{ data.operation === 'add' ? 'Tags to add:' : 'Tags to remove:' }}</h4>
+        <mat-chip-listbox>
+          @for (tag of selectedTags; track tag) {
+            <mat-chip-option [removable]="true" (removed)="removeTag(tag)">
+              {{ tag }}
+              <mat-icon matChipRemove>cancel</mat-icon>
+            </mat-chip-option>
+          }
+        </mat-chip-listbox>
+      </div>
+    </div>
+    
+    <div mat-dialog-actions align="end">
+      <button mat-button (click)="cancel()">Cancel</button>
+      <button mat-raised-button 
+              [color]="data.operation === 'add' ? 'primary' : 'warn'" 
+              (click)="confirm()" 
+              [disabled]="selectedTags.length === 0">
+        {{ data.operation === 'add' ? 'Add Tags' : 'Remove Tags' }}
+      </button>
+    </div>
+  `,
+  styles: [`
+    .selected-tags {
+      margin-top: 16px;
+    }
+    .selected-tags h4 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: #666;
+    }
+  `]
+})
+export class BulkTagDialogComponent {
+  tagControl = new FormControl('');
+  selectedTags: string[] = [];
+  filteredTags: Observable<string[]>;
+
+  constructor(
+    public dialogRef: MatDialogRef<BulkTagDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: {
+      operation: 'add' | 'remove';
+      cardCount: number;
+      existingTags: string[];
+    }
+  ) {
+    this.filteredTags = this.tagControl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(value || ''))
+    );
+  }
+
+  private _filter(value: string): string[] {
+    const filterValue = value.toLowerCase();
+    return this.data.existingTags.filter(tag => 
+      tag.toLowerCase().includes(filterValue) && 
+      !this.selectedTags.includes(tag)
+    );
+  }
+
+  addTag(event: Event): void {
+    event.preventDefault();
+    const input = event.target as HTMLInputElement;
+    const value = input.value.trim();
+    
+    if (value && !this.selectedTags.includes(value)) {
+      this.selectedTags.push(value);
+      this.tagControl.setValue('');
+    }
+  }
+
+  onTagSelected(event: any): void {
+    const value = event.option.value;
+    if (value && !this.selectedTags.includes(value)) {
+      this.selectedTags.push(value);
+      this.tagControl.setValue('');
+    }
+  }
+
+  removeTag(tag: string): void {
+    const index = this.selectedTags.indexOf(tag);
+    if (index >= 0) {
+      this.selectedTags.splice(index, 1);
+    }
+  }
+
+  cancel(): void {
+    this.dialogRef.close();
+  }
+
+  confirm(): void {
+    this.dialogRef.close(this.selectedTags);
   }
 }

@@ -42,6 +42,16 @@
         New Card
       </button>
 
+      <button mat-raised-button color="accent" (click)="bulkAddTags()" [disabled]="selection.selected.length === 0">
+        <mat-icon>add</mat-icon>
+        Add Tags ({{selection.selected.length}})
+      </button>
+
+      <button mat-raised-button color="warn" (click)="bulkRemoveTags()" [disabled]="selection.selected.length === 0">
+        <mat-icon>remove</mat-icon>
+        Remove Tags ({{selection.selected.length}})
+      </button>
+
       <button mat-raised-button color="warn" (click)="deleteAllSelected()" [disabled]="selection.selected.length === 0">
         <mat-icon>delete</mat-icon>
         Delete Selected ({{selection.selected.length}})

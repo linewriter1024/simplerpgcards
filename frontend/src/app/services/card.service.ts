@@ -61,4 +61,19 @@ export class CardService {
       responseType: 'blob'
     });
   }
+
+  // Bulk tag operations
+  bulkAddTags(cardIds: string[], tagsToAdd: string[]): Observable<Card[]> {
+    return this.http.post<Card[]>(`${this.baseUrl}/cards/bulk/add-tags`, {
+      cardIds,
+      tags: tagsToAdd
+    });
+  }
+
+  bulkRemoveTags(cardIds: string[], tagsToRemove: string[]): Observable<Card[]> {
+    return this.http.post<Card[]>(`${this.baseUrl}/cards/bulk/remove-tags`, {
+      cardIds,
+      tags: tagsToRemove
+    });
+  }
 }

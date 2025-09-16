@@ -164,4 +164,48 @@ export class CardController {
       res.status(500).json({ error: 'Internal server error' });
     }
   }
+
+  async bulkAddTags(req: Request, res: Response): Promise<void> {
+    try {
+      const { cardIds, tags } = req.body;
+      
+      if (!Array.isArray(cardIds) || cardIds.length === 0) {
+        res.status(400).json({ error: 'Card IDs array is required' });
+        return;
+      }
+      
+      if (!Array.isArray(tags) || tags.length === 0) {
+        res.status(400).json({ error: 'Tags array is required' });
+        return;
+      }
+
+      const updatedCards = await this.cardService.bulkAddTags(cardIds, tags);
+      res.json(updatedCards);
+    } catch (error) {
+      console.error('Error bulk adding tags:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  async bulkRemoveTags(req: Request, res: Response): Promise<void> {
+    try {
+      const { cardIds, tags } = req.body;
+      
+      if (!Array.isArray(cardIds) || cardIds.length === 0) {
+        res.status(400).json({ error: 'Card IDs array is required' });
+        return;
+      }
+      
+      if (!Array.isArray(tags) || tags.length === 0) {
+        res.status(400).json({ error: 'Tags array is required' });
+        return;
+      }
+
+      const updatedCards = await this.cardService.bulkRemoveTags(cardIds, tags);
+      res.json(updatedCards);
+    } catch (error) {
+      console.error('Error bulk removing tags:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 }

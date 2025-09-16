@@ -121,4 +121,62 @@ export class CardService {
     
     return Array.from(allTags).sort();
   }
+
+  async bulkAddTags(cardIds: string[], tagsToAdd: string[]): Promise<Card[]> {
+    const cards = await this.cardRepository.findByIds(cardIds);
+    const updatedCards: Card[] = [];
+
+    for (const card of cards) {
+      let existingTags: string[] = [];
+      
+      if (card.tags) {
+        try {
+          existingTags = JSON.parse(card.tags);
+        } catch {
+          existingTags = [];
+        }
+      }
+      
+      // Add new tags, avoiding duplicates
+      const uniqueTags = Array.from(new Set([...existingTags, ...tagsToAdd]));
+      card.tags = JSON.stringify(uniqueTags);
+      
+      const savedCard = await this.cardRepository.save(card);
+      
+      // Add parsed tags for response
+      (savedCard as any).parsedTags = uniqueTags;
+      updatedCards.push(savedCard);
+    }
+
+    return updatedCards;
+  }
+
+  async bulkRemoveTags(cardIds: string[], tagsToRemove: string[]): Promise<Card[]> {
+    const cards = await this.cardRepository.findByIds(cardIds);
+    const updatedCards: Card[] = [];
+
+    for (const card of cards) {
+      let existingTags: string[] = [];
+      
+      if (card.tags) {
+        try {
+          existingTags = JSON.parse(card.tags);
+        } catch {
+          existingTags = [];
+        }
+      }
+      
+      // Remove specified tags
+      const filteredTags = existingTags.filter(tag => !tagsToRemove.includes(tag));
+      card.tags = filteredTags.length > 0 ? JSON.stringify(filteredTags) : '';
+      
+      const savedCard = await this.cardRepository.save(card);
+      
+      // Add parsed tags for response
+      (savedCard as any).parsedTags = filteredTags;
+      updatedCards.push(savedCard);
+    }
+
+    return updatedCards;
+  }
 }
