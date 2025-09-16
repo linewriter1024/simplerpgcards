@@ -12,6 +12,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SelectionModel } from '@angular/cdk/collections';
 import { StatblockService } from '../../../services/statblock.service';
 import { StatBlock, StatBlockFilter } from '../../../models/statblock.model';
@@ -37,6 +38,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
   MatDialogModule,
   MatMenuModule,
   MatDividerModule,
+  MatSlideToggleModule,
   DiceLinkifyPipe,
   DiceClickDirective
   ],
@@ -50,6 +52,7 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   searchControl = new FormControl('');
   selection = new SelectionModel<StatBlock>(true, []);
   bulkTagInput: string = '';
+  showActiveOnly: boolean = false; // Toggle for showing only active statblocks
   // Image slicing state
   private imgDims: Record<string, { width: number; height: number }> = {};
   private imgLoadRequested = new Set<string>();
@@ -181,11 +184,16 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
       filtered = filtered.filter(statblock => this.matchesAllTokens(statblock, tokens));
     }
     
+    // Apply active filter if enabled
+    if (this.showActiveOnly) {
+      filtered = filtered.filter(statblock => this.isStatblockActive(statblock));
+    }
+    
     // Always sort by name in view mode
     filtered.sort((a, b) => a.name.localeCompare(b.name));
     
-  this.filteredStatblocks = filtered;
-  this.scheduleMeasureCompute();
+    this.filteredStatblocks = filtered;
+    this.scheduleMeasureCompute();
   }
 
   // Parse into tokens, preserving whether the term was quoted (exact)
@@ -276,9 +284,116 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   clearFilters(): void {
   this.searchControl.setValue('');
   this.bulkTagInput = '';
+    this.showActiveOnly = false; // Reset active filter when clearing all filters
     this.applyFilters();
     this.updatePageTitle();
     this.updateUrl();
+  }
+
+  // Active statblock helpers
+  isStatblockActive(statblock: StatBlock): boolean {
+    return statblock.tags?.includes('active') ?? false;
+  }
+
+  toggleActiveOnly(): void {
+    this.showActiveOnly = !this.showActiveOnly;
+    this.applyFilters();
+  }
+
+  addActiveToSelected(): void {
+    if (this.selection.selected.length === 0) return;
+
+    const selectedStatblocks = this.selection.selected;
+    const updates: Promise<any>[] = [];
+
+    selectedStatblocks.forEach(statblock => {
+      if (!this.isStatblockActive(statblock)) {
+        const updatedTags = [...(statblock.tags || []), 'active'];
+        const updateData = {
+          name: statblock.name,
+          type: statblock.type,
+          cr: statblock.cr,
+          ac: statblock.ac,
+          str: statblock.str,
+          dex: statblock.dex,
+          con: statblock.con,
+          int: statblock.int,
+          wis: statblock.wis,
+          cha: statblock.cha,
+          attacks: statblock.attacks || [],
+          spells: statblock.spells || [],
+          spellSlots: statblock.spellSlots || [],
+          skills: statblock.skills || [],
+          resistances: statblock.resistances || [],
+          tags: updatedTags,
+          notes: statblock.notes
+        };
+
+        updates.push(this.statblockService.updateStatblock(statblock.id!, updateData).toPromise());
+      }
+    });
+
+    if (updates.length > 0) {
+      const selectedIds = this.selection.selected.map(s => s.id);
+      
+      Promise.all(updates).then(() => {
+        this.loadStatblocks().then(() => {
+          this.restoreSelection(selectedIds);
+        });
+      }).catch(error => {
+        console.error('Error adding active tag:', error);
+      });
+    }
+  }
+
+  removeActiveFromSelected(): void {
+    if (this.selection.selected.length === 0) return;
+
+    const selectedStatblocks = this.selection.selected;
+    const updates: Promise<any>[] = [];
+
+    selectedStatblocks.forEach(statblock => {
+      if (this.isStatblockActive(statblock)) {
+        const updatedTags = (statblock.tags || []).filter(tag => tag !== 'active');
+        const updateData = {
+          name: statblock.name,
+          type: statblock.type,
+          cr: statblock.cr,
+          ac: statblock.ac,
+          str: statblock.str,
+          dex: statblock.dex,
+          con: statblock.con,
+          int: statblock.int,
+          wis: statblock.wis,
+          cha: statblock.cha,
+          attacks: statblock.attacks || [],
+          spells: statblock.spells || [],
+          spellSlots: statblock.spellSlots || [],
+          skills: statblock.skills || [],
+          resistances: statblock.resistances || [],
+          tags: updatedTags,
+          notes: statblock.notes
+        };
+
+        updates.push(this.statblockService.updateStatblock(statblock.id!, updateData).toPromise());
+      }
+    });
+
+    if (updates.length > 0) {
+      const selectedIds = this.selection.selected.map(s => s.id);
+      
+      Promise.all(updates).then(() => {
+        this.loadStatblocks().then(() => {
+          this.restoreSelection(selectedIds);
+        });
+      }).catch(error => {
+        console.error('Error removing active tag:', error);
+      });
+    }
+  }
+
+  getActiveStatblocksCount(): number {
+    return this.statblocks.filter(sb => this.isStatblockActive(sb)).length;
   }
 
   private updateUrl(): void {

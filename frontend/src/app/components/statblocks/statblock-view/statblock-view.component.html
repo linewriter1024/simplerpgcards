@@ -130,6 +130,29 @@
         
         <button mat-button (click)="clearFilters()" class="sidebar-button">Clear Filters</button>
         
+        <!-- Active Controls Section -->
+        <div class="sidebar-section">
+          <h4>Active Statblocks</h4>
+          <mat-slide-toggle 
+            [(ngModel)]="showActiveOnly" 
+            (change)="applyFilters()"
+            class="sidebar-toggle">
+            Show Active Only ({{ getActiveStatblocksCount() }})
+          </mat-slide-toggle>
+          
+          <button mat-raised-button color="primary" (click)="addActiveToSelected()" 
+                  [disabled]="selection.selected.length === 0" class="sidebar-button">
+            <mat-icon>star</mat-icon>
+            Mark Selected as Active
+          </button>
+          
+          <button mat-raised-button color="accent" (click)="removeActiveFromSelected()" 
+                  [disabled]="selection.selected.length === 0" class="sidebar-button">
+            <mat-icon>star_border</mat-icon>
+            Remove Active from Selected
+          </button>
+        </div>
+        
         <!-- Tags Section -->
         @if (allTags.length > 0) {
           <div class="sidebar-section">
