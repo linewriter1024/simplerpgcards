@@ -44,55 +44,62 @@
   display: block;
 }
 
+// Mobile layout
+@media (max-width: 768px) {
+  .sidebar {
+    padding: 8px 12px;
+  }
+}
+
 .sidebar-content {
-  padding: 4px;
+  padding: 2px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
 // Compact Sidebar Design
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px;
+  gap: 4px;
+  padding: 2px;
   border-bottom: 1px solid #444;
   
   .sidebar-icon {
     color: #63a4ff;
-    font-size: 16px;
+    font-size: 14px;
   }
   
   .sidebar-title {
     font-weight: 500;
     color: #e0e0e0;
     flex: 1;
-    font-size: 13px;
+    font-size: 12px;
   }
   
   .statblock-count {
     background: #2d2d2d;
     color: #b0b0b0;
-    padding: 1px 4px;
-    border-radius: 8px;
-    font-size: 10px;
+    padding: 1px 3px;
+    border-radius: 6px;
+    font-size: 9px;
     font-weight: 500;
   }
 }
 
 .mode-switcher {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   
   .mode-btn {
     flex: 1;
-    font-size: 11px;
-    height: 28px;
+    font-size: 10px;
+    height: 26px;
     
     mat-icon {
-      font-size: 14px;
-      margin-right: 3px;
+      font-size: 12px;
+      margin-right: 2px;
     }
     
     &.active {
@@ -113,23 +120,23 @@
 
 .control-section {
   border: 1px solid #404040;
-  border-radius: 4px;
-  padding: 4px;
+  border-radius: 3px;
+  padding: 3px;
   background: rgba(255, 255, 255, 0.02);
   
   .section-header {
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-bottom: 4px;
+    gap: 3px;
+    margin-bottom: 2px;
     
     .section-icon {
-      font-size: 14px;
+      font-size: 12px;
       color: #81c784;
     }
     
     span {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 500;
       color: #e0e0e0;
       flex: 1;
@@ -137,28 +144,28 @@
   }
   
   .compact-toggle {
-    font-size: 11px;
-    margin: 2px 0;
+    font-size: 10px;
+    margin: 1px 0;
   }
   
   .compact-checkbox {
-    font-size: 11px;
-    margin: 2px 0;
+    font-size: 10px;
+    margin: 1px 0;
   }
   
   .button-row {
     display: flex;
-    gap: 3px;
-    margin-top: 4px;
+    gap: 2px;
+    margin-top: 2px;
     
     .action-btn {
       flex: 1;
-      font-size: 10px;
-      height: 26px;
+      font-size: 9px;
+      height: 24px;
       
       mat-icon {
-        font-size: 14px;
-        margin-right: 2px;
+        font-size: 12px;
+        margin-right: 1px;
       }
       
       &:disabled {
@@ -169,25 +176,25 @@
   
   .bulk-field {
     width: 100%;
-    font-size: 11px;
-    margin-bottom: 4px;
+    font-size: 10px;
+    margin-bottom: 2px;
   }
   
   .quick-tags {
-    margin-top: 4px;
-    padding-top: 3px;
+    margin-top: 2px;
+    padding-top: 2px;
     border-top: 1px solid #404040;
     display: flex;
     flex-wrap: wrap;
-    gap: 2px;
+    gap: 1px;
     
     .quick-tag-btn {
       background: #2d2d2d;
       border: 1px solid #555;
       color: #e0e0e0;
-      padding: 1px 4px;
+      padding: 1px 3px;
       border-radius: 2px;
-      font-size: 9px;
+      font-size: 8px;
       cursor: pointer;
       transition: all 0.2s;
       
@@ -208,8 +215,8 @@
 .tags-container {
   .compact-chips {
     .compact-chip {
-      font-size: 11px;
-      height: 24px;
+      font-size: 9px;
+      height: 20px;
       margin: 1px;
     }
   }
@@ -231,8 +238,8 @@
 .statblocks-table {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 6px;
+  gap: 2px;
+  padding: 4px;
   height: 100%;
   overflow-y: auto;
 }
@@ -284,14 +291,14 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
 .basic-info-section {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: flex-start;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 /* Inline label-value layout for high density in basic info and abilities */
@@ -304,12 +311,14 @@
 
 .abilities-group {
   display: flex;
-  gap: 4px;
+  gap: 3px;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .text-fields-section {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
@@ -319,7 +328,7 @@
 }
 
 .field-label {
-  font-size: 11px;
+  font-size: 10px;
   color: #ccc;
   font-weight: 500;
   text-transform: uppercase;
@@ -328,15 +337,15 @@
 
 .field-value {
   color: #e0e0e0;
-  font-size: 14px;
-  min-height: 16px;
+  font-size: 12px;
+  min-height: 14px;
 }
 
 .text-content {
   border: 1px solid #555;
-  border-radius: 4px;
-  padding: 3px 5px;
-  min-height: 20px;
+  border-radius: 3px;
+  padding: 2px 4px;
+  min-height: 18px;
   background-color: rgba(255, 255, 255, 0.02);
 }
 
@@ -413,11 +422,11 @@
 .tag-chip {
   background-color: #3f51b5;
   color: white;
-  padding: 1px 4px;
-  border-radius: 8px;
-  font-size: 9px;
-  margin-right: 2px;
-  margin-bottom: 2px;
+  padding: 1px 3px;
+  border-radius: 6px;
+  font-size: 8px;
+  margin-right: 1px;
+  margin-bottom: 1px;
   display: inline-block;
   white-space: nowrap;
 }
@@ -485,7 +494,127 @@
   .toolbar-layout {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
+    padding: 4px;
+    background-color: #2d2d2d;
+    border-bottom: 1px solid #444;
+  }
+  
+  .toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-title {
+    font-weight: 500;
+    color: #e0e0e0;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .mode-buttons {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
+    
+    .mode-button {
+      font-size: 11px;
+      height: 28px;
+      
+      mat-icon {
+        font-size: 14px;
+        margin-right: 3px;
+      }
+      
+      &.current-mode {
+        background: rgba(63, 81, 181, 0.2);
+      }
+    }
+  }
+
+  .toolbar-search {
+    flex: 1;
+    min-width: 120px;
+    font-size: 12px;
+  }
+
+  .active-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    
+    .section-icon {
+      font-size: 14px;
+      color: #81c784;
+    }
+    
+    .section-label {
+      font-size: 11px;
+      color: #e0e0e0;
+      font-weight: 500;
+    }
+  }
+
+  .toolbar-toggle {
+    font-size: 11px;
+    margin: 0;
+  }
+
+  .toolbar-btn {
+    font-size: 10px;
+    height: 26px;
+    
+    mat-icon {
+      font-size: 14px;
+      margin-right: 2px;
+    }
+    
+    &:disabled {
+      opacity: 0.3;
+    }
+  }
+
+  .toolbar-checkbox {
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .tag-chips {
+    flex: 1;
+    min-width: 200px;
+    
+    .tag-chip {
+      font-size: 10px;
+      height: 22px;
+      margin: 1px;
+    }
+  }
+
+  .quick-tags-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-left: 6px;
+    
+    .quick-tag-btn {
+      background: #2d2d2d;
+      border: 1px solid #555;
+      color: #e0e0e0;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-size: 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+      
+      &:hover {
+        background: #3d3d3d;
+        border-color: #666;
+      }
+    }
   }
   
   .toolbar-row {
@@ -696,11 +825,11 @@
 }
 
 /* Preserve visual newlines for inline lists and tighten spacing further */
-.statblock-row { padding: 6px; gap: 6px; }
-.basic-info-section { gap: 6px; }
-.abilities-group { gap: 4px; }
-.text-content { padding: 3px 5px; }
-.spells-two-column { gap: 6px; }
+.statblock-row { padding: 4px; gap: 4px; }
+.basic-info-section { gap: 4px; }
+.abilities-group { gap: 3px; }
+.text-content { padding: 2px 4px; }
+.spells-two-column { gap: 4px; }
 .row-actions { min-width: 0; }
 .name-field { /* allow name to dominate available space */ flex: 2 1 auto; }
 
@@ -711,41 +840,53 @@
 .tags-field {
   flex: 0 1 auto;
   white-space: nowrap;
+  font-size: 11px;
+  min-width: 0;
 }
 
-/* Keep ability scores tight */
-.ability-field { flex: 0 0 auto; white-space: nowrap; }
+/* Keep ability scores tight and prevent wrapping */
+.ability-field { 
+  flex: 0 0 auto; 
+  white-space: nowrap; 
+  font-size: 11px;
+  min-width: 0;
+}
 
 /* Prevent name from wrapping while still allowing shrink; ellipsis if extreme */
-.name-field .field-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.name-field .field-value { 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  max-width: 150px;
+}
 
 /* Inline items with separators to mark original line breaks */
 .list-item {
   display: inline;
-  font-size: 13px;
-  line-height: 1.2;
+  font-size: 11px;
+  line-height: 1.1;
   margin: 0; /* override earlier margins */
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
 /* Add a subtle bullet between items and a small gap */
-.list-item + .list-item { margin-left: 10px; }
+.list-item + .list-item { margin-left: 8px; }
 .list-item + .list-item::before {
   content: '•';
   color: #cfcfcf;
   font-weight: 700;
-  font-size: 14px; /* larger bullet */
+  font-size: 12px; /* smaller bullet for compact view */
   line-height: 1;
   vertical-align: baseline;
-  margin: 0 6px 0 4px; /* balanced spacing around bullet */
+  margin: 0 4px 0 3px; /* tighter spacing around bullet */
 }
 
 /* Slight font-size bump for readability */
-.field-value { font-size: 14px; }
-.list-item { font-size: 13px; }
-.spell-slots { font-size: 12px; }
-.field-label { font-size: 11px; }
+.field-value { font-size: 12px; }
+.list-item { font-size: 11px; }
+.spell-slots { font-size: 11px; }
+.field-label { font-size: 10px; }
 
 /* Spell inline formatting */
 .spell-level { font-weight: 700; margin-right: 2px; }

@@ -5,31 +5,63 @@
     <div class="toolbar-layout">
       <!-- Row 1: Title, Mode Switcher, Search -->
       <div class="toolbar-row">
-        <span class="toolbar-title">Statblocks</span>
+        <span class="toolbar-title">Statblocks ({{ filteredStatblocks.length }})</span>
         
         <div class="mode-buttons">
-          <button mat-raised-button color="primary" (click)="switchToEditMode()" class="mode-button">
+          <button mat-stroked-button color="primary" (click)="switchToEditMode()" class="mode-button">
             <mat-icon>edit</mat-icon>
             Edit
           </button>
-          <button mat-raised-button color="accent" class="mode-button current-mode">
-            <mat-icon>view_list</mat-icon>
+          <button mat-stroked-button color="accent" class="mode-button current-mode">
+            <mat-icon>visibility</mat-icon>
             View
           </button>
         </div>
         
         <mat-form-field appearance="outline" class="toolbar-search">
-          <mat-label>Search</mat-label>
-          <input matInput [formControl]="searchControl" placeholder="Search names and tags...">
-          <mat-icon matSuffix>search</mat-icon>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [formControl]="searchControl" placeholder="Search...">
+          @if (searchControl.value?.trim()) {
+            <button mat-icon-button matSuffix (click)="clearFilters()">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
         </mat-form-field>
-        
-        <button mat-button (click)="clearFilters()" class="toolbar-button">
-          <mat-icon>clear</mat-icon>
-        </button>
       </div>
       
-      <!-- Row 2: Tags, Actions and Selection -->
+      <!-- Row 2: Active Controls -->
+      <div class="toolbar-row">
+        <div class="active-section">
+          <mat-icon class="section-icon">star</mat-icon>
+          <span class="section-label">Active ({{ getActiveStatblocksCount() }})</span>
+          <mat-slide-toggle 
+            [(ngModel)]="showActiveOnly" 
+            (change)="toggleActiveOnly()"
+            class="toolbar-toggle">
+            Show only
+          </mat-slide-toggle>
+          <button mat-stroked-button 
+                  size="small"
+                  color="primary" 
+                  (click)="addActiveToSelected()" 
+                  [disabled]="selection.selected.length === 0" 
+                  class="toolbar-btn">
+            <mat-icon>star</mat-icon>
+            Mark Active
+          </button>
+          <button mat-stroked-button 
+                  size="small"
+                  color="accent" 
+                  (click)="removeActiveFromSelected()" 
+                  [disabled]="selection.selected.length === 0" 
+                  class="toolbar-btn">
+            <mat-icon>star_border</mat-icon>
+            Remove
+          </button>
+        </div>
+      </div>
+      
+      <!-- Row 3: Tags, Selection and Bulk Actions -->
       <div class="toolbar-row">
         @if (allTags.length > 0) {
           <div class="tag-chips">
@@ -51,49 +83,49 @@
                       [checked]="isAllSelected()"
                       [indeterminate]="isIndeterminate()"
                       class="toolbar-checkbox">
-          Select All
+          Select All ({{ selection.selected.length }})
         </mat-checkbox>
-        
-        <span class="toolbar-spacer"></span>
-        <span class="statblock-count">{{ filteredStatblocks.length }} statblocks</span>
       </div>
       
-      <!-- Row 3: Bulk Actions -->
+      <!-- Row 4: Bulk Tag Actions -->
       <div class="toolbar-row">
         <mat-form-field appearance="outline" class="toolbar-search">
-          <mat-label>Tag for Bulk Action</mat-label>
-          <input matInput [(ngModel)]="bulkTagInput" placeholder="Enter tag">
+          <input matInput [(ngModel)]="bulkTagInput" placeholder="Tag name">
           @if (bulkTagInput.trim()) {
-            <button mat-icon-button matSuffix aria-label="Clear bulk tag" (click)="bulkTagInput = ''">
-              <mat-icon>clear</mat-icon>
+            <button mat-icon-button matSuffix (click)="bulkTagInput = ''">
+              <mat-icon>close</mat-icon>
             </button>
           }
         </mat-form-field>
         
-        <button mat-raised-button color="primary" (click)="addTagToSelected()" 
-                [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="toolbar-button">
+        <button mat-stroked-button 
+                size="small"
+                color="primary" 
+                (click)="addTagToSelected()" 
+                [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" 
+                class="toolbar-btn">
           <mat-icon>add</mat-icon>
           Add Tag
         </button>
         
-        <button mat-raised-button color="accent" (click)="removeTagFromSelected()" 
-                [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" class="toolbar-button">
+        <button mat-stroked-button 
+                size="small"
+                color="accent" 
+                (click)="removeTagFromSelected()" 
+                [disabled]="!bulkTagInput.trim() || selection.selected.length === 0" 
+                class="toolbar-btn">
           <mat-icon>remove</mat-icon>
           Remove Tag
         </button>
-      </div>
 
-      <!-- Row 4: Bulk Tag Quick Pick -->
-      @if (allTags.length > 0) {
-        <div class="toolbar-row bulk-tags-row">
-          <div class="bulk-tags-label">Quick pick existing tags:</div>
-          <div class="bulk-tags-list">
+        @if (allTags.length > 0) {
+          <div class="quick-tags-toolbar">
             @for (tag of allTags; track tag) {
-              <button type="button" class="bulk-tag-chip" (click)="bulkTagInput = tag">{{ tag }}</button>
+              <button type="button" class="quick-tag-btn" (click)="bulkTagInput = tag">{{ tag }}</button>
             }
           </div>
-        </div>
-      }
+        }
+      </div>
     </div>
 
     <!-- Sidebar Layout (visible on large screens) -->
@@ -146,7 +178,7 @@
           
           <mat-slide-toggle 
             [(ngModel)]="showActiveOnly" 
-            (change)="applyFilters()"
+            (change)="toggleActiveOnly()"
             class="compact-toggle">
             Show only active
           </mat-slide-toggle>

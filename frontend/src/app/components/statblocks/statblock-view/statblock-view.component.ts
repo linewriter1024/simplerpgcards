@@ -186,11 +186,6 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
       filtered = filtered.filter(statblock => this.matchesAllTokens(statblock, tokens));
     }
     
-    // Apply active filter if enabled
-    if (this.showActiveOnly) {
-      filtered = filtered.filter(statblock => this.isStatblockActive(statblock));
-    }
-    
     // Always sort by name in view mode
     filtered.sort((a, b) => a.name.localeCompare(b.name));
     
@@ -286,7 +281,7 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   clearFilters(): void {
   this.searchControl.setValue('');
   this.bulkTagInput = '';
-    this.showActiveOnly = false; // Reset active filter when clearing all filters
+    this.showActiveOnly = false; // Reset active toggle when clearing all filters
     this.applyFilters();
     this.updatePageTitle();
     this.updateUrl();
@@ -298,7 +293,25 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   toggleActiveOnly(): void {
-    this.showActiveOnly = !this.showActiveOnly;
+    const currentSearch = this.searchControl.value || '';
+    const tokens = this.parseSearchTerms(currentSearch);
+    
+    const activeTokenIndex = tokens.findIndex(t => t.value.toLowerCase() === 'active' && t.exact);
+    
+    if (this.showActiveOnly) {
+      // Add "active" as exact search term if not already present
+      if (activeTokenIndex === -1) {
+        tokens.push({ value: 'active', exact: true });
+      }
+    } else {
+      // Remove "active" search term if present
+      if (activeTokenIndex >= 0) {
+        tokens.splice(activeTokenIndex, 1);
+      }
+    }
+    
+    const newText = this.tokensToSearchText(tokens);
+    this.searchControl.setValue(newText);
     this.applyFilters();
   }
 
