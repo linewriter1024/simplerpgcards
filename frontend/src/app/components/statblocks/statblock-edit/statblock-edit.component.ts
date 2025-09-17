@@ -14,7 +14,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ScrollingModule } from '@angular/cdk/scrolling';
 import { SelectionModel } from '@angular/cdk/collections';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { StatblockService } from '../../../services/statblock.service';
@@ -40,7 +39,6 @@ import { firstValueFrom } from 'rxjs';
   MatTooltipModule,
   MatDialogModule,
     MatProgressSpinnerModule,
-    ScrollingModule,
     TextFieldModule
   ],
   templateUrl: './statblock-edit.component.html',
@@ -239,31 +237,18 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     if (targetRowIndex !== -1) {
       // Use setTimeout to ensure DOM is ready
       setTimeout(() => {
-        // Scroll to the virtual scroll item
-        const viewport = document.querySelector('cdk-virtual-scroll-viewport');
-        if (viewport) {
-          // Calculate the scroll position for virtual scrolling
-          const itemHeight = 300; // Must match the itemSize in template
-          const scrollTop = targetRowIndex * itemHeight;
-          (viewport as any).scrollToOffset(scrollTop);
-          
-          // Add a slight delay to allow virtual scroll to render, then highlight
+        // Find the statblock row element by its data attribute
+        const targetElement = document.querySelector(`[data-statblock-id="${statblockId}"]`) as HTMLElement;
+
+        if (targetElement) {
+          // Scroll the element into view
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Add highlight effect
+          targetElement.classList.add('highlight-jump');
           setTimeout(() => {
-            const elements = document.querySelectorAll('.statblock-row');
-            // Find the visible element (virtual scroll may have different indices)
-            const visibleElement = Array.from(elements).find(el => {
-              const nameInput = el.querySelector('input[ng-reflect-model*="' + statblockId + '"]') ||
-                              el.querySelector('mat-form-field input');
-              return nameInput && (nameInput as any).value?.includes(statblockId);
-            });
-            
-            if (visibleElement) {
-              visibleElement.classList.add('highlight-jump');
-              setTimeout(() => {
-                visibleElement.classList.remove('highlight-jump');
-              }, 2000);
-            }
-          }, 200);
+            targetElement.classList.remove('highlight-jump');
+          }, 2000);
         }
       }, 100);
     }
@@ -805,33 +790,13 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
 
     // Try to find the copy in the currently visible list; fallback to just scrolling to approximate index
     setTimeout(() => {
-      // Find index by uid in the visible list
-      const visibleIndex = this.editableRows.findIndex(r => r.uid === copy.uid);
-      const elements = document.querySelectorAll('.statblock-row');
+      // Find the copy element by its data attribute
+      const copyElement = document.querySelector(`[data-statblock-uid="${copy.uid}"]`) as HTMLElement;
 
-      if (visibleIndex !== -1 && elements[visibleIndex]) {
-        elements[visibleIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        elements[visibleIndex].classList.add('highlight-jump');
-        setTimeout(() => elements[visibleIndex].classList.remove('highlight-jump'), 2000);
-      } else if (elements.length > 0) {
-        // If filtered out, clear filter temporarily to show and focus the copy
-        const restore = typeof prevSearch === 'string' ? prevSearch : '';
-        this.searchControl.setValue('');
-        this.applySearch();
-        this.dataSource.data = [...this.editableRows];
-        setTimeout(() => {
-          const idx = this.editableRows.findIndex(r => r.uid === copy.uid);
-          const els = document.querySelectorAll('.statblock-row');
-          if (idx !== -1 && els[idx]) {
-            els[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            els[idx].classList.add('highlight-jump');
-            setTimeout(() => els[idx].classList.remove('highlight-jump'), 2000);
-          }
-          // Restore prior search text
-          this.searchControl.setValue(restore);
-          this.applySearch();
-          this.dataSource.data = [...this.editableRows];
-        }, 50);
+      if (copyElement) {
+        copyElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        copyElement.classList.add('highlight-jump');
+        setTimeout(() => copyElement.classList.remove('highlight-jump'), 2000);
       }
     }, 50);
   }
@@ -871,7 +836,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     this.titleService.setTitle(title);
   }
 
-  // Performance optimization: trackBy function for the virtual scroll list
+  // Performance optimization: trackBy function for the statblock list
   trackByStatblockUid(index: number, item: EditableStatBlock): string {
     return item.uid;
   }

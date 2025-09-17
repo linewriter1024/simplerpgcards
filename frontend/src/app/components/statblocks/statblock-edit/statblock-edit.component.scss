@@ -3,18 +3,17 @@
 .thumb { width: 100%; height: 100%; object-fit: cover; }
 .image-actions { display: flex; gap: 6px; margin-top: 4px; margin-bottom: 0; }
 .edit-container {
+  height: 100%;
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  flex-direction: row;
 }
 
 .sidebar {
   width: 300px;
+  min-width: 300px;
   background-color: #2d2d2d;
   border-right: 1px solid #444;
-  padding: 16px;
   overflow-y: auto;
-  flex-shrink: 0;
 }
 
 /* Hide toolbar layout by default */
@@ -116,13 +115,18 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: #1e1e1e;
 }
 
 .statblocks-list {
-  padding: 16px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
   height: 100%;
+  overflow-y: auto;
+}
+
+.statblocks-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -277,13 +281,14 @@
   
   .sidebar {
     width: 100% !important;
+    min-width: 100% !important;
     height: auto;
     max-height: none;
-    padding: 12px 16px;
     border-right: none;
     border-bottom: 1px solid #444;
     overflow-x: auto;
     overflow-y: visible;
+    padding: 12px 16px;
   }
   
   /* Hide sidebar layout on tablets/mobile */
@@ -452,24 +457,4 @@
   }
 }
 
-/* Virtual scrolling styles */
-.virtual-scroll-viewport {
-  height: calc(100vh - 20px);
-  width: 100%;
-}
-
-.statblocks-list {
-  height: 100%;
-  overflow: hidden;
-}
-
-/* Ensure proper spacing for virtual scroll items */
-.cdk-virtual-scroll-content-wrapper {
-  .statblock-row {
-    margin-bottom: 16px;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-}
+/* Virtual scrolling styles removed - using regular scrolling now */

@@ -166,18 +166,15 @@
       <p>Loading statblocks...</p>
     </div>
     
-    <!-- Statblocks list with virtual scrolling -->
+    <!-- Statblocks list with regular scrolling -->
     <div class="statblocks-list" *ngIf="!isLoading">
-      <cdk-virtual-scroll-viewport 
-        itemSize="300" 
-        minBufferPx="600" 
-        maxBufferPx="900" 
-        class="virtual-scroll-viewport">
-        
+      <div class="statblocks-container">
         @for (row of editableRows; track trackByStatblockUid($index, row); let i = $index) {
           <div class="statblock-row" 
                [class.new-row]="row.isNew"
-               [class.unsaved-row]="row.hasUnsavedChanges">
+               [class.unsaved-row]="row.hasUnsavedChanges"
+               [attr.data-statblock-id]="row.id"
+               [attr.data-statblock-uid]="row.uid">
             
             <!-- Row Header with Actions and Selection -->
             <div class="row-header">
@@ -311,7 +308,7 @@
           </div>
         </div>
         }
-      </cdk-virtual-scroll-viewport>
+      </div>
     </div>
   </div>
 </div>
