@@ -131,18 +131,11 @@
 
 .row-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
-  min-width: 44px;
+  gap: 4px;
+  min-width: 0;
   justify-content: flex-start;
-}
-
-.offset-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
 }
 
 .row-content {
@@ -253,17 +246,6 @@
 
 .spells-column {
   display: contents;
-}
-
-/* Make list items flow inline to reduce vertical space while preserving all content */
-.spells-column .list-item,
-.list-item {
-  display: inline;
-  font-size: 13px;
-  line-height: 1.2;
-  margin: 0; /* override earlier margins */
-  white-space: normal;
-  overflow-wrap: anywhere;
 }
 
 .spell-slots-field {
@@ -586,7 +568,7 @@
 .abilities-group { gap: 4px; }
 .text-content { padding: 3px 5px; }
 .spells-two-column { gap: 6px; }
-.row-actions { min-width: 44px; }
+.row-actions { min-width: 0; }
 .name-field { max-width: 360px; }
 
 /* Inline items with separators to mark original line breaks */
