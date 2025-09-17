@@ -138,6 +138,13 @@
   justify-content: flex-start;
 }
 
+.offset-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
 .row-content {
   flex: 1;
   display: flex;
@@ -531,6 +538,12 @@
     gap: 8px;
   }
 
+  /* On narrow screens, let the image use full width for readability */
+  .slices-scroll {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
   .row-actions {
     flex-direction: row;
     justify-content: space-between;
@@ -638,6 +651,68 @@
 .image-only img {
   max-width: min(480px, 90%);
   max-height: 50vh;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* Sliced image row */
+.image-sliced-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  width: 100%;
+  justify-content: center; /* center the content to reduce perceived empty space */
+}
+.slice-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.slice-btn {
+  /* Match Angular Material icon button size so ripple/hover is centered */
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.slices-scroll {
+  display: flex;
+  flex-wrap: wrap; /* default horizontal-first */
+  /* Remove vertical padding between contiguous slices while keeping column spacing */
+  row-gap: 0;
+  column-gap: 4px;
+  overflow: hidden; /* prevent horizontal scroll */
+  max-height: calc(180px * 2); /* align with smaller dynamic chunk target (no vertical gap) */
+  width: 100%;
+  /* Use all available horizontal space in image-only rows */
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
+/* Vertical-first flow: fill down first, then wrap across */
+.slices-scroll.vertical-flow {
+  flex-direction: column;
+  align-content: flex-start; /* allow multiple columns */
+  height: auto; /* we set height via ngStyle to h*rows */
+}
+
+/* Image-only rows: allow a larger area for readability */
+.image-only-mode .slices-scroll {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
+.slice-tile {
+  flex: 0 0 auto;
+  background-color: #111;
+  box-sizing: border-box;
+}
+.slice-fallback {
+  max-width: 100%;
+  max-height: calc(200px * 2);
   object-fit: contain;
   border-radius: 6px;
   border: 1px solid rgba(255,255,255,0.12);

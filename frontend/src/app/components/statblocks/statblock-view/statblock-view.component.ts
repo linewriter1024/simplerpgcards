@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChildren, QueryList, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -39,13 +39,44 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
   templateUrl: './statblock-view.component.html',
   styleUrl: './statblock-view.component.scss'
 })
-export class StatblockViewComponent implements OnInit {
+export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy {
   statblocks: StatBlock[] = [];
   filteredStatblocks: StatBlock[] = [];
   allTags: string[] = [];
   searchControl = new FormControl('');
   selection = new SelectionModel<StatBlock>(true, []);
   bulkTagInput: string = '';
+  // Image slicing state
+  private imgDims: Record<string, { width: number; height: number }> = {};
+  private imgLoadRequested = new Set<string>();
+  private sliceOffsets: Record<string, number> = {};
+  // Keep rows compact; desired displayed slice height in CSS px
+  readonly chunkHeight = 180;
+  // Cap each tile's width to avoid horizontal overflow; tiles will wrap
+  readonly maxTileWidth = 99999; // effectively no cap; real cap comes from container width
+  // Layout controls
+  readonly maxRows = 2; // keep overall row height compact
+  readonly tileGap = 6; // must match SCSS gap
+  @ViewChildren('slicesContainer') private slicesContainers!: QueryList<ElementRef<HTMLDivElement>>;
+  private containerWidths: Record<string, number> = {};
+  private layoutById: Record<string, { tileWidth: number; scale: number; chunkImgPx: number; columns: number }> = {};
+  private measureScheduled = false;
+
+  private getChunkHeightFor(id: string): number {
+    const containerW = this.containerWidths[id] ?? 800;
+  // Smaller, tighter rows: scale down further for better horizontal fill
+  const dynamic = Math.round(Math.min(130, Math.max(80, containerW / 20)));
+    return dynamic;
+  }
+
+  getSlicesContainerStyle(sb: StatBlock): { [k: string]: any } {
+    const id = sb.id!;
+    const h = this.getChunkHeightFor(id);
+    // Cap the container to two rows worth of height, but allow it to shrink
+    return {
+      'max-height.px': h * this.maxRows
+    };
+  }
 
   constructor(
   public statblockService: StatblockService,
@@ -76,6 +107,21 @@ export class StatblockViewComponent implements OnInit {
       this.updatePageTitle();
       this.updateUrl();
     });
+  }
+
+  ngAfterViewInit(): void {
+    // Measure after view renders
+    this.scheduleMeasureCompute();
+    // Recompute when containers change (list update)
+    this.slicesContainers.changes.subscribe(() => this.scheduleMeasureCompute());
+    // Fallback measure after initial paint
+    setTimeout(() => this.scheduleMeasureCompute(), 0);
+    setTimeout(() => this.scheduleMeasureCompute(), 100);
+    setTimeout(() => this.scheduleMeasureCompute(), 500);
+  }
+
+  ngOnDestroy(): void {
+    // nothing to clean beyond subscriptions owned by Angular
   }
 
   loadStatblocks(): Promise<void> {
@@ -119,7 +165,8 @@ export class StatblockViewComponent implements OnInit {
     // Always sort by name in view mode
     filtered.sort((a, b) => a.name.localeCompare(b.name));
     
-    this.filteredStatblocks = filtered;
+  this.filteredStatblocks = filtered;
+  this.scheduleMeasureCompute();
   }
 
   // Parse into tokens, preserving whether the term was quoted (exact)
@@ -553,7 +600,11 @@ export class StatblockViewComponent implements OnInit {
     const url = this.statblockService.getImageUrl(statblock.id);
     this.dialog.open(ImageDialogComponent, {
       data: { url, name: statblock.name },
-      panelClass: 'image-dialog-panel'
+      panelClass: 'image-dialog-panel',
+      width: '100vw',
+      height: '100vh',
+      maxWidth: '100vw',
+      maxHeight: '100vh'
     });
   }
 
@@ -568,26 +619,219 @@ export class StatblockViewComponent implements OnInit {
       && (!sb.tags || sb.tags.length === 0);
     return textEmpty && arraysEmpty;
   }
+
+  // --- Image slicing helpers ---
+  private ensureImageDims(sb: StatBlock): void {
+    if (!sb.id) return;
+    if (this.imgDims[sb.id] || this.imgLoadRequested.has(sb.id)) return;
+    this.imgLoadRequested.add(sb.id);
+    const img = new Image();
+    img.onload = () => {
+      this.imgDims[sb.id!] = { width: img.naturalWidth, height: img.naturalHeight };
+      
+      // Recompute layouts once we know dimensions
+      this.scheduleMeasureCompute();
+    };
+    img.onerror = () => {
+      console.error(`Failed to load image for statblock ${sb.id}`);
+      this.imgLoadRequested.delete(sb.id!);
+    };
+    img.src = this.statblockService.getImageUrl(sb.id);
+  }
+
+  getSlicesArray(sb: StatBlock): number[] {
+    if (!sb.id || !sb.hasImage) return [];
+    this.ensureImageDims(sb);
+    const dims = this.imgDims[sb.id];
+    const layout = this.layoutById[sb.id];
+    if (!dims || !layout) {
+      // Force a measurement attempt if we don't have layout yet
+      if (dims && !layout) {
+        this.scheduleMeasureCompute();
+      }
+      return [];
+    }
+    const chunkImgPx = layout.chunkImgPx;
+    const offset = this.sliceOffsets[sb.id] ?? 0;
+    const remaining = Math.max(0, dims.height - offset);
+    const count = Math.ceil(remaining / chunkImgPx);
+    
+    return Array.from({ length: count }, (_, i) => i);
+  }
+
+  getSliceStyle(sb: StatBlock, index: number): { [k: string]: any } {
+    const id = sb.id!;
+    const dims = this.imgDims[id];
+    const url = this.statblockService.getImageUrl(id);
+    const layout = this.layoutById[id];
+  if (!dims || !layout) return { 'display': 'none' };
+    const { tileWidth, scale, chunkImgPx } = layout;
+    const offset = this.sliceOffsets[id] ?? 0;
+    const topImgPx = offset + index * chunkImgPx;
+    const heightCss = Math.max(0, Math.min(this.getChunkHeightFor(id), Math.floor(scale * ((dims?.height || 0) - topImgPx))));
+    return {
+      'background-image': `url(${url})`,
+      'background-size': `${tileWidth}px auto`,
+      'background-position': `0px -${Math.round(scale * topImgPx)}px`,
+      'background-repeat': 'no-repeat',
+      'width.px': tileWidth,
+      'height.px': heightCss,
+      'border': '1px solid rgba(255,255,255,0.12)',
+      'border-radius': '4px'
+    };
+  }
+
+  adjustSliceOffset(sb: StatBlock, delta: number): void {
+    if (!sb.id) return;
+    const dims = this.imgDims[sb.id];
+    if (!dims) { this.ensureImageDims(sb); return; }
+    const layout = this.layoutById[sb.id];
+    if (!layout) { this.scheduleMeasureCompute(); return; }
+    const chunkImgPx = layout.chunkImgPx;
+    const current = this.sliceOffsets[sb.id] ?? 0;
+    let next = current + delta;
+    // Keep offset within a single chunk height in image pixels
+    if (next < 0) next = chunkImgPx - (Math.abs(next) % chunkImgPx);
+    next = next % chunkImgPx;
+    this.sliceOffsets[sb.id] = next;
+    // Recompute layout since offset affects slice count/columns
+    this.computeLayoutForId(sb.id);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.scheduleMeasureCompute();
+  }
+
+  private scheduleMeasureCompute(): void {
+    if (this.measureScheduled) return;
+    this.measureScheduled = true;
+    requestAnimationFrame(() => {
+      this.measureScheduled = false;
+      this.measureContainers();
+      // Only compute layout for statblocks that have images
+      this.filteredStatblocks
+        .filter(sb => sb.hasImage && sb.id)
+        .forEach(sb => this.computeLayoutForId(sb.id!));
+    });
+  }
+
+  private measureContainers(): void {
+    if (!this.slicesContainers) return;
+    this.slicesContainers.forEach(ref => {
+      const el = ref.nativeElement;
+      const id = el.dataset['id'];
+      if (id) {
+        this.containerWidths[id] = el.clientWidth;
+        
+      }
+    });
+  }
+
+  private computeLayoutForId(id: string | undefined): void {
+    if (!id) return;
+    const dims = this.imgDims[id];
+    const containerW = this.containerWidths[id];
+    if (!dims || !containerW) {
+      
+      return;
+    }
+    
+    // Prevent degenerate widths
+    if (containerW < 80) {
+      const scale = Math.max(0.1, (containerW - 8) / dims.width);
+      const ch = this.getChunkHeightFor(id);
+      this.layoutById[id] = {
+        tileWidth: Math.max(40, containerW - 8),
+        scale,
+        chunkImgPx: Math.ceil(ch / scale),
+        columns: 1
+      };
+      
+      return;
+    }
+    const offset = this.sliceOffsets[id] ?? 0;
+    const gap = this.tileGap;
+    const borderX = 2; // 1px left + 1px right
+    // Allow smaller tiles so we can achieve more columns and flow horizontally
+  const minTileWidth = 130;
+    // But also set a reasonable maximum number of columns to avoid tiny tiles
+  const maxColsAbsolute = 16;
+    const maxColsByWidth = Math.max(1, Math.min(maxColsAbsolute, Math.floor((containerW + gap) / (minTileWidth + gap + borderX))));
+
+    const tryCols = (cols: number) => {
+      const availableW = Math.max(0, containerW - (cols - 1) * gap - cols * borderX);
+      let tw = Math.floor(Math.min(dims.width, availableW / cols));
+      if (this.maxTileWidth !== 99999) tw = Math.min(tw, this.maxTileWidth);
+      const scale = Math.max(0.05, tw / dims.width);
+      // Limit chunk size to reasonable portions of the image height to ensure multiple slices when tall
+      const ch = this.getChunkHeightFor(id);
+      const maxReasonableChunk = Math.floor(dims.height / 2); // At least 2 chunks for tall images
+      const chunkImgPx = Math.max(1, Math.min(maxReasonableChunk, Math.ceil(ch / scale)));
+      const remaining = Math.max(0, dims.height - offset);
+      const S = Math.ceil(remaining / chunkImgPx);
+      const effCols = Math.max(1, Math.min(cols, S)); // never exceed number of slices
+      const rows = Math.max(1, Math.ceil(S / effCols));
+      return { tw, scale, chunkImgPx, rows, S, effCols };
+    };
+
+  // Prefer using available width to reduce empty space: pick the largest number of
+  // effective columns that still respects max rows and min tile width.
+    let best: { tw: number; scale: number; chunkImgPx: number; rows: number; S: number; effCols: number } | null = null;
+  let bestCols = 1;
+  for (let cols = maxColsByWidth; cols >= 1; cols--) {
+      const res = tryCols(cols);
+      if (res.tw >= minTileWidth && res.rows <= this.maxRows) {
+    if (!best || res.effCols > best.effCols || (res.effCols === best.effCols && res.tw > best.tw)) {
+          best = res;
+          bestCols = res.effCols; // cap to slice count
+        }
+      }
+    }
+
+    // If nothing satisfies constraints, fall back to the widest feasible option
+    if (!best) {
+      best = tryCols(Math.max(1, Math.min(maxColsByWidth, 1)));
+      bestCols = best.effCols;
+    }
+
+    // Recompute with the chosen effective columns to keep layout consistent
+    const final = tryCols(bestCols);
+
+  this.layoutById[id] = {
+      tileWidth: final.tw,
+      scale: final.scale,
+      chunkImgPx: final.chunkImgPx,
+      columns: bestCols
+    };
+    
+  }
 }
 
 import { Inject } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-image-dialog',
   standalone: true,
   imports: [CommonModule, MatDialogModule],
   template: `
-    <div class="image-dialog">
-      <h3>{{data.name}}</h3>
+    <div class="image-dialog" (click)="close()">
+      <div class="title">{{data.name}}</div>
       <img [src]="data.url" alt="{{data.name}}" />
     </div>
   `,
   styles: [
-    `.image-dialog{ max-width: 90vw; max-height: 90vh; display:flex; flex-direction:column; align-items:center; }
-     .image-dialog img{ max-width: 85vw; max-height: 80vh; object-fit: contain; }`
+    `.image-dialog{ width: 100vw; height: 100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 8px; cursor: zoom-out; padding: 0; }
+     .image-dialog .title{ position: fixed; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; font-size: 14px; }
+     .image-dialog img{ max-width: 100vw; max-height: 100vh; width: auto; height: auto; object-fit: contain; image-rendering: auto; }`
   ]
 })
 export class ImageDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { url: string; name: string }) {}
+  constructor(
+    private dialogRef: MatDialogRef<ImageDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { url: string; name: string }
+  ) {}
+
+  close(): void { this.dialogRef.close(); }
 }

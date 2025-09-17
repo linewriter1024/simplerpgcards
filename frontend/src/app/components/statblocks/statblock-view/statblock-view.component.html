@@ -217,163 +217,178 @@
             <button mat-icon-button color="primary" (click)="editStatblock(statblock); $event.stopPropagation()">
               <mat-icon>edit</mat-icon>
             </button>
+            @if (statblock.hasImage && statblock.id && isStatblockEmpty(statblock)) {
+              <div class="offset-controls" (click)="$event.stopPropagation()">
+                <button mat-icon-button class="slice-btn" title="Nudge up" (click)="adjustSliceOffset(statblock, -8)"><mat-icon>keyboard_arrow_up</mat-icon></button>
+                <button mat-icon-button class="slice-btn" title="Nudge down" (click)="adjustSliceOffset(statblock, 8)"><mat-icon>keyboard_arrow_down</mat-icon></button>
+              </div>
+            }
           </div>
 
           <!-- All Fields in Flex Layout -->
           <div class="row-content">
             <!-- Image-only presentation when other fields are empty -->
             @if (statblock.hasImage && statblock.id && isStatblockEmpty(statblock)) {
-              <div class="image-only" (click)="openImage(statblock)">
-                <img [src]="statblockService.getImageUrl(statblock.id)" [alt]="statblock.name || 'Image'" />
+              <!-- Show sliced view when we have an image-only statblock -->
+              <div class="image-sliced-row image-only-mode" (click)="openImage(statblock); $event.stopPropagation()">
+                <div #slicesContainer class="slices-scroll vertical-flow" [ngStyle]="getSlicesContainerStyle(statblock)" [attr.data-id]="statblock.id">
+                  @if (getSlicesArray(statblock).length === 0) {
+                    <img class="slice-fallback" [src]="statblockService.getImageUrl(statblock.id)" [alt]="statblock.name || 'Image'" />
+                  } @else {
+                    @for (i of getSlicesArray(statblock); track i) {
+                      <div class="slice-tile" [ngStyle]="getSliceStyle(statblock, i)"></div>
+                    }
+                  }
+                </div>
               </div>
             } @else {
-            <!-- Thumbnail if present -->
-            @if (statblock.hasImage && statblock.id) {
-              <div class="thumb-field" (click)="openImage(statblock)" title="Click to view image">
-                <img class="thumb" [src]="statblockService.getImageUrl(statblock.id)" alt="{{statblock.name}} thumbnail" />
+              <!-- Regular statblock view with optional thumbnail -->
+              @if (statblock.hasImage && statblock.id) {
+                <div class="thumb-field" (click)="openImage(statblock); $event.stopPropagation()" title="Click to view image">
+                  <img class="thumb" [src]="statblockService.getImageUrl(statblock.id)" alt="{{statblock.name}} thumbnail" />
+                </div>
+              }
+
+              <!-- Basic Info Row -->
+              <div class="basic-info-section">
+                <div class="field name-field">
+                  <div class="field-label">Name</div>
+                  <div class="field-value">{{statblock.name}}</div>
+                </div>
+
+                @if (statblock.type) {
+                  <div class="field type-field">
+                    <div class="field-label">Type</div>
+                    <div class="field-value">{{statblock.type}}</div>
+                  </div>
+                }
+
+                <div class="field compact-field">
+                  <div class="field-label">CR</div>
+                  <div class="field-value">{{statblock.cr}}</div>
+                </div>
+
+                <div class="field compact-field">
+                  <div class="field-label">EXP</div>
+                  <div class="field-value">{{calculateExperience(statblock.cr)}}</div>
+                </div>
+
+                @if (statblock.hp) {
+                  <div class="field compact-field">
+                    <div class="field-label">HP</div>
+                    <div class="field-value">{{formatHp(statblock.hp)}}</div>
+                  </div>
+                }
+
+                <div class="field compact-field">
+                  <div class="field-label">AC</div>
+                  <div class="field-value">{{statblock.ac}}</div>
+                </div>
+
+                @if (statblock.spellSlots && statblock.spellSlots.length > 0) {
+                  <div class="field spell-slots-field">
+                    <div class="field-label">Spell Slots</div>
+                    <div class="field-value spell-slots">{{formatSpellSlots(statblock.spellSlots)}}</div>
+                  </div>
+                }
+
+                @if (statblock.tags && statblock.tags.length > 0) {
+                  <div class="field text-field">
+                    <div class="field-label">Tags</div>
+                    <div class="field-value">
+                      @for (tag of statblock.tags; track tag) {
+                        <span class="tag-chip">{{tag}}</span>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <div class="abilities-group">
+                  <div class="field ability-field">
+                    <div class="field-label">STR</div>
+                    <div class="field-value">{{statblock.str}} ({{getModifier(statblock.str)}})</div>
+                  </div>
+                  <div class="field ability-field">
+                    <div class="field-label">DEX</div>
+                    <div class="field-value">{{statblock.dex}} ({{getModifier(statblock.dex)}})</div>
+                  </div>
+                  <div class="field ability-field">
+                    <div class="field-label">CON</div>
+                    <div class="field-value">{{statblock.con}} ({{getModifier(statblock.con)}})</div>
+                  </div>
+                  <div class="field ability-field">
+                    <div class="field-label">INT</div>
+                    <div class="field-value">{{statblock.int}} ({{getModifier(statblock.int)}})</div>
+                  </div>
+                  <div class="field ability-field">
+                    <div class="field-label">WIS</div>
+                    <div class="field-value">{{statblock.wis}} ({{getModifier(statblock.wis)}})</div>
+                  </div>
+                  <div class="field ability-field">
+                    <div class="field-label">CHA</div>
+                    <div class="field-value">{{statblock.cha}} ({{getModifier(statblock.cha)}})</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Text Fields Row -->
+              <div class="text-fields-section">
+                <div class="field attacks-field">
+                  <div class="field-label">Attacks</div>
+                  <div class="field-value text-content">
+                    @if (statblock.attacks && statblock.attacks.length > 0) {
+                      @for (attack of statblock.attacks; track attack.name) {
+                        <span class="list-item" [innerHTML]="attack.name | diceLinkify"></span>
+                      }
+                    }
+                  </div>
+                </div>
+
+                @if (statblock.spells && statblock.spells.length > 0) {
+                  <div class="field spells-field-container">
+                    <div class="field-label">Spells</div>
+                    <div class="field-value text-content">
+                      @for (spell of statblock.spells; track spell.name) {
+                        <span class="list-item" [innerHTML]="(getSpellLevel(spell.name) ? (getSpellLevel(spell.name) + ' ' + getSpellText(spell.name)) : spell.name) | diceLinkify"></span>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <div class="field text-field">
+                  <div class="field-label">Skills</div>
+                  <div class="field-value text-content">
+                    @if (statblock.skills && statblock.skills.length > 0) {
+                      @for (skill of statblock.skills; track skill) {
+                        <span class="list-item" [innerHTML]="skill | diceLinkify"></span>
+                      }
+                    }
+                  </div>
+                </div>
+
+                @if (statblock.resistances && statblock.resistances.length > 0) {
+                  <div class="field text-field">
+                    <div class="field-label">Resistances</div>
+                    <div class="field-value text-content">
+                      @for (res of statblock.resistances; track res) {
+                        <span class="list-item" [innerHTML]="res | diceLinkify"></span>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (statblock.notes && statblock.notes.trim()) {
+                  <div class="field text-field">
+                    <div class="field-label">Notes</div>
+                    <div class="field-value text-content">
+                      <span class="list-item" [innerHTML]="statblock.notes | diceLinkify"></span>
+                    </div>
+                  </div>
+                }
               </div>
             }
-            <!-- Basic Info Row -->
-            <div class="basic-info-section">
-              <div class="field name-field">
-                <div class="field-label">Name</div>
-                <div class="field-value">{{statblock.name}}</div>
-              </div>
-
-              @if (statblock.type) {
-                <div class="field type-field">
-                  <div class="field-label">Type</div>
-                  <div class="field-value">{{statblock.type}}</div>
-                </div>
-              }
-
-              <div class="field compact-field">
-                <div class="field-label">CR</div>
-                <div class="field-value">{{statblock.cr}}</div>
-              </div>
-
-              <div class="field compact-field">
-                <div class="field-label">EXP</div>
-                <div class="field-value">{{calculateExperience(statblock.cr)}}</div>
-              </div>
-
-              @if (statblock.hp) {
-                <div class="field compact-field">
-                  <div class="field-label">HP</div>
-                  <div class="field-value">{{formatHp(statblock.hp)}}</div>
-                </div>
-              }
-
-              <div class="field compact-field">
-                <div class="field-label">AC</div>
-                <div class="field-value">{{statblock.ac}}</div>
-              </div>
-
-              @if (statblock.spellSlots && statblock.spellSlots.length > 0) {
-                <div class="field spell-slots-field">
-                  <div class="field-label">Spell Slots</div>
-                  <div class="field-value spell-slots">{{formatSpellSlots(statblock.spellSlots)}}</div>
-                </div>
-              }
-
-              @if (statblock.tags && statblock.tags.length > 0) {
-                <div class="field text-field">
-                  <div class="field-label">Tags</div>
-                  <div class="field-value">
-                    @for (tag of statblock.tags; track tag) {
-                      <span class="tag-chip">{{tag}}</span>
-                    }
-                  </div>
-                </div>
-              }
-
-              <div class="abilities-group">
-                <div class="field ability-field">
-                  <div class="field-label">STR</div>
-                  <div class="field-value">{{statblock.str}} ({{getModifier(statblock.str)}})</div>
-                </div>
-                <div class="field ability-field">
-                  <div class="field-label">DEX</div>
-                  <div class="field-value">{{statblock.dex}} ({{getModifier(statblock.dex)}})</div>
-                </div>
-                <div class="field ability-field">
-                  <div class="field-label">CON</div>
-                  <div class="field-value">{{statblock.con}} ({{getModifier(statblock.con)}})</div>
-                </div>
-                <div class="field ability-field">
-                  <div class="field-label">INT</div>
-                  <div class="field-value">{{statblock.int}} ({{getModifier(statblock.int)}})</div>
-                </div>
-                <div class="field ability-field">
-                  <div class="field-label">WIS</div>
-                  <div class="field-value">{{statblock.wis}} ({{getModifier(statblock.wis)}})</div>
-                </div>
-                <div class="field ability-field">
-                  <div class="field-label">CHA</div>
-                  <div class="field-value">{{statblock.cha}} ({{getModifier(statblock.cha)}})</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Text Fields Row -->
-            <div class="text-fields-section">
-              <div class="field attacks-field">
-                <div class="field-label">Attacks</div>
-                <div class="field-value text-content">
-                  @if (statblock.attacks && statblock.attacks.length > 0) {
-                    @for (attack of statblock.attacks; track attack.name) {
-                      <span class="list-item" [innerHTML]="attack.name | diceLinkify"></span>
-                    }
-                  }
-                </div>
-              </div>
-
-              @if (statblock.spells && statblock.spells.length > 0) {
-                <div class="field spells-field-container">
-                  <div class="field-label">Spells</div>
-          <div class="field-value text-content">
-                    @for (spell of statblock.spells; track spell.name) {
-            <span class="list-item" [innerHTML]="(getSpellLevel(spell.name) ? (getSpellLevel(spell.name) + ' ' + getSpellText(spell.name)) : spell.name) | diceLinkify"></span>
-                    }
-                  </div>
-                </div>
-              }
-
-              <div class="field text-field">
-                <div class="field-label">Skills</div>
-        <div class="field-value text-content">
-                  @if (statblock.skills && statblock.skills.length > 0) {
-                    @for (skill of statblock.skills; track skill) {
-          <span class="list-item" [innerHTML]="skill | diceLinkify"></span>
-                    }
-                  }
-                </div>
-              </div>
-
-              @if (statblock.resistances && statblock.resistances.length > 0) {
-                <div class="field text-field">
-                  <div class="field-label">Resistances</div>
-          <div class="field-value text-content">
-                    @for (res of statblock.resistances; track res) {
-            <span class="list-item" [innerHTML]="res | diceLinkify"></span>
-                    }
-                  </div>
-                </div>
-              }
-
-              @if (statblock.notes && statblock.notes.trim()) {
-                <div class="field text-field">
-                  <div class="field-label">Notes</div>
-                  <div class="field-value text-content">
-                    <span class="list-item" [innerHTML]="statblock.notes | diceLinkify"></span>
-                  </div>
-                </div>
-              }
-            </div>
-          }
           </div>
         </div>
       }
     </div>
   </div>
-</div>
