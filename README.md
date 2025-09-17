@@ -56,6 +56,31 @@ Default URLs:
 - Backend: http://localhost:3000
 - Frontend: http://localhost:4200
 
+## Docker Deployment
+
+For production deployment, use the all-in-one Docker container:
+
+```bash
+# Build and run (separate steps)
+./docker-build.sh
+./docker-run.sh 0.0.0.0 8080 ./data
+
+# Manual build and run
+docker build -t rpg-cards .
+docker run -p 8080:8080 -v $(pwd)/data:/data rpg-cards 0.0.0.0 8080
+
+# Using docker-compose
+docker-compose up -d
+```
+
+The Docker container accepts two arguments:
+1. **Frontend Host** - Interface to bind the web server to (e.g., `0.0.0.0`, `127.0.0.1`)
+2. **Frontend Port** - Port number for the web interface
+
+You must also mount a host directory to `/data` where `simplerpgcards.db` will be stored.
+
+See [DOCKER.md](DOCKER.md) for detailed Docker documentation.
+
 ## Build
 
 ```bash

@@ -10,10 +10,12 @@
     "dev:frontend": "cd frontend && ng serve",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && ng build",
+    "build:frontend:docker": "cd frontend && ng build --configuration=docker",
     "start:backend": "cd backend && npm start",
-    "start:frontend": "cd frontend && ng serve --prod"
+    "start:frontend": "cd frontend && ng serve --prod",
+    "docker:build": "docker build -t rpg-cards ."
   },
   "keywords": ["rpg", "cards", "pdf", "angular", "nodejs", "typescript"],
   "author": "RPG Cards Team",
-  "license": "MIT"
+  "license": "AGPL-3.0-only"
 }
