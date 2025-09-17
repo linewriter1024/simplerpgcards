@@ -81,14 +81,6 @@ prefix_logs() {
 echo "Starting backend server..."
 cd /app/backend
 
-# Check if the built backend exists
-if [ ! -f "dist/app.js" ]; then
-    echo "ERROR: Backend build not found at dist/app.js"
-    exit 1
-fi
-
-echo "Backend files found, starting Node.js process..."
-
 # Start backend and redirect output to log file
 node dist/app.js > "$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
@@ -102,30 +94,12 @@ sleep 3
 # Check if backend started successfully
 if ! kill -0 $BACKEND_PID 2>/dev/null; then
     echo "Error: Backend failed to start"
-    echo "Backend log:"
-    cat "$BACKEND_LOG" 2>/dev/null || echo "No backend log available"
     exit 1
 fi
 
 echo "Backend started successfully (PID: $BACKEND_PID)"
 
 echo "Starting nginx web server..."
-
-# Check if frontend files exist
-if [ ! -d "/app/frontend/dist/browser" ] || [ -z "$(ls -A /app/frontend/dist/browser 2>/dev/null)" ]; then
-    echo "ERROR: Frontend build not found or empty at /app/frontend/dist/browser"
-    echo "Contents of /app/frontend/dist:"
-    ls -la /app/frontend/dist/ 2>/dev/null || echo "Dist directory not found"
-    echo "Contents of /app/:"
-    ls -la /app/ 2>/dev/null || echo "App directory not found"
-    exit 1
-fi
-
-echo "Frontend files found. Contents of /app/frontend/dist/browser:"
-ls -la /app/frontend/dist/browser/
-echo ""
-
-echo "Frontend files found, starting nginx..."
 
 # Start nginx in background mode and redirect logs
 nginx -g "daemon off;" > "$NGINX_ACCESS_LOG" 2> "$NGINX_ERROR_LOG" &
