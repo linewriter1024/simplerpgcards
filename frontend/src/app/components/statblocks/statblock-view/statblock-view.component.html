@@ -219,8 +219,33 @@
             </button>
             @if (statblock.hasImage && statblock.id && isStatblockEmpty(statblock)) {
               <div class="offset-controls" (click)="$event.stopPropagation()">
-                <button mat-icon-button class="slice-btn" title="Nudge up" (click)="adjustSliceOffset(statblock, -8)"><mat-icon>keyboard_arrow_up</mat-icon></button>
-                <button mat-icon-button class="slice-btn" title="Nudge down" (click)="adjustSliceOffset(statblock, 8)"><mat-icon>keyboard_arrow_down</mat-icon></button>
+                <button mat-icon-button [matMenuTriggerFor]="rowMenu" aria-label="Image options">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #rowMenu="matMenu">
+                  <button mat-menu-item (click)="adjustSliceOffset(statblock, -8); $event.stopPropagation()">
+                    <mat-icon>keyboard_arrow_up</mat-icon>
+                    <span>Offset up</span>
+                  </button>
+                  <button mat-menu-item (click)="adjustSliceOffset(statblock, 8); $event.stopPropagation()">
+                    <mat-icon>keyboard_arrow_down</mat-icon>
+                    <span>Offset down</span>
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button mat-menu-item (click)="adjustImageScale(statblock, 'up'); $event.stopPropagation()">
+                    <mat-icon>zoom_in</mat-icon>
+                    <span>Image scale up</span>
+                  </button>
+                  <button mat-menu-item (click)="adjustImageScale(statblock, 'down'); $event.stopPropagation()">
+                    <mat-icon>zoom_out</mat-icon>
+                    <span>Image scale down</span>
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button mat-menu-item (click)="resetImageSettings(statblock); $event.stopPropagation()">
+                    <mat-icon>restart_alt</mat-icon>
+                    <span>Reset image settings</span>
+                  </button>
+                </mat-menu>
               </div>
             }
           </div>

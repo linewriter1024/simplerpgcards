@@ -208,4 +208,37 @@ export class StatBlockController {
       res.status(500).json({ error: 'Failed to delete image' });
     }
   }
+
+  // Get image display settings (offset/scale)
+  async getImageSettings(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const result = await this.statblockService.getImageSettings(id);
+      if (!result) {
+        res.status(404).json({ error: 'Image not found' });
+        return;
+      }
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching image settings:', error);
+      res.status(500).json({ error: 'Failed to fetch image settings' });
+    }
+  }
+
+  // Update image display settings (offset/scale)
+  async updateImageSettings(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { offset, scale } = req.body as { offset?: number; scale?: number };
+      const updated = await this.statblockService.updateImageSettings(id, { offset, scale });
+      if (!updated) {
+        res.status(404).json({ error: 'Image not found' });
+        return;
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating image settings:', error);
+      res.status(500).json({ error: 'Failed to update image settings' });
+    }
+  }
 }

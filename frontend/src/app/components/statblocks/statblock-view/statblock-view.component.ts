@@ -10,6 +10,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { SelectionModel } from '@angular/cdk/collections';
 import { StatblockService } from '../../../services/statblock.service';
 import { StatBlock, StatBlockFilter } from '../../../models/statblock.model';
@@ -33,6 +35,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
     MatChipsModule,
   MatCheckboxModule,
   MatDialogModule,
+  MatMenuModule,
+  MatDividerModule,
   DiceLinkifyPipe,
   DiceClickDirective
   ],
@@ -50,6 +54,8 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   private imgDims: Record<string, { width: number; height: number }> = {};
   private imgLoadRequested = new Set<string>();
   private sliceOffsets: Record<string, number> = {};
+  // User-controlled image scale bias per statblock id (1 = default)
+  private userScale: Record<string, number> = {};
   // Keep rows compact; desired displayed slice height in CSS px
   readonly chunkHeight = 180;
   // Cap each tile's width to avoid horizontal overflow; tiles will wrap
@@ -72,9 +78,10 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   getSlicesContainerStyle(sb: StatBlock): { [k: string]: any } {
     const id = sb.id!;
     const h = this.getChunkHeightFor(id);
+    const s = this.userScale[id] ?? 1;
     // Cap the container to two rows worth of height, but allow it to shrink
     return {
-      'max-height.px': h * this.maxRows
+      'max-height.px': Math.round(h * this.maxRows * s)
     };
   }
 
@@ -129,6 +136,18 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
       this.statblockService.getStatblocks().subscribe({
         next: (statblocks) => {
           this.statblocks = statblocks;
+          // Load image settings (offset/scale) for statblocks with images
+          this.statblocks.filter(sb => sb.hasImage && sb.id).forEach(sb => {
+            const id = sb.id!;
+            this.statblockService.getImageSettings(id).subscribe({
+              next: (s) => {
+                if (typeof s.offset === 'number') this.sliceOffsets[id] = s.offset;
+                if (typeof s.scale === 'number') this.userScale[id] = s.scale;
+                this.scheduleMeasureCompute();
+              },
+              error: () => {/* ignore */}
+            });
+          });
           this.extractTags();
           this.applyFilters();
           resolve();
@@ -666,15 +685,18 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
     const layout = this.layoutById[id];
   if (!dims || !layout) return { 'display': 'none' };
     const { tileWidth, scale, chunkImgPx } = layout;
+    const s = this.userScale[id] ?? 1;
     const offset = this.sliceOffsets[id] ?? 0;
     const topImgPx = offset + index * chunkImgPx;
-    const heightCss = Math.max(0, Math.min(this.getChunkHeightFor(id), Math.floor(scale * ((dims?.height || 0) - topImgPx))));
+    const effectiveScale = scale * s;
+    const effectiveTileW = Math.round(tileWidth * s);
+    const heightCss = Math.max(0, Math.min(Math.round(this.getChunkHeightFor(id) * s), Math.floor(effectiveScale * ((dims?.height || 0) - topImgPx))));
     return {
       'background-image': `url(${url})`,
-      'background-size': `${tileWidth}px auto`,
-      'background-position': `0px -${Math.round(scale * topImgPx)}px`,
+      'background-size': `${effectiveTileW}px auto`,
+      'background-position': `0px -${Math.round(effectiveScale * topImgPx)}px`,
       'background-repeat': 'no-repeat',
-      'width.px': tileWidth,
+      'width.px': effectiveTileW,
       'height.px': heightCss,
       'border': '1px solid rgba(255,255,255,0.12)',
       'border-radius': '4px'
@@ -693,9 +715,43 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
     // Keep offset within a single chunk height in image pixels
     if (next < 0) next = chunkImgPx - (Math.abs(next) % chunkImgPx);
     next = next % chunkImgPx;
-    this.sliceOffsets[sb.id] = next;
+  this.sliceOffsets[sb.id] = next;
     // Recompute layout since offset affects slice count/columns
     this.computeLayoutForId(sb.id);
+  // Persist offset
+  this.statblockService.updateImageSettings(sb.id, { offset: next }).subscribe({ next: () => {}, error: () => {} });
+  }
+
+  // Increase or decrease the visual scale of the image slices for a given statblock.
+  // This biases the layout to use fewer or more columns to make tiles larger/smaller
+  // while still respecting container width and row constraints.
+  adjustImageScale(sb: StatBlock, dir: 'up' | 'down'): void {
+    if (!sb.id) return;
+    const id = sb.id;
+    const current = this.userScale[id] ?? 1;
+    const factor = dir === 'up' ? 1.1 : 1 / 1.1;
+    // Clamp between 0.6x and 2.0x to keep things reasonable
+    const next = Math.max(0.6, Math.min(2.0, current * factor));
+  this.userScale[id] = next;
+  this.computeLayoutForId(id);
+  // Persist scale
+  this.statblockService.updateImageSettings(id, { scale: next }).subscribe({ next: () => {}, error: () => {} });
+  }
+
+  // Reset image settings to defaults and persist
+  resetImageSettings(sb: StatBlock): void {
+    if (!sb.id) return;
+    const id = sb.id;
+    delete this.userScale[id];
+    this.sliceOffsets[id] = 0;
+    this.computeLayoutForId(id);
+    this.scheduleMeasureCompute();
+    this.statblockService.updateImageSettings(id, { offset: 0, scale: 1 }).subscribe({ next: (s) => {
+      // Ensure in-sync with backend response if any rounding occurred
+      this.sliceOffsets[id] = s.offset ?? 0;
+      this.userScale[id] = s.scale ?? 1;
+      this.scheduleMeasureCompute();
+    }, error: () => {} });
   }
 
   @HostListener('window:resize')
@@ -759,7 +815,7 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
   const maxColsAbsolute = 16;
     const maxColsByWidth = Math.max(1, Math.min(maxColsAbsolute, Math.floor((containerW + gap) / (minTileWidth + gap + borderX))));
 
-    const tryCols = (cols: number) => {
+  const tryCols = (cols: number) => {
       const availableW = Math.max(0, containerW - (cols - 1) * gap - cols * borderX);
       let tw = Math.floor(Math.min(dims.width, availableW / cols));
       if (this.maxTileWidth !== 99999) tw = Math.min(tw, this.maxTileWidth);
@@ -795,14 +851,32 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
       bestCols = best.effCols;
     }
 
-    // Recompute with the chosen effective columns to keep layout consistent
-    const final = tryCols(bestCols);
+    // Start with the chosen effective columns
+    let final = tryCols(bestCols);
+
+    // Apply user scale bias by estimating a column count that achieves the desired tile width
+    const scaleBias = this.userScale[id] ?? 1;
+    if (scaleBias !== 1) {
+      const desiredTw = Math.max(minTileWidth, Math.min(dims.width, Math.round(final.tw * scaleBias)));
+      const approxCols = Math.max(
+        1,
+        Math.min(
+          maxColsByWidth,
+          Math.floor((containerW + gap) / (desiredTw + gap + borderX))
+        )
+      );
+      const biased = tryCols(approxCols);
+      // Accept if it respects row constraint and doesn't shrink below min tile width
+      if (biased.rows <= this.maxRows && biased.tw >= minTileWidth) {
+        final = biased;
+      }
+    }
 
   this.layoutById[id] = {
       tileWidth: final.tw,
       scale: final.scale,
       chunkImgPx: final.chunkImgPx,
-      columns: bestCols
+      columns: final.effCols
     };
     
   }

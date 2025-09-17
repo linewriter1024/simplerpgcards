@@ -30,5 +30,8 @@ router.post('/statblocks/:id/image/url', (req, res) => statblockController.setIm
 router.post('/statblocks/:id/image/base64', (req, res) => statblockController.setImageFromBase64(req, res));
 router.get('/statblocks/:id/image', (req, res) => statblockController.getImage(req, res));
 router.delete('/statblocks/:id/image', (req, res) => statblockController.deleteImage(req, res));
+// Image settings routes
+router.get('/statblocks/:id/image/settings', (req, res) => statblockController.getImageSettings(req, res));
+router.put('/statblocks/:id/image/settings', (req, res) => statblockController.updateImageSettings(req, res));
 
 export default router;

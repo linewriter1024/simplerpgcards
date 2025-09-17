@@ -76,7 +76,7 @@ export class StatBlockService {
     if (!statblock) throw new Error('StatBlock not found');
     let image = await this.imageRepository.findOne({ where: { statblockId: id } });
     if (!image) {
-      image = this.imageRepository.create({ statblockId: id, data, mime, filename: filename || null });
+      image = this.imageRepository.create({ statblockId: id, data, mime, filename: filename || null, offset: 0, scale: 1.0 });
     } else {
       image.data = data;
       image.mime = mime;
@@ -91,6 +91,25 @@ export class StatBlockService {
     const image = await this.imageRepository.findOne({ where: { statblockId: id } });
     if (!image) return null;
     return { data: image.data, mime: image.mime, filename: image.filename };
+  }
+
+  async getImageSettings(id: string): Promise<{ offset: number; scale: number } | null> {
+    const image = await this.imageRepository.findOne({ where: { statblockId: id } });
+    if (!image) return null;
+    return { offset: image.offset ?? 0, scale: image.scale ?? 1.0 };
+  }
+
+  async updateImageSettings(id: string, settings: { offset?: number; scale?: number }): Promise<{ offset: number; scale: number } | null> {
+    const image = await this.imageRepository.findOne({ where: { statblockId: id } });
+    if (!image) return null;
+    if (typeof settings.offset === 'number' && Number.isFinite(settings.offset)) {
+      image.offset = Math.max(0, Math.floor(settings.offset));
+    }
+    if (typeof settings.scale === 'number' && Number.isFinite(settings.scale)) {
+      image.scale = Math.max(0.1, Math.min(4.0, settings.scale));
+    }
+    const saved = await this.imageRepository.save(image);
+    return { offset: saved.offset, scale: saved.scale };
   }
 
   async clearImage(id: string): Promise<void> {

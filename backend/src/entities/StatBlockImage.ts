@@ -22,6 +22,13 @@ export class StatBlockImage {
   @Column({ type: 'varchar', length: 255, nullable: true })
   filename?: string | null;
 
+  // User display preferences for image slicing
+  @Column({ type: 'integer', default: 0 })
+  offset!: number;
+
+  @Column({ type: 'real', default: 1.0 })
+  scale!: number;
+
   @CreateDateColumn()
   createdAt!: Date;
 

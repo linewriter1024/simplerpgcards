@@ -49,6 +49,14 @@ export class StatblockService {
     return `${this.apiUrl}/${id}/image`;
   }
 
+  getImageSettings(id: string): Observable<{ offset: number; scale: number }> {
+    return this.http.get<{ offset: number; scale: number }>(`${this.apiUrl}/${id}/image/settings`);
+  }
+
+  updateImageSettings(id: string, settings: { offset?: number; scale?: number }): Observable<{ offset: number; scale: number }> {
+    return this.http.put<{ offset: number; scale: number }>(`${this.apiUrl}/${id}/image/settings`, settings);
+  }
+
   uploadImage(id: string, file: File): Observable<void> {
     const form = new FormData();
     form.append('file', file);
