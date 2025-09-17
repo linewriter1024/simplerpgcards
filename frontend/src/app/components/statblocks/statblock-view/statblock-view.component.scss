@@ -304,6 +304,7 @@
 /* Inline label-value layout for high density in basic info and abilities */
 .basic-info-section .field,
 .abilities-group .field {
+  flex: auto;
   flex-direction: row;
   align-items: baseline;
   gap: 6px;
