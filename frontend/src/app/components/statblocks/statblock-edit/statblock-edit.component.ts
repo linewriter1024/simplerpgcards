@@ -18,7 +18,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { StatblockService } from '../../../services/statblock.service';
 import { StatBlock, CreateStatBlockDto } from '../../../models/statblock.model';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -234,6 +234,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
   scrollToStatblock(statblockId: string): void {
     // Find the statblock row with the matching ID
     const targetRowIndex = this.editableRows.findIndex(row => row.id === statblockId);
+    
     if (targetRowIndex !== -1) {
       // Use setTimeout to ensure DOM is ready
       setTimeout(() => {
@@ -246,6 +247,50 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
 
           // Add highlight effect
           targetElement.classList.add('highlight-jump');
+          
+          // Remove jumpTo parameter from URL immediately after scroll
+          
+          // Use requestAnimationFrame to ensure scroll has started
+          requestAnimationFrame(() => {
+            // Get current query parameters and remove jumpTo
+            const currentParams = { ...this.route.snapshot.queryParams };
+            
+            if (currentParams['jumpTo']) {
+              const params = { ...currentParams };
+              params['jumpTo'] = null; // Explicitly set to null to remove
+              
+              this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: params,
+                replaceUrl: true
+              }).then(() => {
+                // URL updated successfully
+              }).catch((error) => {
+                console.error('Failed to update URL:', error);
+              });
+            }
+          });
+          
+          // Fallback: also try after a short delay in case requestAnimationFrame doesn't work
+          setTimeout(() => {
+            const currentParams = { ...this.route.snapshot.queryParams };
+            if (currentParams['jumpTo']) {
+              const params = { ...currentParams };
+              params['jumpTo'] = null;
+              
+              this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: params,
+                replaceUrl: true
+              }).then(() => {
+                // Fallback: URL updated successfully
+              }).catch((error) => {
+                console.error('Fallback: Failed to update URL:', error);
+              });
+            }
+          }, 200);
+          
+          // Remove highlight effect after delay
           setTimeout(() => {
             targetElement.classList.remove('highlight-jump');
           }, 2000);
