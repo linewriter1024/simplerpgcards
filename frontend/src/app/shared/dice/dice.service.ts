@@ -3,7 +3,9 @@ import { Injectable } from '@angular/core';
 export interface DiceTermResult {
   term: string; // e.g., "2d6"
   rolls: number[]; // e.g., [3,5]
+  critrolls: number[];
   sum: number; // 8
+  critsum: number;
 }
 
 export interface DiceRollResult {
@@ -11,6 +13,7 @@ export interface DiceRollResult {
   terms: DiceTermResult[];
   modifiers: number[]; // individual +N / -N modifiers preserved by sign
   total: number;
+  crittotal: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -66,17 +69,25 @@ export class DiceService {
         const r = 1 + Math.floor(rng() * t.m);
         rolls.push(r);
       }
+      const critrolls = [...rolls];
+      for (let i = 0; i < t.n; i++) {
+        const r = 1 + Math.floor(rng() * t.m);
+        critrolls.push(r);
+      }
       const sum = rolls.reduce((a, b) => a + b, 0);
-      return { term: t.raw, rolls, sum };
+      const critsum = critrolls.reduce((a, b) => a + b, 0);
+      return { term: t.raw, rolls, critrolls, sum, critsum };
     });
 
     const total = terms.reduce((acc, t) => acc + t.sum, 0) + modifiers.reduce((a, b) => a + b, 0);
+    const crittotal = terms.reduce((acc, t) => acc + t.critsum, 0) + modifiers.reduce((a, b) => a + b, 0);
 
     return {
       expression: normalized,
       terms,
       modifiers,
-      total
+      total,
+      crittotal
     };
   }
 }

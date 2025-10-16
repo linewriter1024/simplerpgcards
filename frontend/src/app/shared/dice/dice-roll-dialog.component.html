@@ -25,6 +25,19 @@
       </div>
     </div>
 
+      <div class="terms" *ngIf="data.result.terms.length > 0">
+      <div class="term" *ngFor="let t of data.result.terms">
+        <div class="term-head">
+          <mat-icon class="die-icon">flare</mat-icon>
+          {{ t.term }} (CRIT)
+        </div>
+        <div class="term-body">
+          <span class="roll" *ngFor="let r of t.critrolls">{{ r }}</span>
+          <span class="sum">= {{ t.critsum }}</span>
+        </div>
+      </div>
+    </div>
+
     <div class="mods" *ngIf="data.result.modifiers.length > 0">
       <mat-icon class="mod-icon">add</mat-icon>
       <span class="mods-label">Modifiers</span>
@@ -35,7 +48,7 @@
 
     <div class="total" aria-live="polite">
       <span class="total-label">Total</span>
-      <span class="total-value">{{ data.result.total }}</span>
+      <span class="total-value">{{ data.result.total }} (CRIT {{data.result.crittotal}})</span>
     </div>
   </div>
 

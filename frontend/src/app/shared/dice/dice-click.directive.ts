@@ -1,4 +1,11 @@
-import { Directive, HostListener, Input } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  Renderer2,
+  Input,
+  OnDestroy,
+  AfterViewInit
+} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DiceService } from './dice.service';
 
@@ -6,33 +13,60 @@ import { DiceService } from './dice.service';
   selector: '[appDiceClick]',
   standalone: true
 })
-export class DiceClickDirective {
-  // Optional context text for dialog title
+export class DiceClickDirective implements AfterViewInit, OnDestroy {
   @Input('appDiceClick') context?: string;
 
-  constructor(private dialog: MatDialog, private dice: DiceService) {}
+  private observer?: MutationObserver;
 
-  @HostListener('click', ['$event'])
-  async onClick(ev: MouseEvent) {
-    const target = ev.target as HTMLElement;
-    // If clicking a linkified dice element or inside it
-    const linkEl = target.closest('.dice-link') as HTMLElement | null;
-    if (!linkEl) return;
-    ev.preventDefault();
-    ev.stopPropagation();
+  constructor(
+    private el: ElementRef<HTMLElement>,
+    private renderer: Renderer2,
+    private dialog: MatDialog,
+    private dice: DiceService
+  ) {}
 
-    const expr = linkEl.getAttribute('data-dice');
-    if (!expr) return;
+  ngAfterViewInit() {
+    // Attach to any dice links that already exist
+    this.attachToLinks();
 
-  const result = this.dice.roll(expr);
-  // @ts-ignore - dynamic import path resolved at build time by Angular
-  const { DiceRollDialogComponent } = await import('./dice-roll-dialog.component');
-  this.dialog.open(DiceRollDialogComponent, {
-      width: '380px',
-      data: {
-        context: this.context,
-        result
-      }
+    // Observe for dynamically added content (e.g. when [innerHTML] updates)
+    this.observer = new MutationObserver(() => this.attachToLinks());
+    this.observer.observe(this.el.nativeElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  ngOnDestroy() {
+    this.observer?.disconnect();
+  }
+
+  private attachToLinks() {
+    const links = this.el.nativeElement.querySelectorAll<HTMLAnchorElement>('.dice-link');
+
+    links.forEach(link => {
+      if ((link as any)._diceListenerAttached) return;
+      (link as any)._diceListenerAttached = true;
+
+      this.renderer.listen(link, 'click', (ev: MouseEvent) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        (async () => {
+          const expr = link.getAttribute('data-dice');
+          if (!expr) return;
+
+          const result = this.dice.roll(expr);
+          const { DiceRollDialogComponent } = await import('./dice-roll-dialog.component');
+          this.dialog.open(DiceRollDialogComponent, {
+            width: '380px',
+            data: {
+              context: this.context,
+              result
+            }
+          });
+        })();
+      });
     });
   }
 }
