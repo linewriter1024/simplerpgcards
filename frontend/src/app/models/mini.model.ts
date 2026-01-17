@@ -52,6 +52,7 @@ export interface SheetSettings {
 export interface MiniSheet {
   id?: string;
   name: string;
+  code?: string; // Short code for labels like "TF"
   placements: MiniPlacement[];
   settings: SheetSettings;
   createdAt?: Date;
@@ -60,12 +61,14 @@ export interface MiniSheet {
 
 export interface CreateMiniSheetDto {
   name: string;
+  code?: string;
   placements?: MiniPlacement[];
   settings?: Partial<SheetSettings>;
 }
 
 export interface UpdateMiniSheetDto {
   name?: string;
+  code?: string;
   placements?: MiniPlacement[];
   settings?: Partial<SheetSettings>;
 }

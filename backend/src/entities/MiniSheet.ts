@@ -39,6 +39,9 @@ export class MiniSheet {
   @Column({ type: "varchar", length: 255 })
   name!: string;
 
+  @Column({ type: "varchar", length: 10, default: "" })
+  code!: string;
+
   @Column({ type: "simple-json" })
   placements!: MiniPlacement[];
 

@@ -3,10 +3,28 @@
     <h2>Print Preview</h2>
     <div class="header-actions">
       <button
+        mat-stroked-button
+        (click)="toggleSelectionPanel()"
+        [class.active]="showSelectionPanel"
+      >
+        <mat-icon>checklist</mat-icon>
+        {{ selectedCount }}/{{ totalCount }}
+      </button>
+      <mat-form-field appearance="outline" class="code-field">
+        <mat-label>Code</mat-label>
+        <input
+          matInput
+          [(ngModel)]="tempCode"
+          (ngModelChange)="onCodeChange()"
+          maxlength="5"
+          placeholder="TF"
+        />
+      </mat-form-field>
+      <button
         mat-raised-button
         color="primary"
         (click)="downloadPdf()"
-        [disabled]="isLoading"
+        [disabled]="isLoading || selectedCount === 0"
       >
         <mat-icon>download</mat-icon>
         Download PDF
@@ -15,7 +33,7 @@
         mat-raised-button
         color="accent"
         (click)="printPdf()"
-        [disabled]="isLoading"
+        [disabled]="isLoading || selectedCount === 0"
       >
         <mat-icon>print</mat-icon>
         Print
@@ -26,22 +44,61 @@
     </div>
   </div>
 
-  <div class="preview-content">
-    @if (isLoading) {
-      <div class="loading-container">
-        <mat-spinner diameter="48"></mat-spinner>
-        <p>Generating PDF...</p>
-      </div>
-    } @else if (pdfUrl) {
-      <iframe [src]="pdfUrl" class="pdf-viewer" frameborder="0"> </iframe>
-    } @else if (errorMessage) {
-      <div class="error-container">
-        <mat-icon>error_outline</mat-icon>
-        <p>{{ errorMessage }}</p>
-        <button mat-raised-button color="primary" (click)="loadPdf()">
-          Retry
-        </button>
+  <div class="preview-body">
+    @if (showSelectionPanel) {
+      <div class="selection-panel">
+        <div class="selection-header">
+          <span>Select Minis</span>
+          <div class="selection-actions">
+            <button mat-button (click)="selectAll()">All</button>
+            <button mat-button (click)="selectNone()">None</button>
+          </div>
+        </div>
+        <div class="selection-hint">Shift+click for range selection</div>
+        <div class="selection-list">
+          @for (
+            sp of selectablePlacements;
+            track sp.placement.id;
+            let i = $index
+          ) {
+            <div
+              class="selection-item"
+              [class.selected]="sp.selected"
+              (click)="toggleSelection(i, $event)"
+            >
+              <img
+                [src]="getImageUrl(sp.placement.miniId)"
+                [alt]="sp.displayLabel"
+              />
+              <span class="item-label">{{ sp.displayLabel }}</span>
+            </div>
+          }
+        </div>
       </div>
     }
+
+    <div class="preview-content">
+      @if (isLoading) {
+        <div class="loading-container">
+          <mat-spinner diameter="48"></mat-spinner>
+          <p>Generating PDF...</p>
+        </div>
+      } @else if (selectedCount === 0) {
+        <div class="empty-container">
+          <mat-icon>deselect</mat-icon>
+          <p>No minis selected</p>
+        </div>
+      } @else if (pdfUrl) {
+        <iframe [src]="pdfUrl" class="pdf-viewer" frameborder="0"> </iframe>
+      } @else if (errorMessage) {
+        <div class="error-container">
+          <mat-icon>error_outline</mat-icon>
+          <p>{{ errorMessage }}</p>
+          <button mat-raised-button color="primary" (click)="loadPdf()">
+            Retry
+          </button>
+        </div>
+      }
+    </div>
   </div>
 </div>

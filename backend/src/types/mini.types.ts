@@ -12,12 +12,14 @@ export interface UpdateMiniDto {
 
 export interface CreateMiniSheetDto {
   name: string;
+  code?: string;
   placements?: MiniPlacement[];
   settings?: Partial<SheetSettings>;
 }
 
 export interface UpdateMiniSheetDto {
   name?: string;
+  code?: string;
   placements?: MiniPlacement[];
   settings?: Partial<SheetSettings>;
 }

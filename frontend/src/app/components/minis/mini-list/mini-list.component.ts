@@ -50,6 +50,7 @@ export class MiniListComponent implements OnInit {
   selectedMinis = new Set<string>();
   isLoading = false;
   isDragging = false;
+  imageCacheBuster = Date.now();
 
   // For front+back upload flow
   private pendingFrontImage: string | null = null;
@@ -67,6 +68,7 @@ export class MiniListComponent implements OnInit {
 
   loadMinis(): void {
     this.isLoading = true;
+    this.imageCacheBuster = Date.now();
     this.miniService.getMinis().subscribe({
       next: (minis) => {
         this.minis = minis;
@@ -97,11 +99,15 @@ export class MiniListComponent implements OnInit {
   }
 
   getImageUrl(mini: Mini): string {
-    return this.miniService.getFrontImageUrl(mini.id);
+    return (
+      this.miniService.getFrontImageUrl(mini.id) + "?t=" + this.imageCacheBuster
+    );
   }
 
   getBackImageUrl(mini: Mini): string {
-    return this.miniService.getBackImageUrl(mini.id);
+    return (
+      this.miniService.getBackImageUrl(mini.id) + "?t=" + this.imageCacheBuster
+    );
   }
 
   toggleSelection(mini: Mini): void {

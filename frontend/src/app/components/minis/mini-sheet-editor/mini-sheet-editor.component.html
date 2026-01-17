@@ -15,7 +15,12 @@
           (click)="selectSheet(sheet)"
         >
           <mat-icon>description</mat-icon>
-          <span class="sheet-name">{{ sheet.name }}</span>
+          <span class="sheet-name"
+            >{{ sheet.name }}
+            @if (sheet.code) {
+              <span class="sheet-code">[{{ sheet.code }}]</span>
+            }
+          </span>
           <button
             mat-icon-button
             class="delete-btn"
@@ -47,6 +52,17 @@
           />
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="sheet-code-field">
+          <mat-label>Code</mat-label>
+          <input
+            matInput
+            [(ngModel)]="currentSheet.code"
+            (ngModelChange)="scheduleAutoSave()"
+            maxlength="5"
+            placeholder="TF"
+          />
+        </mat-form-field>
+
         <div class="toolbar-group">
           <mat-form-field appearance="outline" class="size-select">
             <mat-label>Mini Size</mat-label>
@@ -65,13 +81,6 @@
             (click)="autoArrange()"
           >
             <mat-icon>auto_fix_high</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            matTooltip="Clear all"
-            (click)="clearPlacements()"
-          >
-            <mat-icon>clear_all</mat-icon>
           </button>
           <button mat-raised-button color="accent" (click)="openPrintPreview()">
             <mat-icon>print</mat-icon>
@@ -178,7 +187,7 @@
                         ((placement.textSize || 8) * displayScale) / 72
                       "
                     >
-                      {{ placement.text }}
+                      {{ getDisplayLabel(placement.text) }}
                     </div>
                   }
                 </div>
@@ -205,7 +214,7 @@
                           ((placement.textSize || 8) * displayScale) / 72
                         "
                       >
-                        {{ placement.text }}
+                        {{ getDisplayLabel(placement.text) }}
                       </div>
                     }
                   </div>

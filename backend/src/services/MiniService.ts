@@ -171,6 +171,9 @@ export class MiniService {
     if (updates.name !== undefined) {
       sheet.name = updates.name;
     }
+    if (updates.code !== undefined) {
+      sheet.code = updates.code;
+    }
     if (updates.placements !== undefined) {
       sheet.placements = updates.placements;
     }

@@ -151,6 +151,7 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     this.miniService
       .updateSheet(this.currentSheet.id, {
         name: this.currentSheet.name,
+        code: this.currentSheet.code,
         placements: this.placements,
         settings: this.settings,
       })
@@ -235,6 +236,10 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
   }
 
   selectSheet(sheet: MiniSheet): void {
+    // Ensure code is initialized
+    if (sheet.code === undefined) {
+      sheet.code = "";
+    }
     this.currentSheet = sheet;
     this.settings = { ...sheet.settings };
     this.placements = [...sheet.placements];
@@ -243,6 +248,11 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
 
   deleteSheet(sheet: MiniSheet, event: Event): void {
     event.stopPropagation();
+
+    if (!confirm(`Delete sheet "${sheet.name}"? This cannot be undone.`)) {
+      return;
+    }
+
     this.miniService.deleteSheet(sheet.id!).subscribe({
       next: () => {
         this.sheets = this.sheets.filter((s) => s.id !== sheet.id);
@@ -333,6 +343,9 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     x = Math.max(minX, Math.min(maxX, x));
     y = Math.max(minY, Math.min(maxY, y));
 
+    // Generate default label - letter based on mini type, number increments
+    const defaultLabel = this.getNextLabel(miniId);
+
     const placement: MiniPlacement = {
       id: this.generateId(),
       miniId,
@@ -340,7 +353,7 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
       y,
       width,
       height,
-      text: "",
+      text: defaultLabel,
       textPosition: "bottom",
       backMode: "none",
     };
@@ -348,6 +361,68 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     this.placements.push(placement);
     this.selectedPlacementId = placement.id;
     this.scheduleAutoSave();
+  }
+
+  private getNextLabel(miniId: string): string {
+    // Use *** as placeholder for sheet code - replaced dynamically at display/print time
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    // Build a map of miniId -> letter assignment
+    const miniIdToLetter = new Map<string, string>();
+    let nextLetterIdx = 0;
+
+    // Collect used labels per mini type
+    const usedNumbersByMini = new Map<string, Set<number>>();
+
+    for (const p of this.placements) {
+      if (!miniIdToLetter.has(p.miniId) && nextLetterIdx < letters.length) {
+        miniIdToLetter.set(p.miniId, letters[nextLetterIdx++]);
+      }
+
+      // Track which numbers are used for this mini's letter
+      if (p.text) {
+        const match = p.text.match(/\*\*\* ([A-Z]+)(\d+)/);
+        if (match) {
+          const letter = match[1];
+          const num = parseInt(match[2], 10);
+          if (!usedNumbersByMini.has(letter)) {
+            usedNumbersByMini.set(letter, new Set());
+          }
+          usedNumbersByMini.get(letter)!.add(num);
+        }
+      }
+    }
+
+    // Get or assign letter for this mini type
+    let letter = miniIdToLetter.get(miniId);
+    if (!letter) {
+      letter = nextLetterIdx < letters.length ? letters[nextLetterIdx] : "Z";
+    }
+
+    // Find next available number for this letter
+    const usedNumbers = usedNumbersByMini.get(letter) || new Set();
+    let num = 1;
+    while (usedNumbers.has(num) && num <= 99) {
+      num++;
+    }
+
+    return `*** ${letter}${num}`;
+  }
+
+  private countLabels(label: string): number {
+    return this.placements.filter((p) => p.text === label).length;
+  }
+
+  // Replace *** placeholder with actual sheet code for display
+  getDisplayLabel(text: string | undefined): string {
+    if (!text) return "";
+    const code = this.currentSheet?.code || "";
+    if (code) {
+      return text.replace(/\*\*\*/, code);
+    } else {
+      // Remove "*** " prefix if no code
+      return text.replace(/\*\*\* /, "");
+    }
   }
 
   // Placement interaction
@@ -432,12 +507,22 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
   }
 
   duplicatePlacement(placement: MiniPlacement): void {
-    const offset = this.settings.gridSnap || 0.25;
+    const minX = this.settings.marginLeft;
+
+    // Try to place to the left of the original
+    let newX = placement.x - placement.width;
+
+    // If it would go off the page or into the margin, place to the right instead
+    if (newX < minX) {
+      newX = placement.x + placement.width;
+    }
+
     const newPlacement: MiniPlacement = {
       ...placement,
       id: this.generateId(),
-      x: placement.x + offset,
-      y: placement.y + offset,
+      x: newX,
+      y: placement.y,
+      text: this.getNextLabel(placement.miniId),
     };
     this.placements.push(newPlacement);
     this.selectedPlacementId = newPlacement.id;
@@ -496,7 +581,7 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     return placement.backMode !== "none";
   }
 
-  // Auto-arrange all placements in a grid
+  // Auto-arrange all placements in a grid, sorted by label
   autoArrange(): void {
     if (this.placements.length === 0) return;
 
@@ -504,24 +589,43 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
       this.settings.pageWidth -
       this.settings.marginLeft -
       this.settings.marginRight;
-    const printableHeight =
-      this.settings.pageHeight -
-      this.settings.marginTop -
-      this.settings.marginBottom;
 
-    // Use max width/height for spacing
+    // Use max width/height for layout, add margin for labels below
     const maxWidth = Math.max(...this.placements.map((p) => p.width));
     const maxHeight = Math.max(...this.placements.map((p) => p.height));
-    const spacing = 0.1; // 0.1 inch between minis
+    const labelMargin = 0.2; // Extra space below each mini for labels (in inches)
+    const rowHeight = maxHeight + labelMargin;
 
-    const cols = Math.floor(printableWidth / (maxWidth + spacing));
+    const cols = Math.floor(printableWidth / maxWidth);
 
-    this.placements.forEach((placement, index) => {
+    // Sort placements by label (A1, A2, B1, B2, etc.)
+    const sorted = [...this.placements].sort((a, b) => {
+      const labelA = a.text || "ZZZ999";
+      const labelB = b.text || "ZZZ999";
+
+      // Extract letter and number parts
+      const matchA = labelA.match(/([A-Z]+)(\d+)/);
+      const matchB = labelB.match(/([A-Z]+)(\d+)/);
+
+      if (matchA && matchB) {
+        // Compare letters first
+        if (matchA[1] !== matchB[1]) {
+          return matchA[1].localeCompare(matchB[1]);
+        }
+        // Then compare numbers
+        return parseInt(matchA[2], 10) - parseInt(matchB[2], 10);
+      }
+
+      return labelA.localeCompare(labelB);
+    });
+
+    // Apply positions based on sorted order
+    sorted.forEach((placement, index) => {
       const col = index % cols;
       const row = Math.floor(index / cols);
 
-      placement.x = this.settings.marginLeft + col * (maxWidth + spacing);
-      placement.y = this.settings.marginTop + row * (maxHeight + spacing);
+      placement.x = this.settings.marginLeft + col * maxWidth;
+      placement.y = this.settings.marginTop + row * rowHeight;
     });
 
     this.scheduleAutoSave();
@@ -733,6 +837,7 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
         placements: this.placements,
         settings: this.settings,
         miniService: this.miniService,
+        sheetCode: this.currentSheet?.code || "",
       },
     });
   }
