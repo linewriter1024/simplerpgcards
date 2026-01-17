@@ -73,12 +73,8 @@
   } @else {
     <div class="mini-grid">
       @for (mini of filteredMinis; track mini.id) {
-        <mat-card
-          class="mini-card"
-          [class.selected]="isSelected(mini)"
-          [class.expanded]="expandedMiniId === mini.id"
-        >
-          <div class="card-header" (click)="toggleExpand(mini)">
+        <mat-card class="mini-card" [class.selected]="isSelected(mini)">
+          <div class="card-header">
             <div class="card-image-container">
               <img
                 [src]="getImageUrl(mini)"
@@ -107,22 +103,6 @@
               </div>
             }
           </mat-card-content>
-
-          <!-- Expanded content -->
-          @if (expandedMiniId === mini.id) {
-            <div class="expanded-content">
-              @if (mini.hasBackImage) {
-                <button
-                  mat-stroked-button
-                  class="flip-btn"
-                  (click)="swapImages(mini, $event)"
-                >
-                  <mat-icon>swap_horiz</mat-icon>
-                  Swap Front &amp; Back
-                </button>
-              }
-            </div>
-          }
 
           <mat-card-actions>
             <button

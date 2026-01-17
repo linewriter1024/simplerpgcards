@@ -83,6 +83,17 @@ export interface MiniEditDialogData {
               />
             </div>
 
+            @if (hasBackImage) {
+              <button
+                mat-stroked-button
+                class="swap-btn"
+                (click)="swapImages()"
+              >
+                <mat-icon>swap_horiz</mat-icon>
+                Swap Front &amp; Back
+              </button>
+            }
+
             <div class="image-section">
               <h4>Back Image (Optional)</h4>
               <div class="image-preview">
@@ -201,6 +212,11 @@ export interface MiniEditDialogData {
         display: flex;
         gap: 8px;
       }
+
+      .swap-btn {
+        width: 100%;
+        margin-bottom: 16px;
+      }
     `,
   ],
 })
@@ -313,6 +329,30 @@ export class MiniEditDialogComponent implements OnInit {
       },
       error: () => {
         this.snackBar.open("Failed to remove back image", "Dismiss", {
+          duration: 3000,
+        });
+      },
+    });
+  }
+
+  swapImages(): void {
+    if (!this.data.mini) return;
+    this.miniService.swapImages(this.data.mini.id).subscribe({
+      next: () => {
+        // Swap the displayed URLs by adding cache-busting param
+        const timestamp = Date.now();
+        this.frontImageUrl =
+          this.miniService.getFrontImageUrl(this.data.mini!.id) +
+          "?t=" +
+          timestamp;
+        this.backImageUrl =
+          this.miniService.getBackImageUrl(this.data.mini!.id) +
+          "?t=" +
+          timestamp;
+        this.snackBar.open("Images swapped", "Dismiss", { duration: 2000 });
+      },
+      error: () => {
+        this.snackBar.open("Failed to swap images", "Dismiss", {
           duration: 3000,
         });
       },

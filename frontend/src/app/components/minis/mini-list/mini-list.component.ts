@@ -50,7 +50,6 @@ export class MiniListComponent implements OnInit {
   selectedMinis = new Set<string>();
   isLoading = false;
   isDragging = false;
-  expandedMiniId: string | null = null;
 
   // For front+back upload flow
   private pendingFrontImage: string | null = null;
@@ -115,30 +114,6 @@ export class MiniListComponent implements OnInit {
 
   isSelected(mini: Mini): boolean {
     return this.selectedMinis.has(mini.id);
-  }
-
-  toggleExpand(mini: Mini): void {
-    if (this.expandedMiniId === mini.id) {
-      this.expandedMiniId = null;
-    } else {
-      this.expandedMiniId = mini.id;
-    }
-  }
-
-  swapImages(mini: Mini, event: Event): void {
-    event.stopPropagation();
-    this.miniService.swapImages(mini.id).subscribe({
-      next: () => {
-        this.snackBar.open("Images swapped", "Dismiss", { duration: 2000 });
-        // Force reload to get updated images
-        this.loadMinis();
-      },
-      error: () => {
-        this.snackBar.open("Failed to swap images", "Dismiss", {
-          duration: 3000,
-        });
-      },
-    });
   }
 
   selectAll(): void {
