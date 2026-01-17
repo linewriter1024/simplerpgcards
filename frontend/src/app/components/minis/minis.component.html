@@ -1,0 +1,26 @@
+<div class="minis-container">
+  <mat-toolbar class="mode-toolbar">
+    <button
+      mat-raised-button
+      [color]="currentMode === 'library' ? 'accent' : 'primary'"
+      (click)="switchMode('library')"
+    >
+      <mat-icon>collections</mat-icon>
+      Mini Library
+    </button>
+    <button
+      mat-raised-button
+      [color]="currentMode === 'sheets' ? 'accent' : 'primary'"
+      (click)="switchMode('sheets')"
+    >
+      <mat-icon>print</mat-icon>
+      Print Sheets
+    </button>
+  </mat-toolbar>
+
+  @if (currentMode === "library") {
+    <app-mini-list></app-mini-list>
+  } @else {
+    <app-mini-sheet-editor></app-mini-sheet-editor>
+  }
+</div>

@@ -1,0 +1,47 @@
+<div class="print-preview-dialog">
+  <div class="dialog-header">
+    <h2>Print Preview</h2>
+    <div class="header-actions">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="downloadPdf()"
+        [disabled]="isLoading"
+      >
+        <mat-icon>download</mat-icon>
+        Download PDF
+      </button>
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="printPdf()"
+        [disabled]="isLoading"
+      >
+        <mat-icon>print</mat-icon>
+        Print
+      </button>
+      <button mat-icon-button mat-dialog-close>
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="preview-content">
+    @if (isLoading) {
+      <div class="loading-container">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Generating PDF...</p>
+      </div>
+    } @else if (pdfUrl) {
+      <iframe [src]="pdfUrl" class="pdf-viewer" frameborder="0"> </iframe>
+    } @else if (errorMessage) {
+      <div class="error-container">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ errorMessage }}</p>
+        <button mat-raised-button color="primary" (click)="loadPdf()">
+          Retry
+        </button>
+      </div>
+    }
+  </div>
+</div>

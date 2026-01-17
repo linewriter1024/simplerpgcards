@@ -1,0 +1,155 @@
+<div
+  class="mini-list-container"
+  (dragover)="onDragOver($event)"
+  (drop)="onDrop($event)"
+  (paste)="onPaste($event)"
+  tabindex="0"
+>
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search minis</mat-label>
+      <input
+        matInput
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="applyFilter()"
+        placeholder="Search by name or tag..."
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-stroked-button (click)="fileInput.click()">
+        <mat-icon>add_photo_alternate</mat-icon>
+        Add Front
+      </button>
+      <button mat-stroked-button (click)="startFrontBackUpload()">
+        <mat-icon>flip</mat-icon>
+        Front + Back
+      </button>
+      <input
+        #fileInput
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        (change)="onFileSelect($event)"
+      />
+      <input
+        #backFileInput
+        type="file"
+        accept="image/*"
+        hidden
+        (change)="onBackFileSelect($event)"
+      />
+
+      @if (selectedMinis.size > 0) {
+        <button mat-raised-button color="warn" (click)="deleteSelected()">
+          <mat-icon>delete</mat-icon>
+          Delete Selected ({{ selectedMinis.size }})
+        </button>
+        <button mat-button (click)="clearSelection()">Clear Selection</button>
+      }
+    </div>
+  </div>
+
+  <div
+    class="drop-zone"
+    [class.drag-over]="isDragging"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+  >
+    <mat-icon>cloud_upload</mat-icon>
+    <span>Drop or paste images here to add minis (Ctrl+V)</span>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading">Loading...</div>
+  } @else if (filteredMinis.length === 0) {
+    <div class="empty-state">
+      <mat-icon>collections</mat-icon>
+      <p>No minis found. Add images to build your mini library!</p>
+    </div>
+  } @else {
+    <div class="mini-grid">
+      @for (mini of filteredMinis; track mini.id) {
+        <mat-card
+          class="mini-card"
+          [class.selected]="isSelected(mini)"
+          [class.expanded]="expandedMiniId === mini.id"
+        >
+          <div class="card-header" (click)="toggleExpand(mini)">
+            <div class="card-image-container">
+              <img
+                [src]="getImageUrl(mini)"
+                [alt]="mini.name"
+                class="mini-image"
+              />
+            </div>
+            @if (mini.hasBackImage) {
+              <div class="card-back-image-container">
+                <img
+                  [src]="getBackImageUrl(mini)"
+                  [alt]="mini.name + ' back'"
+                  class="mini-image"
+                />
+                <div class="back-label">Back</div>
+              </div>
+            }
+          </div>
+          <mat-card-content>
+            <h3 class="mini-name">{{ mini.name }}</h3>
+            @if (mini.tags && mini.tags.length > 0) {
+              <div class="tags">
+                @for (tag of mini.tags; track tag) {
+                  <span class="tag-chip">{{ tag }}</span>
+                }
+              </div>
+            }
+          </mat-card-content>
+
+          <!-- Expanded content -->
+          @if (expandedMiniId === mini.id) {
+            <div class="expanded-content">
+              @if (mini.hasBackImage) {
+                <button
+                  mat-stroked-button
+                  class="flip-btn"
+                  (click)="swapImages(mini, $event)"
+                >
+                  <mat-icon>swap_horiz</mat-icon>
+                  Swap Front &amp; Back
+                </button>
+              }
+            </div>
+          }
+
+          <mat-card-actions>
+            <button
+              mat-icon-button
+              matTooltip="Edit"
+              (click)="openEditDialog(mini); $event.stopPropagation()"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              matTooltip="Delete"
+              color="warn"
+              (click)="deleteMini(mini, $event)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-actions>
+          <mat-checkbox
+            class="selection-checkbox"
+            [checked]="isSelected(mini)"
+            (click)="$event.stopPropagation()"
+            (change)="toggleSelection(mini)"
+          >
+          </mat-checkbox>
+        </mat-card>
+      }
+    </div>
+  }
+</div>
