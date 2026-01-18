@@ -617,7 +617,7 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     // Use skyline bin packing algorithm for optimal placement
     // Skyline tracks the "top edge" of placed items at each x position
     const skyline: { x: number; y: number; width: number }[] = [
-      { x: 0, y: 0, width: printableWidth }
+      { x: 0, y: 0, width: printableWidth },
     ];
 
     for (const placement of sorted) {
@@ -631,13 +631,13 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
 
       for (let i = 0; i < skyline.length; i++) {
         const seg = skyline[i];
-        
+
         // Check if item fits starting at this segment
         if (seg.width >= itemWidth) {
           // Find the max height across segments this item would span
           let maxY = seg.y;
           let spanWidth = 0;
-          
+
           for (let j = i; j < skyline.length && spanWidth < itemWidth; j++) {
             maxY = Math.max(maxY, skyline[j].y);
             spanWidth += skyline[j].width;
@@ -664,7 +664,13 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
       placement.y = this.settings.marginTop + bestY;
 
       // Update skyline
-      this.updateSkyline(skyline, bestX, bestY + itemHeight, itemWidth, printableWidth);
+      this.updateSkyline(
+        skyline,
+        bestX,
+        bestY + itemHeight,
+        itemWidth,
+        printableWidth,
+      );
     }
 
     this.scheduleAutoSave();
@@ -675,13 +681,13 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     newX: number,
     newY: number,
     newWidth: number,
-    maxWidth: number
+    maxWidth: number,
   ): void {
     const newRight = newX + newWidth;
 
     // Find segments that overlap with the new rectangle
     const newSegments: { x: number; y: number; width: number }[] = [];
-    
+
     for (const seg of skyline) {
       const segRight = seg.x + seg.width;
 
@@ -696,7 +702,11 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
       } else if (seg.x < newX) {
         // Overlaps on the left
         newSegments.push({ x: seg.x, y: seg.y, width: newX - seg.x });
-        newSegments.push({ x: newX, y: newY, width: Math.min(segRight, newRight) - newX });
+        newSegments.push({
+          x: newX,
+          y: newY,
+          width: Math.min(segRight, newRight) - newX,
+        });
       } else if (segRight > newRight) {
         // Overlaps on the right
         newSegments.push({ x: seg.x, y: newY, width: newRight - seg.x });
@@ -712,7 +722,10 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     for (const seg of newSegments) {
       if (skyline.length > 0) {
         const last = skyline[skyline.length - 1];
-        if (Math.abs(last.y - seg.y) < 0.001 && Math.abs(last.x + last.width - seg.x) < 0.001) {
+        if (
+          Math.abs(last.y - seg.y) < 0.001 &&
+          Math.abs(last.x + last.width - seg.x) < 0.001
+        ) {
           last.width += seg.width;
           continue;
         }
