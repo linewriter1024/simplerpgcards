@@ -589,46 +589,136 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
       this.settings.pageWidth -
       this.settings.marginLeft -
       this.settings.marginRight;
+    const printableHeight =
+      this.settings.pageHeight -
+      this.settings.marginTop -
+      this.settings.marginBottom;
 
-    // Use max width/height for layout, add margin for labels below
-    const maxWidth = Math.max(...this.placements.map((p) => p.width));
-    const maxHeight = Math.max(...this.placements.map((p) => p.height));
     const labelMargin = 0.2; // Extra space below each mini for labels (in inches)
-    const rowHeight = maxHeight + labelMargin;
-
-    const cols = Math.floor(printableWidth / maxWidth);
 
     // Sort placements by label (A1, A2, B1, B2, etc.)
     const sorted = [...this.placements].sort((a, b) => {
       const labelA = a.text || "ZZZ999";
       const labelB = b.text || "ZZZ999";
 
-      // Extract letter and number parts
       const matchA = labelA.match(/([A-Z]+)(\d+)/);
       const matchB = labelB.match(/([A-Z]+)(\d+)/);
 
       if (matchA && matchB) {
-        // Compare letters first
         if (matchA[1] !== matchB[1]) {
           return matchA[1].localeCompare(matchB[1]);
         }
-        // Then compare numbers
         return parseInt(matchA[2], 10) - parseInt(matchB[2], 10);
       }
 
       return labelA.localeCompare(labelB);
     });
 
-    // Apply positions based on sorted order
-    sorted.forEach((placement, index) => {
-      const col = index % cols;
-      const row = Math.floor(index / cols);
+    // Use skyline bin packing algorithm for optimal placement
+    // Skyline tracks the "top edge" of placed items at each x position
+    const skyline: { x: number; y: number; width: number }[] = [
+      { x: 0, y: 0, width: printableWidth }
+    ];
 
-      placement.x = this.settings.marginLeft + col * maxWidth;
-      placement.y = this.settings.marginTop + row * rowHeight;
-    });
+    for (const placement of sorted) {
+      const itemWidth = placement.width;
+      const itemHeight = placement.height + labelMargin;
+
+      // Find the best position (lowest y that fits)
+      let bestIdx = -1;
+      let bestY = Infinity;
+      let bestX = 0;
+
+      for (let i = 0; i < skyline.length; i++) {
+        const seg = skyline[i];
+        
+        // Check if item fits starting at this segment
+        if (seg.width >= itemWidth) {
+          // Find the max height across segments this item would span
+          let maxY = seg.y;
+          let spanWidth = 0;
+          
+          for (let j = i; j < skyline.length && spanWidth < itemWidth; j++) {
+            maxY = Math.max(maxY, skyline[j].y);
+            spanWidth += skyline[j].width;
+          }
+
+          // Check if it fits vertically
+          if (maxY + itemHeight <= printableHeight && maxY < bestY) {
+            bestY = maxY;
+            bestX = seg.x;
+            bestIdx = i;
+          }
+        }
+      }
+
+      if (bestIdx === -1) {
+        // Doesn't fit on page, place at origin (will overflow)
+        placement.x = this.settings.marginLeft;
+        placement.y = this.settings.marginTop;
+        continue;
+      }
+
+      // Place the item
+      placement.x = this.settings.marginLeft + bestX;
+      placement.y = this.settings.marginTop + bestY;
+
+      // Update skyline
+      this.updateSkyline(skyline, bestX, bestY + itemHeight, itemWidth, printableWidth);
+    }
 
     this.scheduleAutoSave();
+  }
+
+  private updateSkyline(
+    skyline: { x: number; y: number; width: number }[],
+    newX: number,
+    newY: number,
+    newWidth: number,
+    maxWidth: number
+  ): void {
+    const newRight = newX + newWidth;
+
+    // Find segments that overlap with the new rectangle
+    const newSegments: { x: number; y: number; width: number }[] = [];
+    
+    for (const seg of skyline) {
+      const segRight = seg.x + seg.width;
+
+      if (segRight <= newX || seg.x >= newRight) {
+        // No overlap, keep segment as is
+        newSegments.push(seg);
+      } else if (seg.x < newX && segRight > newRight) {
+        // Segment spans entire new rectangle - split into 3
+        newSegments.push({ x: seg.x, y: seg.y, width: newX - seg.x });
+        newSegments.push({ x: newX, y: newY, width: newWidth });
+        newSegments.push({ x: newRight, y: seg.y, width: segRight - newRight });
+      } else if (seg.x < newX) {
+        // Overlaps on the left
+        newSegments.push({ x: seg.x, y: seg.y, width: newX - seg.x });
+        newSegments.push({ x: newX, y: newY, width: Math.min(segRight, newRight) - newX });
+      } else if (segRight > newRight) {
+        // Overlaps on the right
+        newSegments.push({ x: seg.x, y: newY, width: newRight - seg.x });
+        newSegments.push({ x: newRight, y: seg.y, width: segRight - newRight });
+      } else {
+        // Segment is fully covered
+        newSegments.push({ x: seg.x, y: newY, width: seg.width });
+      }
+    }
+
+    // Merge adjacent segments with same height
+    skyline.length = 0;
+    for (const seg of newSegments) {
+      if (skyline.length > 0) {
+        const last = skyline[skyline.length - 1];
+        if (Math.abs(last.y - seg.y) < 0.001 && Math.abs(last.x + last.width - seg.x) < 0.001) {
+          last.width += seg.width;
+          continue;
+        }
+      }
+      skyline.push(seg);
+    }
   }
 
   // Clear all placements
