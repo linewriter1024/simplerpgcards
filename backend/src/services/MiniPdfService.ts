@@ -8,10 +8,38 @@ export interface MiniSheetPdfData {
   minis: Map<string, Mini>;
 }
 
+interface PlacementWithPage extends MiniPlacement {
+  page: number;
+}
+
 export class MiniPdfService {
   private inchesToPt(inches: number): number {
     // 1 inch = 72 points
     return inches * 72;
+  }
+
+  /**
+   * Organize placements into pages based on their Y position.
+   * Each page has a printable height based on margins.
+   */
+  private organizePlacementsIntoPages(
+    placements: MiniPlacement[],
+    settings: SheetSettings,
+  ): PlacementWithPage[] {
+    const printableHeight =
+      settings.pageHeight - settings.marginTop - settings.marginBottom;
+    const labelMargin = 0.2; // Extra space for labels below minis
+
+    return placements.map((p) => {
+      // Calculate page based on the bottom of the placement (including label space)
+      const placementBottom = p.y - settings.marginTop + p.height + labelMargin;
+      const page = Math.floor(placementBottom / printableHeight);
+
+      return {
+        ...p,
+        page: Math.max(0, page),
+      };
+    });
   }
 
   async generateSheetPdf(data: MiniSheetPdfData): Promise<Buffer> {
@@ -24,70 +52,101 @@ export class MiniPdfService {
     const doc = new PDFDocument({
       size: [pageWidthPt, pageHeightPt],
       margin: 0,
-      autoFirstPage: true,
+      autoFirstPage: false,
     });
 
     const chunks: Buffer[] = [];
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
 
-    // Draw each placement
-    for (const placement of placements) {
-      const mini = minis.get(placement.miniId);
-      if (!mini || !mini.imageData) continue;
+    // Organize placements into pages
+    const placementsWithPages = this.organizePlacementsIntoPages(
+      placements,
+      settings,
+    );
 
-      // Calculate position and size in points
-      const widthPt = this.inchesToPt(placement.width);
-      const heightPt = this.inchesToPt(placement.height);
-      const xPt = this.inchesToPt(placement.x);
-      const yPt = this.inchesToPt(placement.y);
+    // Find the maximum page number
+    const maxPage = placementsWithPages.reduce(
+      (max, p) => Math.max(max, p.page),
+      0,
+    );
 
-      // Draw front image
-      await this.drawRectangularImage(
-        doc,
-        mini.imageData,
-        xPt,
-        yPt,
-        widthPt,
-        heightPt,
+    const printableHeight =
+      settings.pageHeight - settings.marginTop - settings.marginBottom;
+
+    // Generate each page
+    for (let pageNum = 0; pageNum <= maxPage; pageNum++) {
+      doc.addPage({ size: [pageWidthPt, pageHeightPt], margin: 0 });
+
+      // Get placements for this page
+      const pagePlacements = placementsWithPages.filter(
+        (p) => p.page === pageNum,
       );
 
-      // Draw text label if present
-      if (placement.text) {
-        this.drawPlacementText(doc, placement, xPt, yPt, widthPt, heightPt);
-      }
+      // Draw each placement on this page
+      for (const placement of pagePlacements) {
+        const mini = minis.get(placement.miniId);
+        if (!mini || !mini.imageData) continue;
 
-      // Handle back side if needed
-      if (placement.backMode === "back-image") {
-        // Position back side to the right of front with small gap
-        const gapPt = this.inchesToPt(0.1); // 0.1 inch gap
-        const backXPt = xPt + widthPt + gapPt;
+        // Calculate position and size in points
+        const widthPt = this.inchesToPt(placement.width);
+        const heightPt = this.inchesToPt(placement.height);
+        const xPt = this.inchesToPt(placement.x);
+        // Adjust Y position relative to the current page
+        const yPt = this.inchesToPt(placement.y - pageNum * printableHeight);
 
-        // Use back image if available, fall back to front
-        const backImageData = mini.backImageData || mini.imageData;
+        // Draw front image
+        await this.drawRectangularImage(
+          doc,
+          mini.imageData,
+          xPt,
+          yPt,
+          widthPt,
+          heightPt,
+        );
 
-        if (backImageData) {
-          await this.drawRectangularImage(
-            doc,
-            backImageData,
-            backXPt,
-            yPt,
-            widthPt,
-            heightPt,
-          );
+        // Draw text label if present
+        if (placement.text) {
+          this.drawPlacementText(doc, placement, xPt, yPt, widthPt, heightPt);
+        }
 
-          // Draw text on back side too
-          if (placement.text) {
-            this.drawPlacementText(
+        // Handle back side if needed
+        if (placement.backMode === "back-image") {
+          // Position back side to the right of front with small gap
+          const gapPt = this.inchesToPt(0.1); // 0.1 inch gap
+          const backXPt = xPt + widthPt + gapPt;
+
+          // Use back image if available, fall back to front
+          const backImageData = mini.backImageData || mini.imageData;
+
+          if (backImageData) {
+            await this.drawRectangularImage(
               doc,
-              placement,
+              backImageData,
               backXPt,
               yPt,
               widthPt,
               heightPt,
             );
+
+            // Draw text on back side too
+            if (placement.text) {
+              this.drawPlacementText(
+                doc,
+                placement,
+                backXPt,
+                yPt,
+                widthPt,
+                heightPt,
+              );
+            }
           }
         }
       }
+    }
+
+    // Handle edge case: no placements at all
+    if (placements.length === 0) {
+      doc.addPage({ size: [pageWidthPt, pageHeightPt], margin: 0 });
     }
 
     doc.end();

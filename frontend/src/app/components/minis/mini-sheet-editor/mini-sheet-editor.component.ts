@@ -114,6 +114,82 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
   hasUnsavedChanges = false;
   private autoSaveSubject = new Subject<void>();
 
+  // Multi-page support
+  get printableHeight(): number {
+    return (
+      this.settings.pageHeight -
+      this.settings.marginTop -
+      this.settings.marginBottom
+    );
+  }
+
+  get pageCount(): number {
+    if (this.placements.length === 0) return 1;
+    const labelMargin = 0.2;
+    let maxPage = 0;
+    for (const p of this.placements) {
+      const bottomY = p.y - this.settings.marginTop + p.height + labelMargin;
+      const page = Math.floor(bottomY / this.printableHeight);
+      maxPage = Math.max(maxPage, page);
+    }
+    return maxPage + 1;
+  }
+
+  get totalCanvasHeight(): number {
+    // Total height for all pages with gaps between them
+    const pageGap = 20 / this.displayScale; // 20px gap between pages
+    return (
+      this.pageCount * this.settings.pageHeight + (this.pageCount - 1) * pageGap
+    );
+  }
+
+  getPageNumbers(): number[] {
+    return Array.from({ length: this.pageCount }, (_, i) => i);
+  }
+
+  getPageTopOffset(pageIndex: number): number {
+    const pageGap = 20; // pixels
+    return pageIndex * (this.settings.pageHeight * this.displayScale + pageGap);
+  }
+
+  /**
+   * Get the page number a placement is on based on its Y position
+   */
+  getPlacementPage(placement: MiniPlacement): number {
+    const labelMargin = 0.2;
+    const bottomY =
+      placement.y - this.settings.marginTop + placement.height + labelMargin;
+    return Math.max(0, Math.floor(bottomY / this.printableHeight));
+  }
+
+  /**
+   * Convert a placement's Y position (in inches) to a canvas Y position (in pixels)
+   * This accounts for page gaps in the multi-page display
+   */
+  getPlacementCanvasY(placement: MiniPlacement): number {
+    const page = this.getPlacementPage(placement);
+    const pageGap = 20; // pixels
+    // Y within the page
+    const yOnPage = placement.y - page * this.printableHeight;
+    // Add page offset
+    return (
+      yOnPage * this.displayScale +
+      page * (this.settings.pageHeight * this.displayScale + pageGap)
+    );
+  }
+
+  /**
+   * Convert canvas Y (in pixels) to placement Y (in inches)
+   */
+  canvasYToPlacementY(canvasY: number, placementHeight: number): number {
+    const pageGap = 20; // pixels
+    const pageHeightPx = this.settings.pageHeight * this.displayScale + pageGap;
+    const page = Math.floor(canvasY / pageHeightPx);
+    const yOnPagePx = canvasY - page * pageHeightPx;
+    const yOnPage = yOnPagePx / this.displayScale;
+    return yOnPage + page * this.printableHeight;
+  }
+
   // For front+back upload flow
   private pendingFrontImage: string | null = null;
 
@@ -366,31 +442,49 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     event.preventDefault();
     if (!this.draggedMini || !this.currentSheet) return;
 
-    const rect = this.sheetCanvas.nativeElement.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / this.displayScale;
-    const y = (event.clientY - rect.top) / this.displayScale;
+    // Find which page was dropped on
+    const target = event.target as HTMLElement;
+    const pageElement = target.closest(".sheet-page");
+    if (!pageElement) return;
 
-    this.addPlacement(this.draggedMini.id, x, y);
+    const pageNum = parseInt(pageElement.getAttribute("data-page") || "0", 10);
+
+    const rect = pageElement.getBoundingClientRect();
+    const xOnPage = (event.clientX - rect.left) / this.displayScale;
+    const yOnPage = (event.clientY - rect.top) / this.displayScale;
+
+    // Convert to absolute Y position (accounting for page)
+    const y = yOnPage + pageNum * this.printableHeight;
+
+    this.addPlacement(this.draggedMini.id, xOnPage, y, pageNum);
     this.draggedMini = null;
   }
 
-  addPlacement(miniId: string, x: number, y: number): void {
+  addPlacement(
+    miniId: string,
+    x: number,
+    y: number,
+    pageNum: number = 0,
+  ): void {
     // Snap to grid if enabled
     if (this.settings.gridSnap > 0) {
       x = Math.round(x / this.settings.gridSnap) * this.settings.gridSnap;
       y = Math.round(y / this.settings.gridSnap) * this.settings.gridSnap;
     }
 
-    // Clamp within printable area
+    // Clamp within printable area for the specific page
     const width = this.currentMiniSize;
     const height = this.currentMiniSize;
+    const labelMargin = 0.2;
     const maxX = this.settings.pageWidth - this.settings.marginRight - width;
-    const maxY = this.settings.pageHeight - this.settings.marginBottom - height;
     const minX = this.settings.marginLeft;
-    const minY = this.settings.marginTop;
+
+    // Y bounds are relative to the page
+    const pageTopY = this.settings.marginTop + pageNum * this.printableHeight;
+    const pageBottomY = pageTopY + this.printableHeight - height - labelMargin;
 
     x = Math.max(minX, Math.min(maxX, x));
-    y = Math.max(minY, Math.min(maxY, y));
+    y = Math.max(pageTopY, Math.min(pageBottomY, y));
 
     // Generate default label - letter based on mini type, number increments
     const defaultLabel = this.getNextLabel(miniId);
@@ -475,6 +569,8 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
   }
 
   // Placement interaction
+  private dragStartPage = 0;
+
   onPlacementMouseDown(event: MouseEvent, placement: MiniPlacement): void {
     event.preventDefault();
     event.stopPropagation();
@@ -482,9 +578,21 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     this.selectedPlacementId = placement.id;
     this.isDraggingPlacement = true;
 
-    const rect = this.sheetCanvas.nativeElement.getBoundingClientRect();
+    // Find which page element this placement is on
+    const target = event.target as HTMLElement;
+    const pageElement = target.closest(".sheet-page");
+    this.dragStartPage = pageElement
+      ? parseInt(pageElement.getAttribute("data-page") || "0", 10)
+      : this.getPlacementPage(placement);
+
+    const rect = pageElement
+      ? pageElement.getBoundingClientRect()
+      : this.sheetCanvas.nativeElement.getBoundingClientRect();
+
+    // Calculate offset within the page
+    const yOnPage = placement.y - this.dragStartPage * this.printableHeight;
     const currentX = placement.x * this.displayScale;
-    const currentY = placement.y * this.displayScale;
+    const currentY = yOnPage * this.displayScale;
 
     this.dragOffset = {
       x: event.clientX - rect.left - currentX,
@@ -496,32 +604,59 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
   onMouseMove(event: MouseEvent): void {
     if (!this.isDraggingPlacement || !this.selectedPlacementId) return;
 
-    const rect = this.sheetCanvas.nativeElement.getBoundingClientRect();
+    // Find the page element under the cursor
+    const elementsUnder = document.elementsFromPoint(
+      event.clientX,
+      event.clientY,
+    );
+    const pageElement = elementsUnder.find((el) =>
+      el.classList.contains("sheet-page"),
+    );
+
+    if (!pageElement) return;
+
+    const pageNum = parseInt(pageElement.getAttribute("data-page") || "0", 10);
+    const rect = pageElement.getBoundingClientRect();
+
     let x = (event.clientX - rect.left - this.dragOffset.x) / this.displayScale;
-    let y = (event.clientY - rect.top - this.dragOffset.y) / this.displayScale;
+    let yOnPage =
+      (event.clientY - rect.top - this.dragOffset.y) / this.displayScale;
 
     // Snap to grid
     if (this.settings.gridSnap > 0) {
       x = Math.round(x / this.settings.gridSnap) * this.settings.gridSnap;
-      y = Math.round(y / this.settings.gridSnap) * this.settings.gridSnap;
+      yOnPage =
+        Math.round(yOnPage / this.settings.gridSnap) * this.settings.gridSnap;
     }
 
     const placement = this.placements.find(
       (p) => p.id === this.selectedPlacementId,
     );
     if (placement) {
-      // Clamp within printable area
+      const labelMargin = 0.2;
+
+      // Clamp X within printable area
       const minX = this.settings.marginLeft;
       const maxX =
         this.settings.pageWidth - this.settings.marginRight - placement.width;
-      const minY = this.settings.marginTop;
-      const maxY =
+
+      // Clamp Y within the page's printable area
+      const minYOnPage = this.settings.marginTop;
+      const maxYOnPage =
         this.settings.pageHeight -
         this.settings.marginBottom -
-        placement.height;
+        placement.height -
+        labelMargin;
 
       placement.x = Math.max(minX, Math.min(maxX, x));
-      placement.y = Math.max(minY, Math.min(maxY, y));
+
+      // Convert page-relative Y to absolute Y
+      const clampedYOnPage = Math.max(
+        minYOnPage,
+        Math.min(maxYOnPage, yOnPage),
+      );
+      placement.y = clampedYOnPage + pageNum * this.printableHeight;
+
       this.scheduleAutoSave();
     }
   }
@@ -630,7 +765,7 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     return placement.backMode !== "none";
   }
 
-  // Auto-arrange all placements in a grid, sorted by label
+  // Auto-arrange all placements using row-based packing with equal-height rows
   autoArrange(): void {
     if (this.placements.length === 0) return;
 
@@ -645,81 +780,73 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
 
     const labelMargin = 0.2; // Extra space below each mini for labels (in inches)
 
-    // Sort placements by label (A1, A2, B1, B2, etc.)
+    // Sort placements by height (descending), then by label
     const sorted = [...this.placements].sort((a, b) => {
+      // Primary sort: by height (tallest first), with tolerance for grouping similar heights
+      const heightA = Math.round(a.height * 10) / 10; // Round to 0.1 inch
+      const heightB = Math.round(b.height * 10) / 10;
+      if (heightA !== heightB) return heightB - heightA;
+
+      // Secondary sort: by full label (prefix + letter + number)
+      // Labels are like "*** A1" or "TF A1" - sort by prefix first, then letter, then number
       const labelA = a.text || "ZZZ999";
       const labelB = b.text || "ZZZ999";
 
-      const matchA = labelA.match(/([A-Z]+)(\d+)/);
-      const matchB = labelB.match(/([A-Z]+)(\d+)/);
+      // Match pattern: optional prefix, then letter(s), then number
+      const matchA = labelA.match(/^(.*?)([A-Z]+)(\d+)$/);
+      const matchB = labelB.match(/^(.*?)([A-Z]+)(\d+)$/);
 
       if (matchA && matchB) {
-        if (matchA[1] !== matchB[1]) {
-          return matchA[1].localeCompare(matchB[1]);
-        }
-        return parseInt(matchA[2], 10) - parseInt(matchB[2], 10);
+        // Compare prefix first (e.g., "*** " or "TF ")
+        const prefixCmp = matchA[1].localeCompare(matchB[1]);
+        if (prefixCmp !== 0) return prefixCmp;
+
+        // Then compare letter part (A, B, C, etc.)
+        const letterCmp = matchA[2].localeCompare(matchB[2]);
+        if (letterCmp !== 0) return letterCmp;
+
+        // Then compare number part numerically
+        return parseInt(matchA[3], 10) - parseInt(matchB[3], 10);
       }
 
       return labelA.localeCompare(labelB);
     });
 
-    // Use skyline bin packing algorithm for optimal placement
-    // Skyline tracks the "top edge" of placed items at each x position
-    const skyline: { x: number; y: number; width: number }[] = [
-      { x: 0, y: 0, width: printableWidth },
-    ];
+    // Row-based placement across multiple pages
+    let currentPage = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let rowHeight = 0; // Height of current row (tallest item + label margin)
 
     for (const placement of sorted) {
       const itemWidth = placement.width;
       const itemHeight = placement.height + labelMargin;
 
-      // Find the best position (lowest y that fits)
-      let bestIdx = -1;
-      let bestY = Infinity;
-      let bestX = 0;
-
-      for (let i = 0; i < skyline.length; i++) {
-        const seg = skyline[i];
-
-        // Check if item fits starting at this segment
-        if (seg.width >= itemWidth) {
-          // Find the max height across segments this item would span
-          let maxY = seg.y;
-          let spanWidth = 0;
-
-          for (let j = i; j < skyline.length && spanWidth < itemWidth; j++) {
-            maxY = Math.max(maxY, skyline[j].y);
-            spanWidth += skyline[j].width;
-          }
-
-          // Check if it fits vertically
-          if (maxY + itemHeight <= printableHeight && maxY < bestY) {
-            bestY = maxY;
-            bestX = seg.x;
-            bestIdx = i;
-          }
-        }
+      // Check if item fits in current row
+      if (currentX + itemWidth > printableWidth) {
+        // Start new row
+        currentX = 0;
+        currentY += rowHeight;
+        rowHeight = 0;
       }
 
-      if (bestIdx === -1) {
-        // Doesn't fit on page, place at origin (will overflow)
-        placement.x = this.settings.marginLeft;
-        placement.y = this.settings.marginTop;
-        continue;
+      // Check if row fits on current page
+      if (currentY + itemHeight > printableHeight) {
+        // Start new page
+        currentPage++;
+        currentX = 0;
+        currentY = 0;
+        rowHeight = 0;
       }
 
       // Place the item
-      placement.x = this.settings.marginLeft + bestX;
-      placement.y = this.settings.marginTop + bestY;
+      placement.x = this.settings.marginLeft + currentX;
+      placement.y =
+        this.settings.marginTop + currentY + currentPage * printableHeight;
 
-      // Update skyline
-      this.updateSkyline(
-        skyline,
-        bestX,
-        bestY + itemHeight,
-        itemWidth,
-        printableWidth,
-      );
+      // Update row tracking
+      currentX += itemWidth;
+      rowHeight = Math.max(rowHeight, itemHeight);
     }
 
     this.scheduleAutoSave();

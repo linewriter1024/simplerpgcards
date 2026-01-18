@@ -4,10 +4,18 @@
     <div class="sidebar-header">
       <h3>Sheets</h3>
       <div class="header-actions">
-        <button mat-icon-button matTooltip="New Sheet" (click)="createNewSheet()">
+        <button
+          mat-icon-button
+          matTooltip="New Sheet"
+          (click)="createNewSheet()"
+        >
           <mat-icon>add</mat-icon>
         </button>
-        <button mat-icon-button matTooltip="Create from Multiple Sheets" (click)="openConglomerateDialog()">
+        <button
+          mat-icon-button
+          matTooltip="Create from Multiple Sheets"
+          (click)="openConglomerateDialog()"
+        >
           <mat-icon>merge</mat-icon>
         </button>
       </div>
@@ -80,6 +88,9 @@
         </div>
 
         <div class="toolbar-actions">
+          <span class="page-info"
+            >{{ pageCount }} page{{ pageCount !== 1 ? "s" : "" }}</span
+          >
           <button
             mat-icon-button
             matTooltip="Auto-arrange"
@@ -102,127 +113,153 @@
         <div class="canvas-scroll">
           <div
             #sheetCanvas
-            class="sheet-canvas"
+            class="sheet-canvas-wrapper"
             [style.width.px]="settings.pageWidth * displayScale"
-            [style.height.px]="settings.pageHeight * displayScale"
             (click)="deselectPlacement()"
             (dragover)="onSheetDragOver($event)"
             (drop)="onSheetDrop($event)"
           >
-            <!-- Grid overlay -->
-            @if (settings.showGrid && settings.gridSnap > 0) {
-              <svg
-                class="grid-overlay"
-                [attr.width]="settings.pageWidth * displayScale"
-                [attr.height]="settings.pageHeight * displayScale"
-              >
-                <defs>
-                  <pattern
-                    id="grid"
-                    [attr.width]="settings.gridSnap * displayScale"
-                    [attr.height]="settings.gridSnap * displayScale"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path
-                      [attr.d]="
-                        'M ' +
-                        settings.gridSnap * displayScale +
-                        ' 0 L 0 0 0 ' +
-                        settings.gridSnap * displayScale
-                      "
-                      fill="none"
-                      stroke="rgba(100,100,100,0.3)"
-                      stroke-width="0.5"
-                    />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-              </svg>
-            }
-
-            <!-- Margin indicators -->
-            <div
-              class="margin-indicator top"
-              [style.height.px]="settings.marginTop * displayScale"
-            ></div>
-            <div
-              class="margin-indicator bottom"
-              [style.height.px]="settings.marginBottom * displayScale"
-            ></div>
-            <div
-              class="margin-indicator left"
-              [style.width.px]="settings.marginLeft * displayScale"
-            ></div>
-            <div
-              class="margin-indicator right"
-              [style.width.px]="settings.marginRight * displayScale"
-            ></div>
-
-            <!-- Placements -->
-            @for (placement of placements; track placement.id) {
+            <!-- Render each page -->
+            @for (pageNum of getPageNumbers(); track pageNum) {
               <div
-                class="mini-placement-group"
-                [class.selected]="selectedPlacementId === placement.id"
-                [class.has-back]="
-                  placement.backMode && placement.backMode !== 'none'
-                "
-                [style.left.px]="placement.x * displayScale"
-                [style.top.px]="placement.y * displayScale"
-                (mousedown)="onPlacementMouseDown($event, placement)"
-                (click)="selectPlacement(placement, $event)"
+                class="sheet-page"
+                [style.width.px]="settings.pageWidth * displayScale"
+                [style.height.px]="settings.pageHeight * displayScale"
+                [attr.data-page]="pageNum"
               >
-                <!-- Front side -->
-                <div
-                  class="mini-placement front"
-                  [style.width.px]="placement.width * displayScale"
-                  [style.height.px]="placement.height * displayScale"
-                >
-                  <img
-                    [src]="getImageUrl(placement.miniId)"
-                    [alt]="getMini(placement.miniId)?.name"
-                    class="placement-image"
-                    draggable="false"
-                  />
+                <!-- Page number label -->
+                <div class="page-label">Page {{ pageNum + 1 }}</div>
 
-                  @if (placement.text) {
+                <!-- Grid overlay -->
+                @if (settings.showGrid && settings.gridSnap > 0) {
+                  <svg
+                    class="grid-overlay"
+                    [attr.width]="settings.pageWidth * displayScale"
+                    [attr.height]="settings.pageHeight * displayScale"
+                  >
+                    <defs>
+                      <pattern
+                        [id]="'grid-' + pageNum"
+                        [attr.width]="settings.gridSnap * displayScale"
+                        [attr.height]="settings.gridSnap * displayScale"
+                        patternUnits="userSpaceOnUse"
+                      >
+                        <path
+                          [attr.d]="
+                            'M ' +
+                            settings.gridSnap * displayScale +
+                            ' 0 L 0 0 0 ' +
+                            settings.gridSnap * displayScale
+                          "
+                          fill="none"
+                          stroke="rgba(100,100,100,0.3)"
+                          stroke-width="0.5"
+                        />
+                      </pattern>
+                    </defs>
+                    <rect
+                      width="100%"
+                      height="100%"
+                      [attr.fill]="'url(#grid-' + pageNum + ')'"
+                    />
+                  </svg>
+                }
+
+                <!-- Margin indicators -->
+                <div
+                  class="margin-indicator top"
+                  [style.height.px]="settings.marginTop * displayScale"
+                ></div>
+                <div
+                  class="margin-indicator bottom"
+                  [style.height.px]="settings.marginBottom * displayScale"
+                ></div>
+                <div
+                  class="margin-indicator left"
+                  [style.width.px]="settings.marginLeft * displayScale"
+                ></div>
+                <div
+                  class="margin-indicator right"
+                  [style.width.px]="settings.marginRight * displayScale"
+                ></div>
+
+                <!-- Placements for this page -->
+                @for (placement of placements; track placement.id) {
+                  @if (getPlacementPage(placement) === pageNum) {
                     <div
-                      class="placement-text"
-                      [class]="'text-' + (placement.textPosition || 'bottom')"
-                      [style.fontSize.px]="
-                        ((placement.textSize || 8) * displayScale) / 72
+                      class="mini-placement-group"
+                      [class.selected]="selectedPlacementId === placement.id"
+                      [class.has-back]="
+                        placement.backMode && placement.backMode !== 'none'
                       "
+                      [style.left.px]="placement.x * displayScale"
+                      [style.top.px]="
+                        (placement.y - pageNum * printableHeight) * displayScale
+                      "
+                      (mousedown)="onPlacementMouseDown($event, placement)"
+                      (click)="selectPlacement(placement, $event)"
                     >
-                      {{ getDisplayLabel(placement.text) }}
+                      <!-- Front side -->
+                      <div
+                        class="mini-placement front"
+                        [style.width.px]="placement.width * displayScale"
+                        [style.height.px]="placement.height * displayScale"
+                      >
+                        <img
+                          [src]="getImageUrl(placement.miniId)"
+                          [alt]="getMini(placement.miniId)?.name"
+                          class="placement-image"
+                          draggable="false"
+                        />
+
+                        @if (placement.text) {
+                          <div
+                            class="placement-text"
+                            [class]="
+                              'text-' + (placement.textPosition || 'bottom')
+                            "
+                            [style.fontSize.px]="
+                              ((placement.textSize || 8) * displayScale) / 72
+                            "
+                          >
+                            {{ getDisplayLabel(placement.text) }}
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Back side (if enabled) -->
+                      @if (
+                        placement.backMode && placement.backMode !== "none"
+                      ) {
+                        <div
+                          class="mini-placement back"
+                          [style.width.px]="placement.width * displayScale"
+                          [style.height.px]="placement.height * displayScale"
+                        >
+                          <img
+                            [src]="getBackSideImageUrl(placement)"
+                            [alt]="getMini(placement.miniId)?.name + ' (back)'"
+                            class="placement-image"
+                            draggable="false"
+                          />
+
+                          @if (placement.text) {
+                            <div
+                              class="placement-text"
+                              [class]="
+                                'text-' + (placement.textPosition || 'bottom')
+                              "
+                              [style.fontSize.px]="
+                                ((placement.textSize || 8) * displayScale) / 72
+                              "
+                            >
+                              {{ getDisplayLabel(placement.text) }}
+                            </div>
+                          }
+                        </div>
+                      }
                     </div>
                   }
-                </div>
-
-                <!-- Back side (if enabled) -->
-                @if (placement.backMode && placement.backMode !== "none") {
-                  <div
-                    class="mini-placement back"
-                    [style.width.px]="placement.width * displayScale"
-                    [style.height.px]="placement.height * displayScale"
-                  >
-                    <img
-                      [src]="getBackSideImageUrl(placement)"
-                      [alt]="getMini(placement.miniId)?.name + ' (back)'"
-                      class="placement-image"
-                      draggable="false"
-                    />
-
-                    @if (placement.text) {
-                      <div
-                        class="placement-text"
-                        [class]="'text-' + (placement.textPosition || 'bottom')"
-                        [style.fontSize.px]="
-                          ((placement.textSize || 8) * displayScale) / 72
-                        "
-                      >
-                        {{ getDisplayLabel(placement.text) }}
-                      </div>
-                    }
-                  </div>
                 }
               </div>
             }
