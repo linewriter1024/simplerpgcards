@@ -37,6 +37,10 @@ import {
   PAPER_SIZE,
 } from "../../../models/mini.model";
 import { MiniPrintPreviewComponent } from "./mini-print-preview.component";
+import {
+  ConglomerateDialogComponent,
+  ConglomerateDialogResult,
+} from "./conglomerate-dialog.component";
 
 @Component({
   selector: "app-mini-sheet-editor",
@@ -229,6 +233,51 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.snackBar.open("Failed to create sheet", "Dismiss", {
+            duration: 3000,
+          });
+        },
+      });
+  }
+
+  openConglomerateDialog(): void {
+    if (this.sheets.length === 0) {
+      this.snackBar.open("No sheets available to combine", "Dismiss", {
+        duration: 3000,
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConglomerateDialogComponent, {
+      data: { sheets: this.sheets },
+      width: "500px",
+    });
+
+    dialogRef.afterClosed().subscribe((result: ConglomerateDialogResult) => {
+      if (result) {
+        this.createConglomerateSheet(result);
+      }
+    });
+  }
+
+  private createConglomerateSheet(result: ConglomerateDialogResult): void {
+    this.miniService
+      .createSheet({ name: result.name, settings: DEFAULT_SHEET_SETTINGS })
+      .subscribe({
+        next: (sheet) => {
+          this.sheets.unshift(sheet);
+          this.selectSheet(sheet);
+          // Add the combined placements
+          this.placements = result.placements;
+          // Auto-arrange them
+          this.autoArrange();
+          this.snackBar.open(
+            `Created conglomerate sheet with ${result.placements.length} minis`,
+            "Dismiss",
+            { duration: 3000 },
+          );
+        },
+        error: () => {
+          this.snackBar.open("Failed to create conglomerate sheet", "Dismiss", {
             duration: 3000,
           });
         },

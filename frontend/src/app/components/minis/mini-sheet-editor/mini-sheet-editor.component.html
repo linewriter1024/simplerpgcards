@@ -3,9 +3,14 @@
   <div class="sidebar sheets-sidebar">
     <div class="sidebar-header">
       <h3>Sheets</h3>
-      <button mat-icon-button matTooltip="New Sheet" (click)="createNewSheet()">
-        <mat-icon>add</mat-icon>
-      </button>
+      <div class="header-actions">
+        <button mat-icon-button matTooltip="New Sheet" (click)="createNewSheet()">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Create from Multiple Sheets" (click)="openConglomerateDialog()">
+          <mat-icon>merge</mat-icon>
+        </button>
+      </div>
     </div>
     <div class="sheet-list">
       @for (sheet of sheets; track sheet.id) {
