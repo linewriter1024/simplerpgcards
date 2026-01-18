@@ -682,6 +682,7 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     if (this.selectedPlacementId === placementId) {
       this.selectedPlacementId = null;
     }
+    this.scheduleAutoSave();
   }
 
   deleteSelectedPlacement(): void {
