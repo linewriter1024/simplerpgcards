@@ -298,11 +298,7 @@
           <div class="library-actions">
             <button mat-stroked-button (click)="addNewMini()">
               <mat-icon>add_photo_alternate</mat-icon>
-              Front
-            </button>
-            <button mat-stroked-button (click)="addNewMiniWithBack()">
-              <mat-icon>flip</mat-icon>
-              Front + Back
+              Upload Image
             </button>
           </div>
 
@@ -635,11 +631,4 @@
   hidden
   accept="image/*"
   (change)="onFrontImageSelected($event)"
-/>
-<input
-  type="file"
-  #backImageInput
-  hidden
-  accept="image/*"
-  (change)="onBackImageSelected($event)"
 />

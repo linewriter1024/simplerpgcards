@@ -69,7 +69,6 @@ import {
 export class MiniSheetEditorComponent implements OnInit, OnDestroy {
   @ViewChild("sheetCanvas") sheetCanvas!: ElementRef<HTMLDivElement>;
   @ViewChild("frontImageInput") frontImageInput!: ElementRef<HTMLInputElement>;
-  @ViewChild("backImageInput") backImageInput!: ElementRef<HTMLInputElement>;
 
   sheets: MiniSheet[] = [];
   currentSheet: MiniSheet | null = null;
@@ -189,9 +188,6 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
     const yOnPage = yOnPagePx / this.displayScale;
     return yOnPage + page * this.printableHeight;
   }
-
-  // For front+back upload flow
-  private pendingFrontImage: string | null = null;
 
   // Cache for original image dimensions (in pixels)
   private imageSizeCache = new Map<string, { width: number; height: number }>();
@@ -930,81 +926,17 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
 
   // === Image Upload Methods ===
 
-  // Track if we're doing a front+back upload
-  private isFrontBackMode = false;
-
   onFrontImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
     const file = input.files[0];
-
-    if (this.isFrontBackMode) {
-      // Save front image and prompt for back
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.pendingFrontImage = reader.result as string;
-        // Prompt for back image
-        setTimeout(() => this.backImageInput.nativeElement.click(), 100);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // Regular upload - front only
-      this.uploadImageAsMini(file);
-    }
+    this.uploadImageAsMini(file);
     input.value = ""; // Reset for next selection
   }
 
   addNewMini(): void {
-    this.isFrontBackMode = false;
     this.frontImageInput.nativeElement.click();
-  }
-
-  addNewMiniWithBack(): void {
-    this.isFrontBackMode = true;
-    this.pendingFrontImage = null;
-    this.frontImageInput.nativeElement.click();
-  }
-
-  onBackImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length || !this.pendingFrontImage) {
-      // Cancelled back selection - just create with front only
-      if (this.pendingFrontImage) {
-        this.createMiniFromBase64(this.pendingFrontImage, "New Mini");
-        this.pendingFrontImage = null;
-      }
-      this.isFrontBackMode = false;
-      return;
-    }
-
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      const backData = reader.result as string;
-      this.createMiniWithBothImages(this.pendingFrontImage!, backData);
-      this.pendingFrontImage = null;
-      this.isFrontBackMode = false;
-    };
-    reader.readAsDataURL(file);
-    input.value = "";
-  }
-
-  private createMiniFromBase64(imageData: string, name: string): void {
-    this.miniService.createMini(name, imageData).subscribe({
-      next: (mini) => {
-        this.minis.unshift(mini);
-        this.filterMinis();
-        this.snackBar.open(`Added "${mini.name}"`, "Dismiss", {
-          duration: 2000,
-        });
-      },
-      error: () => {
-        this.snackBar.open("Failed to create mini", "Dismiss", {
-          duration: 3000,
-        });
-      },
-    });
   }
 
   private uploadImageAsMini(file: File): void {
@@ -1029,40 +961,6 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
       });
     };
     reader.readAsDataURL(file);
-  }
-
-  private createMiniWithBothImages(frontData: string, backData: string): void {
-    // First create the mini with front image
-    this.miniService.createMini("New Mini", frontData).subscribe({
-      next: (mini) => {
-        // Then set the back image
-        this.miniService.setBackImageFromBase64(mini.id, backData).subscribe({
-          next: () => {
-            mini.hasBackImage = true;
-            this.minis.unshift(mini);
-            this.filterMinis();
-            this.snackBar.open(`Added mini with front and back`, "Dismiss", {
-              duration: 2000,
-            });
-          },
-          error: () => {
-            // Front was added but back failed
-            this.minis.unshift(mini);
-            this.filterMinis();
-            this.snackBar.open(
-              "Added front, but back image failed",
-              "Dismiss",
-              { duration: 3000 },
-            );
-          },
-        });
-      },
-      error: () => {
-        this.snackBar.open("Failed to create mini", "Dismiss", {
-          duration: 3000,
-        });
-      },
-    });
   }
 
   // Library drag/drop for adding images

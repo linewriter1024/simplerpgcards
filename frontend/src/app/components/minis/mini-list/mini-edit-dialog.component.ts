@@ -70,7 +70,14 @@ export interface MiniEditDialogData {
           <div class="image-sections">
             <div class="image-section">
               <h4>Front Image</h4>
-              <div class="image-preview" [class.checkerboard]="true">
+              <div
+                class="image-preview"
+                [class.checkerboard]="true"
+                (paste)="onPaste($event, 'front')"
+                (dragover)="onDragOver($event)"
+                (drop)="onDrop($event, 'front')"
+                tabindex="0"
+              >
                 <img
                   [src]="frontImageUrl"
                   alt="Front image"
@@ -80,6 +87,9 @@ export interface MiniEditDialogData {
               <div class="image-actions">
                 <button mat-stroked-button (click)="frontFileInput.click()">
                   <mat-icon>upload</mat-icon> Replace
+                </button>
+                <button mat-stroked-button (click)="pasteFromClipboard('front')">
+                  <mat-icon>content_paste</mat-icon> Paste
                 </button>
                 <button
                   mat-stroked-button
@@ -132,7 +142,14 @@ export interface MiniEditDialogData {
 
             <div class="image-section">
               <h4>Back Image (Optional)</h4>
-              <div class="image-preview" [class.checkerboard]="hasBackImage">
+              <div
+                class="image-preview"
+                [class.checkerboard]="hasBackImage"
+                (paste)="onPaste($event, 'back')"
+                (dragover)="onDragOver($event)"
+                (drop)="onDrop($event, 'back')"
+                tabindex="0"
+              >
                 @if (hasBackImage) {
                   <img
                     [src]="backImageUrl"
@@ -142,7 +159,7 @@ export interface MiniEditDialogData {
                 } @else {
                   <div class="no-image">
                     <mat-icon>image</mat-icon>
-                    <span>No back image</span>
+                    <span>Drop, paste, or upload</span>
                   </div>
                 }
               </div>
@@ -150,6 +167,9 @@ export interface MiniEditDialogData {
                 <button mat-stroked-button (click)="backFileInput.click()">
                   <mat-icon>upload</mat-icon>
                   {{ hasBackImage ? "Replace" : "Add" }}
+                </button>
+                <button mat-stroked-button (click)="pasteFromClipboard('back')">
+                  <mat-icon>content_paste</mat-icon> Paste
                 </button>
                 @if (hasBackImage) {
                   <button
@@ -250,6 +270,17 @@ export interface MiniEditDialogData {
         justify-content: center;
         overflow: hidden;
         margin-bottom: 8px;
+        cursor: pointer;
+        transition: border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #7c4dff;
+        }
+
+        &:hover {
+          border-color: #606060;
+        }
 
         img {
           max-width: 100%;
@@ -482,6 +513,97 @@ export class MiniEditDialogComponent implements OnInit {
         });
       },
     });
+  }
+
+  onPaste(event: ClipboardEvent, target: "front" | "back"): void {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith("image/")) {
+        const file = items[i].getAsFile();
+        if (file) {
+          event.preventDefault();
+          this.handleImageFile(file, target);
+          return;
+        }
+      }
+    }
+  }
+
+  async pasteFromClipboard(target: "front" | "back"): Promise<void> {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imageType = item.types.find((type) => type.startsWith("image/"));
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          const file = new File([blob], "pasted-image.png", { type: imageType });
+          this.handleImageFile(file, target);
+          return;
+        }
+      }
+      this.snackBar.open("No image found in clipboard", "Dismiss", {
+        duration: 3000,
+      });
+    } catch {
+      this.snackBar.open(
+        "Could not access clipboard. Try Ctrl+V on the image area.",
+        "Dismiss",
+        { duration: 3000 },
+      );
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDrop(event: DragEvent, target: "front" | "back"): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const files = event.dataTransfer?.files;
+    if (files?.length && files[0].type.startsWith("image/")) {
+      this.handleImageFile(files[0], target);
+    }
+  }
+
+  private handleImageFile(file: File, target: "front" | "back"): void {
+    if (!this.data.mini) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      const saveMethod =
+        target === "front"
+          ? this.miniService.setFrontImageFromBase64(this.data.mini!.id, base64)
+          : this.miniService.setBackImageFromBase64(this.data.mini!.id, base64);
+
+      saveMethod.subscribe({
+        next: () => {
+          if (target === "front") {
+            this.frontImageUrl = base64;
+          } else {
+            this.backImageUrl = base64;
+            this.hasBackImage = true;
+          }
+          this.imageModified = true;
+          this.snackBar.open(
+            `${target === "front" ? "Front" : "Back"} image updated`,
+            "Dismiss",
+            { duration: 2000 },
+          );
+        },
+        error: () => {
+          this.snackBar.open("Failed to update image", "Dismiss", {
+            duration: 3000,
+          });
+        },
+      });
+    };
+    reader.readAsDataURL(file);
   }
 
   save(): void {
