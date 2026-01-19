@@ -19,11 +19,7 @@
     <div class="actions">
       <button mat-stroked-button (click)="fileInput.click()">
         <mat-icon>add_photo_alternate</mat-icon>
-        Add Front
-      </button>
-      <button mat-stroked-button (click)="startFrontBackUpload()">
-        <mat-icon>flip</mat-icon>
-        Front + Back
+        Upload Image
       </button>
       <input
         #fileInput
@@ -32,13 +28,6 @@
         multiple
         hidden
         (change)="onFileSelect($event)"
-      />
-      <input
-        #backFileInput
-        type="file"
-        accept="image/*"
-        hidden
-        (change)="onBackFileSelect($event)"
       />
 
       @if (selectedMinis.size > 0) {

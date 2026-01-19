@@ -88,7 +88,10 @@ export interface MiniEditDialogData {
                 <button mat-stroked-button (click)="frontFileInput.click()">
                   <mat-icon>upload</mat-icon> Replace
                 </button>
-                <button mat-stroked-button (click)="pasteFromClipboard('front')">
+                <button
+                  mat-stroked-button
+                  (click)="pasteFromClipboard('front')"
+                >
                   <mat-icon>content_paste</mat-icon> Paste
                 </button>
                 <button
@@ -538,7 +541,9 @@ export class MiniEditDialogComponent implements OnInit {
         const imageType = item.types.find((type) => type.startsWith("image/"));
         if (imageType) {
           const blob = await item.getType(imageType);
-          const file = new File([blob], "pasted-image.png", { type: imageType });
+          const file = new File([blob], "pasted-image.png", {
+            type: imageType,
+          });
           this.handleImageFile(file, target);
           return;
         }

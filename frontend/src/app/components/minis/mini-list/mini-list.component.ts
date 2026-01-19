@@ -1,10 +1,4 @@
-import {
-  Component,
-  OnInit,
-  HostListener,
-  ViewChild,
-  ElementRef,
-} from "@angular/core";
+import { Component, OnInit, HostListener } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
@@ -42,8 +36,6 @@ import { MiniEditDialogComponent } from "./mini-edit-dialog.component";
   styleUrl: "./mini-list.component.scss",
 })
 export class MiniListComponent implements OnInit {
-  @ViewChild("backFileInput") backFileInput!: ElementRef<HTMLInputElement>;
-
   minis: Mini[] = [];
   filteredMinis: Mini[] = [];
   searchTerm = "";
@@ -51,10 +43,6 @@ export class MiniListComponent implements OnInit {
   isLoading = false;
   isDragging = false;
   imageCacheBuster = Date.now();
-
-  // For front+back upload flow
-  private pendingFrontImage: string | null = null;
-  private pendingFileName: string = "";
 
   constructor(
     private miniService: MiniService,
@@ -259,112 +247,5 @@ export class MiniListComponent implements OnInit {
         this.createMiniFromFile(files[i]);
       }
     }
-  }
-
-  startFrontBackUpload(): void {
-    // Reset state and trigger front image selection
-    this.pendingFrontImage = null;
-    this.pendingFileName = "";
-    // Use the regular file input but we'll handle it differently
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/*";
-    fileInput.onchange = (e) => {
-      const target = e.target as HTMLInputElement;
-      const file = target.files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.pendingFrontImage = reader.result as string;
-        this.pendingFileName = file.name.replace(/\.[^/.]+$/, "") || "New Mini";
-        // Now prompt for back image
-        setTimeout(() => this.backFileInput.nativeElement.click(), 100);
-      };
-      reader.readAsDataURL(file);
-    };
-    fileInput.click();
-  }
-
-  onBackFileSelect(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (!this.pendingFrontImage) {
-      // No front image pending, just reset
-      input.value = "";
-      return;
-    }
-
-    if (!file) {
-      // User cancelled - create mini with just front
-      this.miniService
-        .createMini(this.pendingFileName, this.pendingFrontImage)
-        .subscribe({
-          next: () => {
-            this.snackBar.open(`Created "${this.pendingFileName}"`, "Dismiss", {
-              duration: 2000,
-            });
-            this.loadMinis();
-            this.pendingFrontImage = null;
-          },
-          error: () => {
-            this.snackBar.open("Failed to create mini", "Dismiss", {
-              duration: 3000,
-            });
-            this.pendingFrontImage = null;
-          },
-        });
-      return;
-    }
-
-    // Read back image and create mini with both
-    const reader = new FileReader();
-    reader.onload = () => {
-      const backData = reader.result as string;
-      this.createMiniWithBothImages(
-        this.pendingFrontImage!,
-        backData,
-        this.pendingFileName,
-      );
-      this.pendingFrontImage = null;
-    };
-    reader.readAsDataURL(file);
-    input.value = "";
-  }
-
-  private createMiniWithBothImages(
-    frontData: string,
-    backData: string,
-    name: string,
-  ): void {
-    // Create mini with front, then add back
-    this.miniService.createMini(name, frontData).subscribe({
-      next: (mini) => {
-        this.miniService.setBackImageFromBase64(mini.id, backData).subscribe({
-          next: () => {
-            this.snackBar.open(
-              `Created "${name}" with front and back`,
-              "Dismiss",
-              { duration: 2000 },
-            );
-            this.loadMinis();
-          },
-          error: () => {
-            this.snackBar.open(
-              `Created "${name}", but failed to add back image`,
-              "Dismiss",
-              { duration: 3000 },
-            );
-            this.loadMinis();
-          },
-        });
-      },
-      error: () => {
-        this.snackBar.open("Failed to create mini", "Dismiss", {
-          duration: 3000,
-        });
-      },
-    });
   }
 }
