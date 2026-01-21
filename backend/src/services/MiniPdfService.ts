@@ -94,10 +94,17 @@ export class MiniPdfService {
         // Adjust Y position relative to the current page
         const yPt = this.inchesToPt(placement.y - pageNum * printableHeight);
 
-        // Draw front image
+        // Determine which image to use based on backMode
+        // "back-image" means this placement should show the back image
+        const imageData =
+          placement.backMode === "back-image" && mini.backImageData
+            ? mini.backImageData
+            : mini.imageData;
+
+        // Draw the image
         await this.drawRectangularImage(
           doc,
-          mini.imageData,
+          imageData,
           xPt,
           yPt,
           widthPt,
@@ -107,39 +114,6 @@ export class MiniPdfService {
         // Draw text label if present
         if (placement.text) {
           this.drawPlacementText(doc, placement, xPt, yPt, widthPt, heightPt);
-        }
-
-        // Handle back side if needed
-        if (placement.backMode === "back-image") {
-          // Position back side to the right of front with small gap
-          const gapPt = this.inchesToPt(0.1); // 0.1 inch gap
-          const backXPt = xPt + widthPt + gapPt;
-
-          // Use back image if available, fall back to front
-          const backImageData = mini.backImageData || mini.imageData;
-
-          if (backImageData) {
-            await this.drawRectangularImage(
-              doc,
-              backImageData,
-              backXPt,
-              yPt,
-              widthPt,
-              heightPt,
-            );
-
-            // Draw text on back side too
-            if (placement.text) {
-              this.drawPlacementText(
-                doc,
-                placement,
-                backXPt,
-                yPt,
-                widthPt,
-                heightPt,
-              );
-            }
-          }
         }
       }
     }

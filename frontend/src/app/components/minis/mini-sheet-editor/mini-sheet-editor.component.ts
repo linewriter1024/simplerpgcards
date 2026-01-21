@@ -38,9 +38,9 @@ import {
 } from "../../../models/mini.model";
 import { MiniPrintPreviewComponent } from "./mini-print-preview.component";
 import {
-  ConglomerateDialogComponent,
-  ConglomerateDialogResult,
-} from "./conglomerate-dialog.component";
+  ImportFromSheetDialogComponent,
+  ImportFromSheetDialogResult,
+} from "./import-from-sheet-dialog.component";
 
 @Component({
   selector: "app-mini-sheet-editor",
@@ -311,49 +311,52 @@ export class MiniSheetEditorComponent implements OnInit, OnDestroy {
       });
   }
 
-  openConglomerateDialog(): void {
-    if (this.sheets.length === 0) {
-      this.snackBar.open("No sheets available to combine", "Dismiss", {
+  openImportFromSheetDialog(): void {
+    if (!this.currentSheet) {
+      this.snackBar.open("Select a sheet first", "Dismiss", {
         duration: 3000,
       });
       return;
     }
 
-    const dialogRef = this.dialog.open(ConglomerateDialogComponent, {
-      data: { sheets: this.sheets },
-      width: "500px",
+    if (this.sheets.length <= 1) {
+      this.snackBar.open(
+        "No other sheets available to import from",
+        "Dismiss",
+        {
+          duration: 3000,
+        },
+      );
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ImportFromSheetDialogComponent, {
+      data: {
+        sheets: this.sheets,
+        currentSheetId: this.currentSheet.id,
+        minis: this.minis,
+      },
+      width: "550px",
     });
 
-    dialogRef.afterClosed().subscribe((result: ConglomerateDialogResult) => {
-      if (result) {
-        this.createConglomerateSheet(result);
+    dialogRef.afterClosed().subscribe((result: ImportFromSheetDialogResult) => {
+      if (result && result.placements.length > 0) {
+        this.importPlacementsFromSheet(result.placements);
       }
     });
   }
 
-  private createConglomerateSheet(result: ConglomerateDialogResult): void {
-    this.miniService
-      .createSheet({ name: result.name, settings: DEFAULT_SHEET_SETTINGS })
-      .subscribe({
-        next: (sheet) => {
-          this.sheets.unshift(sheet);
-          this.selectSheet(sheet);
-          // Add the combined placements
-          this.placements = result.placements;
-          // Auto-arrange them
-          this.autoArrange();
-          this.snackBar.open(
-            `Created conglomerate sheet with ${result.placements.length} minis`,
-            "Dismiss",
-            { duration: 3000 },
-          );
-        },
-        error: () => {
-          this.snackBar.open("Failed to create conglomerate sheet", "Dismiss", {
-            duration: 3000,
-          });
-        },
-      });
+  private importPlacementsFromSheet(importedPlacements: MiniPlacement[]): void {
+    // Add the imported placements to the current sheet
+    this.placements.push(...importedPlacements);
+    // Auto-arrange to position them properly
+    this.autoArrange();
+    this.scheduleAutoSave();
+    this.snackBar.open(
+      `Imported ${importedPlacements.length} mini${importedPlacements.length !== 1 ? "s" : ""}`,
+      "Dismiss",
+      { duration: 3000 },
+    );
   }
 
   selectSheet(sheet: MiniSheet): void {
