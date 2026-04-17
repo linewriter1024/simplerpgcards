@@ -636,6 +636,26 @@ export class StatblockViewComponent implements OnInit, AfterViewInit, OnDestroy 
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   }
 
+  /** Return a flex-grow value proportional to text content length for a statblock field. */
+  getTextFieldFlex(statblock: StatBlock): Record<string, number> {
+    const lengths: Record<string, number> = {};
+    lengths['attacks'] = (statblock.attacks || []).reduce((sum, a) => sum + (a.name?.length || 0), 0);
+    lengths['spells'] = (statblock.spells || []).reduce((sum, s) => sum + (s.name?.length || 0), 0);
+    lengths['skills'] = (statblock.skills || []).join(' ').length;
+    lengths['resistances'] = (statblock.resistances || []).join(' ').length;
+    lengths['notes'] = (statblock.notes || '').length;
+
+    const maxLen = Math.max(...Object.values(lengths), 1);
+    const result: Record<string, number> = {};
+    for (const key of Object.keys(lengths)) {
+      // Use square-root scaling: compresses the range so large fields don't starve small ones
+      // A field with 25x the content gets ~5x the space instead of 25x
+      const ratio = lengths[key] / maxLen;
+      result[key] = Math.max(1, Math.round(Math.sqrt(ratio) * 4));
+    }
+    return result;
+  }
+
   formatSpellSlots(spellSlots: number[]): string {
     if (!spellSlots || spellSlots.length === 0) return '';
     

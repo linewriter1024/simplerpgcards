@@ -575,7 +575,7 @@
 
               <!-- Text Fields Row -->
               <div class="text-fields-section">
-                <div class="field attacks-field">
+                <div class="field attacks-field" [style.flex]="getTextFieldFlex(statblock)['attacks']">
                   <div class="field-label">Attacks</div>
                   <div class="field-value text-content">
                     @if (statblock.attacks && statblock.attacks.length > 0) {
@@ -587,7 +587,7 @@
                 </div>
 
                 @if (statblock.spells && statblock.spells.length > 0) {
-                  <div class="field spells-field-container">
+                  <div class="field spells-field-container" [style.flex]="getTextFieldFlex(statblock)['spells']">
                     <div class="field-label">Spells</div>
                     <div class="field-value text-content">
                       @for (spell of statblock.spells; track spell.name) {
@@ -598,7 +598,7 @@
                 }
 
                 @if (statblock.skills && statblock.skills.length > 0) {
-                  <div class="field text-field">
+                  <div class="field text-field" [style.flex]="getTextFieldFlex(statblock)['skills']">
                     <div class="field-label">Skills</div>
                     <div class="field-value text-content">
                       @for (skill of statblock.skills; track skill) {
@@ -609,7 +609,7 @@
                 }
 
                 @if (statblock.resistances && statblock.resistances.length > 0) {
-                  <div class="field text-field">
+                  <div class="field text-field" [style.flex]="getTextFieldFlex(statblock)['resistances']">
                     <div class="field-label">Resistances</div>
                     <div class="field-value text-content">
                       @for (res of statblock.resistances; track res) {
@@ -620,7 +620,7 @@
                 }
 
                 @if (statblock.notes && statblock.notes.trim()) {
-                  <div class="field text-field">
+                  <div class="field text-field" [style.flex]="getTextFieldFlex(statblock)['notes']">
                     <div class="field-label">Notes</div>
                     <div class="field-value text-content">
                       <span class="list-item" [innerHTML]="statblock.notes | diceLinkify"></span>
