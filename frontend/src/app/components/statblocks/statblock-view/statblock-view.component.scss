@@ -21,9 +21,10 @@
 }
 
 .view-container {
-  height: 100%;
+  height: calc(100vh - 64px);
   display: flex;
   flex-direction: row;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -259,6 +260,8 @@
   padding: 2px;
   height: 100%;
   overflow-y: auto;
+  overflow-anchor: none;
+  scroll-behavior: auto;
 }
 
 .highlighted-tag {
@@ -282,7 +285,7 @@
   gap: 3px;
   align-items: stretch;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .statblock-row:hover {

@@ -62,6 +62,7 @@ export class StatblockViewComponent
   statblocks: StatBlock[] = [];
   filteredStatblocks: StatBlock[] = [];
   allTags: string[] = [];
+  private textFieldFlexCache = new Map<string | number, Record<string, number>>();
   searchControl = new FormControl("");
   selection = new SelectionModel<StatBlock>(true, []);
   bulkTagInput: string = "";
@@ -117,6 +118,10 @@ export class StatblockViewComponent
   ) {}
 
   ngOnInit(): void {
+    // Prevent the page from scrolling while this view is active so the
+    // inner statblocks-table is the sole scroll container
+    document.body.style.overflow = 'hidden';
+
     // Load context tag from localStorage
     const savedContextTag = localStorage.getItem("statblockContextTag");
     if (savedContextTag) {
@@ -158,7 +163,7 @@ export class StatblockViewComponent
   }
 
   ngOnDestroy(): void {
-    // nothing to clean beyond subscriptions owned by Angular
+    document.body.style.overflow = '';
   }
 
   loadStatblocks(): Promise<void> {
@@ -222,6 +227,7 @@ export class StatblockViewComponent
     filtered.sort((a, b) => a.name.localeCompare(b.name));
 
     this.filteredStatblocks = filtered;
+    this.rebuildFlexCache();
     this.scheduleMeasureCompute();
 
     // Update toggle states based on current search
@@ -708,30 +714,39 @@ export class StatblockViewComponent
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   }
 
-  /** Return a flex-grow value proportional to text content length for a statblock field. */
-  getTextFieldFlex(statblock: StatBlock): Record<string, number> {
+  /** Pre-compute flex values for all filtered statblocks into a cache. */
+  private rebuildFlexCache(): void {
+    this.textFieldFlexCache.clear();
+    for (const statblock of this.filteredStatblocks) {
+      if (statblock.id == null) continue;
+      this.textFieldFlexCache.set(statblock.id, this.computeTextFieldFlex(statblock));
+    }
+  }
+
+  private computeTextFieldFlex(statblock: StatBlock): Record<string, number> {
     const lengths: Record<string, number> = {};
-    lengths["attacks"] = (statblock.attacks || []).reduce(
-      (sum, a) => sum + (a.name?.length || 0),
-      0,
-    );
-    lengths["spells"] = (statblock.spells || []).reduce(
-      (sum, s) => sum + (s.name?.length || 0),
-      0,
-    );
-    lengths["skills"] = (statblock.skills || []).join(" ").length;
-    lengths["resistances"] = (statblock.resistances || []).join(" ").length;
-    lengths["notes"] = (statblock.notes || "").length;
+    lengths['attacks'] = (statblock.attacks || []).reduce((sum, a) => sum + (a.name?.length || 0), 0);
+    lengths['spells'] = (statblock.spells || []).reduce((sum, s) => sum + (s.name?.length || 0), 0);
+    lengths['skills'] = (statblock.skills || []).join(' ').length;
+    lengths['resistances'] = (statblock.resistances || []).join(' ').length;
+    lengths['notes'] = (statblock.notes || '').length;
 
     const maxLen = Math.max(...Object.values(lengths), 1);
     const result: Record<string, number> = {};
     for (const key of Object.keys(lengths)) {
-      // Use square-root scaling: compresses the range so large fields don't starve small ones
-      // A field with 25x the content gets ~5x the space instead of 25x
       const ratio = lengths[key] / maxLen;
       result[key] = Math.max(1, Math.round(Math.sqrt(ratio) * 4));
     }
     return result;
+  }
+
+  /** Return cached flex-grow values for a statblock's text fields. */
+  getTextFieldFlex(statblock: StatBlock): Record<string, number> {
+    if (statblock.id != null && this.textFieldFlexCache.has(statblock.id)) {
+      return this.textFieldFlexCache.get(statblock.id)!;
+    }
+    // Fallback: compute on the fly (e.g. before cache is built)
+    return this.computeTextFieldFlex(statblock);
   }
 
   formatSpellSlots(spellSlots: number[]): string {

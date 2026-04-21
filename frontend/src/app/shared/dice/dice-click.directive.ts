@@ -17,6 +17,7 @@ export class DiceClickDirective implements AfterViewInit, OnDestroy {
   @Input('appDiceClick') context?: string;
 
   private observer?: MutationObserver;
+  private pendingAttach?: ReturnType<typeof setTimeout>;
 
   constructor(
     private el: ElementRef<HTMLElement>,
@@ -29,8 +30,18 @@ export class DiceClickDirective implements AfterViewInit, OnDestroy {
     // Attach to any dice links that already exist
     this.attachToLinks();
 
-    // Observe for dynamically added content (e.g. when [innerHTML] updates)
-    this.observer = new MutationObserver(() => this.attachToLinks());
+    // Debounce the observer so rapid DOM changes (e.g. during scroll/CD) don't
+    // cause repeated querySelectorAll across the whole subtree
+    this.observer = new MutationObserver((mutations) => {
+      // Only care about mutations that added nodes containing dice links
+      const hasNewNodes = mutations.some(m => m.addedNodes.length > 0);
+      if (!hasNewNodes) return;
+      if (this.pendingAttach) return;
+      this.pendingAttach = setTimeout(() => {
+        this.pendingAttach = undefined;
+        this.attachToLinks();
+      }, 50);
+    });
     this.observer.observe(this.el.nativeElement, {
       childList: true,
       subtree: true
@@ -39,6 +50,7 @@ export class DiceClickDirective implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.observer?.disconnect();
+    if (this.pendingAttach) clearTimeout(this.pendingAttach);
   }
 
   private attachToLinks() {
