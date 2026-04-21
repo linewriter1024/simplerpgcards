@@ -4,17 +4,17 @@ import {
   Renderer2,
   Input,
   OnDestroy,
-  AfterViewInit
-} from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { DiceService } from './dice.service';
+  AfterViewInit,
+} from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+import { DiceService } from "./dice.service";
 
 @Directive({
-  selector: '[appDiceClick]',
-  standalone: true
+  selector: "[appDiceClick]",
+  standalone: true,
 })
 export class DiceClickDirective implements AfterViewInit, OnDestroy {
-  @Input('appDiceClick') context?: string;
+  @Input("appDiceClick") context?: string;
 
   private observer?: MutationObserver;
   private pendingAttach?: ReturnType<typeof setTimeout>;
@@ -23,7 +23,7 @@ export class DiceClickDirective implements AfterViewInit, OnDestroy {
     private el: ElementRef<HTMLElement>,
     private renderer: Renderer2,
     private dialog: MatDialog,
-    private dice: DiceService
+    private dice: DiceService,
   ) {}
 
   ngAfterViewInit() {
@@ -34,7 +34,7 @@ export class DiceClickDirective implements AfterViewInit, OnDestroy {
     // cause repeated querySelectorAll across the whole subtree
     this.observer = new MutationObserver((mutations) => {
       // Only care about mutations that added nodes containing dice links
-      const hasNewNodes = mutations.some(m => m.addedNodes.length > 0);
+      const hasNewNodes = mutations.some((m) => m.addedNodes.length > 0);
       if (!hasNewNodes) return;
       if (this.pendingAttach) return;
       this.pendingAttach = setTimeout(() => {
@@ -44,7 +44,7 @@ export class DiceClickDirective implements AfterViewInit, OnDestroy {
     });
     this.observer.observe(this.el.nativeElement, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
   }
 
@@ -54,28 +54,30 @@ export class DiceClickDirective implements AfterViewInit, OnDestroy {
   }
 
   private attachToLinks() {
-    const links = this.el.nativeElement.querySelectorAll<HTMLAnchorElement>('.dice-link');
+    const links =
+      this.el.nativeElement.querySelectorAll<HTMLAnchorElement>(".dice-link");
 
-    links.forEach(link => {
+    links.forEach((link) => {
       if ((link as any)._diceListenerAttached) return;
       (link as any)._diceListenerAttached = true;
 
-      this.renderer.listen(link, 'click', (ev: MouseEvent) => {
+      this.renderer.listen(link, "click", (ev: MouseEvent) => {
         ev.preventDefault();
         ev.stopPropagation();
 
         (async () => {
-          const expr = link.getAttribute('data-dice');
+          const expr = link.getAttribute("data-dice");
           if (!expr) return;
 
           const result = this.dice.roll(expr);
-          const { DiceRollDialogComponent } = await import('./dice-roll-dialog.component');
+          const { DiceRollDialogComponent } =
+            await import("./dice-roll-dialog.component");
           this.dialog.open(DiceRollDialogComponent, {
-            width: '380px',
+            width: "380px",
             data: {
               context: this.context,
-              result
-            }
+              result,
+            },
           });
         })();
       });

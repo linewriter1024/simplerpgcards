@@ -62,7 +62,10 @@ export class StatblockViewComponent
   statblocks: StatBlock[] = [];
   filteredStatblocks: StatBlock[] = [];
   allTags: string[] = [];
-  private textFieldFlexCache = new Map<string | number, Record<string, number>>();
+  private textFieldFlexCache = new Map<
+    string | number,
+    Record<string, number>
+  >();
   searchControl = new FormControl("");
   selection = new SelectionModel<StatBlock>(true, []);
   bulkTagInput: string = "";
@@ -120,7 +123,7 @@ export class StatblockViewComponent
   ngOnInit(): void {
     // Prevent the page from scrolling while this view is active so the
     // inner statblocks-table is the sole scroll container
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 
     // Load context tag from localStorage
     const savedContextTag = localStorage.getItem("statblockContextTag");
@@ -163,7 +166,7 @@ export class StatblockViewComponent
   }
 
   ngOnDestroy(): void {
-    document.body.style.overflow = '';
+    document.body.style.overflow = "";
   }
 
   loadStatblocks(): Promise<void> {
@@ -719,17 +722,26 @@ export class StatblockViewComponent
     this.textFieldFlexCache.clear();
     for (const statblock of this.filteredStatblocks) {
       if (statblock.id == null) continue;
-      this.textFieldFlexCache.set(statblock.id, this.computeTextFieldFlex(statblock));
+      this.textFieldFlexCache.set(
+        statblock.id,
+        this.computeTextFieldFlex(statblock),
+      );
     }
   }
 
   private computeTextFieldFlex(statblock: StatBlock): Record<string, number> {
     const lengths: Record<string, number> = {};
-    lengths['attacks'] = (statblock.attacks || []).reduce((sum, a) => sum + (a.name?.length || 0), 0);
-    lengths['spells'] = (statblock.spells || []).reduce((sum, s) => sum + (s.name?.length || 0), 0);
-    lengths['skills'] = (statblock.skills || []).join(' ').length;
-    lengths['resistances'] = (statblock.resistances || []).join(' ').length;
-    lengths['notes'] = (statblock.notes || '').length;
+    lengths["attacks"] = (statblock.attacks || []).reduce(
+      (sum, a) => sum + (a.name?.length || 0),
+      0,
+    );
+    lengths["spells"] = (statblock.spells || []).reduce(
+      (sum, s) => sum + (s.name?.length || 0),
+      0,
+    );
+    lengths["skills"] = (statblock.skills || []).join(" ").length;
+    lengths["resistances"] = (statblock.resistances || []).join(" ").length;
+    lengths["notes"] = (statblock.notes || "").length;
 
     const maxLen = Math.max(...Object.values(lengths), 1);
     const result: Record<string, number> = {};
