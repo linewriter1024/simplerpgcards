@@ -1,7 +1,27 @@
-.image-sidebar { border: 1px dashed rgba(0,0,0,0.2); border-radius: 4px; padding: 8px; }
-.thumb-wrapper { width: 120px; height: 120px; border: 1px solid rgba(0,0,0,0.12); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
-.thumb { width: 100%; height: 100%; object-fit: cover; }
-.image-actions { display: flex; gap: 6px; margin-top: 4px; margin-bottom: 0; }
+.image-sidebar {
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 8px;
+}
+.thumb-wrapper {
+  width: 120px;
+  height: 120px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
 .edit-container {
   height: 100%;
   display: flex;
@@ -34,23 +54,23 @@
 
 .sidebar-header {
   margin-bottom: 24px;
-  
+
   h3 {
     margin: 0 0 12px 0;
     color: #e0e0e0;
     font-size: 18px;
     font-weight: 500;
   }
-  
+
   .mode-buttons {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    
+
     .mode-button {
       min-width: 90px;
       font-size: 12px;
-      
+
       &.current-mode {
         opacity: 0.8;
         cursor: default;
@@ -61,7 +81,7 @@
 
 .sidebar-section {
   margin-bottom: 24px;
-  
+
   h4 {
     margin: 0 0 12px 0;
     color: #ccc;
@@ -70,31 +90,31 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  
+
   .full-width {
     width: 100%;
     margin-bottom: 8px;
   }
-  
+
   .filter-actions {
     display: flex;
     justify-content: flex-start;
     margin-top: 8px;
-    
+
     .clear-button {
       color: #ccc;
       font-size: 12px;
     }
   }
-  
+
   .action-button {
     margin-bottom: 8px;
-    
+
     &.delete-button {
       margin-top: 12px;
     }
   }
-  
+
   .select-all-checkbox {
     margin-bottom: 12px;
   }
@@ -193,7 +213,7 @@
   height: auto;
   object-fit: contain;
   border-radius: 4px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 .image-delete-btn {
   margin-top: 4px;
@@ -285,7 +305,7 @@
   .edit-container {
     flex-direction: column;
   }
-  
+
   .sidebar {
     width: 100% !important;
     min-width: 100% !important;
@@ -298,19 +318,19 @@
     padding: 12px 16px;
     position: static;
   }
-  
+
   /* Hide sidebar layout on tablets/mobile */
   .sidebar-layout {
     display: none;
   }
-  
+
   /* Show compact toolbar layout on tablets/mobile */
   .toolbar-layout {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .toolbar-row {
     display: flex;
     align-items: center;
@@ -318,46 +338,46 @@
     flex-wrap: wrap;
     min-height: 40px;
   }
-  
+
   .toolbar-title {
     font-size: 16px;
     font-weight: 500;
     color: #e0e0e0;
     flex-shrink: 0;
   }
-  
+
   .toolbar-search {
     flex: 1;
     min-width: 200px;
   }
-  
+
   .toolbar-button {
     flex-shrink: 0;
     min-width: auto;
     padding: 0 12px;
     height: 36px;
   }
-  
+
   .toolbar-checkbox {
     flex-shrink: 0;
   }
-  
+
   .toolbar-spacer {
     flex: 1;
   }
-  
+
   .statblock-count {
     color: #b0b0b0;
     font-size: 14px;
     flex-shrink: 0;
   }
-  
+
   .mode-buttons {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
   }
-  
+
   .mode-button {
     min-width: auto;
     padding: 0 12px;
@@ -369,58 +389,58 @@
   .sidebar {
     padding: 8px 12px;
   }
-  
+
   .toolbar-row {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
     min-height: auto;
   }
-  
+
   .toolbar-row:first-child {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .toolbar-title {
     order: 1;
     text-align: left;
   }
-  
+
   .mode-buttons {
     order: 2;
     justify-content: center;
     flex: 1;
   }
-  
+
   .toolbar-search {
     order: 3;
     min-width: 150px;
     flex: 1;
   }
-  
+
   .toolbar-button {
     order: 4;
     width: auto;
   }
-  
+
   .toolbar-row:last-child {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 8px;
   }
-  
+
   .toolbar-checkbox {
     width: auto;
   }
-  
+
   .mode-button {
     width: auto;
     min-width: 70px;
   }
-  
+
   .basic-info-row {
     flex-direction: column;
     gap: 8px;
@@ -457,7 +477,7 @@
   justify-content: center;
   height: 50vh;
   gap: 16px;
-  
+
   p {
     margin: 0;
     color: #666;
