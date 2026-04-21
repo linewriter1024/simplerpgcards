@@ -541,6 +541,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     const timeoutId = setTimeout(() => {
       callback();
       this.changeDebounceMap.delete(row.uid);
+      this.cdr.markForCheck();
     }, 100); // Small debounce to batch rapid changes
 
     this.changeDebounceMap.set(row.uid, timeoutId);
@@ -653,6 +654,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
           Object.assign(row, created);
           row.isNew = false;
           row.hasUnsavedChanges = false;
+          this.cdr.markForCheck();
           console.log("Statblock created:", created);
         },
         error: (error) => {
@@ -664,6 +666,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
         next: (updated) => {
           Object.assign(row, updated);
           row.hasUnsavedChanges = false;
+          this.cdr.markForCheck();
           console.log("Statblock updated:", updated);
         },
         error: (error) => {
