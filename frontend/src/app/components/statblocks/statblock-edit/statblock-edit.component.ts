@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -42,7 +42,8 @@ import { firstValueFrom } from 'rxjs';
     TextFieldModule
   ],
   templateUrl: './statblock-edit.component.html',
-  styleUrl: './statblock-edit.component.scss'
+  styleUrl: './statblock-edit.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatblockEditComponent implements OnInit, OnDestroy {
   editableRows: EditableStatBlock[] = [];
@@ -68,7 +69,8 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private titleService: Title,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -223,6 +225,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
       // Update the visible data incrementally
       this.editableRows = [...this.allStatblocks];
       this.dataSource.data = this.editableRows;
+      this.cdr.markForCheck();
       
       // Yield control back to the browser to prevent blocking
       if (i < totalChunks - 1) {
@@ -317,6 +320,7 @@ export class StatblockEditComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.editableRows = filtered;
       this.dataSource.data = this.editableRows;
+      this.cdr.markForCheck();
     }, 0);
   }
 

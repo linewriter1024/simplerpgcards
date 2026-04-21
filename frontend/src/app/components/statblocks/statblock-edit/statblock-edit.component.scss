@@ -273,8 +273,11 @@
 }
 
 .text-field ::ng-deep textarea {
-  resize: both; /* Allow both horizontal and vertical resizing */
-  /* Remove fixed min-height to allow dynamic row-based sizing */
+  resize: vertical;
+  /* field-sizing: content allows the textarea to grow with its content without JS */
+  field-sizing: content;
+  min-height: 3lh;
+  max-height: 30lh;
 }
 
 /* Responsive breakpoints */
